@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id           String    @id @default(cuid())
+  slug         String    @unique
+  name         String
+  description  String
+  price        Int
+  compareAt    Int?
+  images       String
+  sizes        String
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  orderItems   OrderItem[]
+}
+
+model Order {
+  id              String    @id @default(cuid())
+  orderNumber     String    @unique
+  fullName        String
+  mobile          String
+  email           String?
+  altPhone        String?
+  pincode         String
+  state           String
+  city            String
+  addressLine1    String
+  addressLine2    String?
+  landmark        String?
+  paymentMethod   String
+  paidAmount      Int
+  codAmount       Int
+  totalAmount     Int
+  discountAmount  Int       @default(0)
+  paymentStatus   String    @default("PENDING")
+  orderStatus     String    @default("PLACED")
+  utr             String?
+  notes           String?
+  metaFbc         String?
+  metaFbp         String?
+  utmData         String?
+  capiFired       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  items           OrderItem[]
+
+  @@index([mobile])
+  @@index([paymentStatus])
+  @@index([orderStatus])
+  @@index([paymentMethod])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String
+  size        String
+  quantity    Int
+  price       Int
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+model VerificationSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  mobile    String
+  captcha   String
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  action    String
+  metadata  String?
+  createdAt DateTime @default(now())
+}
+
+model Waitlist {
+  id          String   @id @default(cuid())
+  productId   String
+  productName String
+  size        String
+  mobile      String
+  email       String?
+  notified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([productId, size])
+  @@index([notified])
+}
+
+model BlockedPincode {
+  id        String   @id @default(cuid())
+  pincode   String   @unique
+  reason    String
+  createdAt DateTime @default(now())
+}

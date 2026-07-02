@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --scroll-behavior: smooth; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  background: #FAF6F0;
+  color: #2B1810;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection { background: #B03A4C; color: #FAF6F0; }
+.container-x { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+.btn-primary { @apply inline-flex items-center justify-center px-6 py-3 bg-wine text-ivory font-medium tracking-wide uppercase text-sm transition-all hover:bg-rose active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed; }
+.btn-secondary { @apply inline-flex items-center justify-center px-6 py-3 border border-espresso text-espresso font-medium tracking-wide uppercase text-sm transition-all hover:bg-espresso hover:text-ivory; }
+.input { @apply w-full px-4 py-3 bg-white border border-taupe/30 rounded-none focus:outline-none focus:border-wine transition-colors text-espresso placeholder:text-taupe/60; }
+.label { @apply block text-xs uppercase tracking-widest text-espresso/70 mb-2 font-medium; }
+.badge { @apply inline-flex items-center px-2 py-1 text-[10px] uppercase tracking-widest font-semibold; }
