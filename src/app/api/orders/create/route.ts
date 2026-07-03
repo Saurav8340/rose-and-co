@@ -97,7 +97,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Selected size is out of stock' }, { status: 400 });
   }
 
-  // Pricing with prepaid discount
   const qty = d.quantity;
   const isPrepaid = d.paymentMethod === 'PREPAID';
 
@@ -107,7 +106,9 @@ export async function POST(req: Request) {
   const discountAmount = isPrepaid ? ((PAYMENT.fullPrice - PAYMENT.prepaidPrice) * qty) : 0;
 
   const orderNumber = generateOrderNumber();
-  const notes = `IP:${ip} UA:${ua.slice(0, 200)}`;
+
+  // Store IP + UA in structured JSON in notes so we can retrieve for CAPI later
+  const notes = JSON.stringify({ ip, ua: ua.slice(0, 500) });
 
   const order = await prisma.$transaction(async (tx) => {
     const o = await tx.order.create({

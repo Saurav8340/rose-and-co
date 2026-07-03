@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
 import { sendPurchaseCapi } from '@/lib/metaCapi';
+import { SITE } from '@/lib/constants';
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   if (!(await verifyAdminSession())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -24,10 +25,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   // ============================================================
   // CAPI FIRING RULE
-  // PREPAID: fire when paymentStatus becomes VERIFIED
-  //   → value = paidAmount (₹1,399 = prepaid price)
-  // PARTIAL_COD: fire when orderStatus=DELIVERED AND paymentStatus=VERIFIED
-  //   → value = totalAmount (₹1,499 = full price collected)
   // ============================================================
   let capiFired = false;
   if (!after.capiFired) {
@@ -39,6 +36,19 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     if (isPrepaidVerified || isCodDeliveredAndPaid) {
       const value = after.paymentMethod === 'PREPAID' ? after.paidAmount : after.totalAmount;
+
+      // Extract original IP and UA from notes (stored as JSON at order creation)
+      let clientIp: string | null = null;
+      let clientUa: string | null = null;
+      if (after.notes) {
+        try {
+          const parsed = JSON.parse(after.notes);
+          if (parsed.ip) clientIp = String(parsed.ip);
+          if (parsed.ua) clientUa = String(parsed.ua);
+        } catch {
+          // notes may be free-text (from admin edits) — safe to skip
+        }
+      }
 
       sendPurchaseCapi({
         orderNumber: after.orderNumber,
@@ -54,6 +64,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         metaFbp:     after.metaFbp,
         utmData:     after.utmData,
         createdAt:   after.createdAt,
+        clientIp,
+        clientUa,
+        eventSourceUrl: SITE.url + '/product/amara-marble-swirl-coord-set',
       }).catch(err => console.error('[CAPI] Send failed:', err));
 
       await prisma.order.update({
@@ -68,6 +81,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
             orderNumber:  after.orderNumber,
             paymentMethod: after.paymentMethod,
             value,
+            hasIp: !!clientIp,
+            hasUa: !!clientUa,
           }),
         },
       });
