@@ -18,3 +18,17 @@ body {
 .input { @apply w-full px-4 py-3 bg-white border border-taupe/30 rounded-none focus:outline-none focus:border-wine transition-colors text-espresso placeholder:text-taupe/60; }
 .label { @apply block text-xs uppercase tracking-widest text-espresso/70 mb-2 font-medium; }
 .badge { @apply inline-flex items-center px-2 py-1 text-[10px] uppercase tracking-widest font-semibold; }
+
+.journal-content h2 { font-family: Georgia, 'Playfair Display', serif; font-size: 1.75rem; color: #2B1810; margin-top: 2.5rem; margin-bottom: 1rem; font-weight: 500; }
+.journal-content h3 { font-family: Georgia, 'Playfair Display', serif; font-size: 1.375rem; color: #2B1810; margin-top: 2rem; margin-bottom: 0.75rem; font-weight: 500; }
+.journal-content p { color: rgba(43, 24, 16, 0.85); line-height: 1.75; margin: 1.25rem 0; font-size: 1.05rem; }
+.journal-content ul, .journal-content ol { margin: 1.25rem 0; padding-left: 1.5rem; color: rgba(43, 24, 16, 0.85); line-height: 1.75; }
+.journal-content li { margin: 0.5rem 0; }
+.journal-content a { color: #5C1A2B; text-decoration: underline; }
+.journal-content a:hover { color: #B03A4C; }
+.journal-content blockquote { border-left: 3px solid #5C1A2B; padding-left: 1.5rem; margin: 2rem 0; font-style: italic; color: rgba(43, 24, 16, 0.75); }
+.journal-content table { width: 100%; border-collapse: collapse; margin: 2rem 0; font-size: 0.95rem; }
+.journal-content th { background: #F4DCD6; padding: 0.75rem; text-align: left; font-weight: 600; color: #2B1810; border: 1px solid rgba(139, 117, 104, 0.3); }
+.journal-content td { padding: 0.75rem; border: 1px solid rgba(139, 117, 104, 0.2); color: rgba(43, 24, 16, 0.85); }
+.journal-content strong { color: #2B1810; font-weight: 600; }
+.journal-content hr { border: none; border-top: 1px solid rgba(139, 117, 104, 0.3); margin: 3rem 0; }

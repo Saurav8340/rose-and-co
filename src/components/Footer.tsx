@@ -15,7 +15,7 @@ export default function Footer() {
           <h4 className="text-xs uppercase tracking-widest text-espresso mb-4">Shop</h4>
           <ul className="space-y-2 text-sm text-espresso/80">
             <li><Link href="/product/amara-marble-swirl-coord-set" className="hover:text-wine">Amara Co-ord Set</Link></li>
-            <li><Link href="/search" className="hover:text-wine">Search</Link></li>
+            <li><Link href="/journal" className="hover:text-wine">Journal</Link></li>
             <li><Link href="/track" className="hover:text-wine">Track your order</Link></li>
           </ul>
         </div>
@@ -40,7 +40,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-taupe/20">
         <div className="container-x py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-espresso/60">
-          <span>© {new Date().getFullYear()} {SITE.name}. Made in India.</span>
+          <span>{new Date().getFullYear()} {SITE.name}. Made in India.</span>
           <div className="flex gap-4 uppercase tracking-widest">
             <a href={SITE.instagram} target="_blank" rel="noopener">Instagram</a>
             <a href={`mailto:${SITE.email}`}>Email</a>
