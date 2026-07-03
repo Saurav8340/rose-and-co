@@ -1,5 +1,5 @@
 export const SITE = {
-  name: 'Rosé & Co',
+  name: 'Rose & Co',
   tagline: 'Small-batch co-ord sets. Hand-painted prints.',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
   email: 'care@roseandco.in',
@@ -8,10 +8,11 @@ export const SITE = {
 };
 
 export const UPI = {
-  id:   process.env.NEXT_PUBLIC_UPI_ID || '8340474678@pthdfc',
+  id:   process.env.NEXT_PUBLIC_UPI_ID || 'powernutrition@nyes',
   name: process.env.NEXT_PUBLIC_UPI_PAYEE_NAME || 'Rose And Co',
 };
 
+// PRICING
 export const PAYMENT = {
   fullPrice:      1499,
   prepaidPrice:   1399,

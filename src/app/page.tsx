@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { inr } from '@/lib/format';
 import TrustBar from '@/components/TrustBar';
 import JsonLd from '@/components/JsonLd';
+import CustomerPhotos from '@/components/CustomerPhotos';
+import TestimonialsCarousel from '@/components/TestimonialsCarousel';
 import { organizationSchema, websiteSchema } from '@/lib/schemas';
 
 export const revalidate = 60;
@@ -13,24 +15,18 @@ export default async function HomePage() {
   const images: string[] = product ? JSON.parse(product.images) : [];
   const hero = images[0] || '/products/amara-front.png';
 
-  const reviews = [
-    { n: 'Ananya S.', c: 'Pune', r: "Ordered for my sister's engagement roka. Went with M based on the size chart, fit was accurate. Waistband did not dig in even after a long night. Took 4 days to reach Pune." },
-    { n: 'Riya K.', c: 'Bangalore', r: 'Was hesitant about buying satin online because most brands send you thin synthetic stuff. This one has actual weight to it. Print looks better in person than in photos.' },
-    { n: 'Meher T.', c: 'Mumbai', r: 'Wore it to a dinner in Bandra and three people asked where it was from. Skirt is the star.' },
-  ];
-
   const faqs: [string, string][] = [
-    ['How long does delivery actually take?', 'Ships from Delhi NCR in 24 to 48 hours. Delivered in 3 to 5 business days for metros, 5 to 7 for smaller cities.'],
-    ['Is COD available?', 'Partial COD only. Rs 299 online via UPI plus Rs 1,200 in cash on delivery.'],
-    ['What is the fabric like?', 'Poly-satin blend, around 90 to 100 GSM. Has weight, falls with drape.'],
-    ['Can I return it?', 'Yes, within 7 days of delivery. Tags on, unworn, unwashed.'],
+    ['How fast do you actually ship?', 'From our Gurugram unit within 24 to 48 hours after payment clears. Metros get it in 3 to 5 working days (Delhivery), tier-2 cities in 5 to 7.'],
+    ['Do you have COD?', 'Partial only. Rs 299 upfront on UPI, Rs 1,200 in cash to the delivery boy. Full COD had a 30% return rate for us in testing, so we stopped it.'],
+    ['Tell me about the fabric.', 'Poly-satin blend, 90 to 100 GSM. Falls with weight, doesn\'t stick to your body. Not the cheap slippery kind you get at Rs 500.'],
+    ['What if the size is wrong?', 'Free reverse pickup within 7 days. Tags on, unworn. Refund lands in 5 to 7 working days after we get it back.'],
   ];
 
   const facts = [
-    { n: '200',     t: 'sets per drop', d: 'Small batch. When your size sells out, it is gone until the next drop.' },
-    { n: '24-48',   t: 'hour dispatch', d: 'Packed and handed to the courier from our Delhi NCR unit within 2 working days.' },
-    { n: '100%',    t: 'inspected',     d: 'Every set is checked for print quality, stitching, and loose threads before it ships.' },
-    { n: '7 days',  t: 'to return',     d: 'Free reverse pickup. Refund lands in 5 to 7 working days after we receive it.' },
+    { n: '200',    t: 'sets per drop', d: 'That\'s it. When your size is out, wait for the next drop. No restock guilt trips.' },
+    { n: '24-48',  t: 'hour dispatch', d: 'Real numbers from our Delhivery pickup data. Not marketing.' },
+    { n: 'Every',  t: 'set checked',   d: 'Loose threads, print smudges, missing labels - we catch them before it leaves the studio.' },
+    { n: '7 days', t: 'to return',     d: 'Free pickup by Delhivery. Refund in 5 to 7 working days.' },
   ];
 
   return (
@@ -39,16 +35,16 @@ export default async function HomePage() {
 
       <section className="relative bg-blush/40">
         <div className="container-x grid md:grid-cols-2 gap-8 items-center py-12 md:py-20">
-          <div className="animate-fade-in">
+          <div>
             <div className="text-xs uppercase tracking-[0.3em] text-wine mb-4">New drop &middot; Amara</div>
             <h1 className="font-display text-5xl md:text-7xl leading-[1.05] text-espresso">
               Poured in ros&eacute;.<br/>Worn in fire.
             </h1>
             <p className="mt-6 text-lg text-espresso/70 max-w-md leading-relaxed">
-              Fitted crop top + high-waist A-line midi skirt in hand-painted marble swirl satin. 200 sets in this drop.
+              Crop top, high-waist A-line midi. Hand-painted marble swirl on satin that actually has weight. 200 sets, then it&apos;s done.
             </p>
             <div className="mt-8 flex items-center gap-4">
-              <Link href="/product/amara-marble-swirl-coord-set" className="btn-primary">Shop Amara &mdash; {product ? inr(product.price) : '&#8377;1,499'}</Link>
+              <Link href="/product/amara-marble-swirl-coord-set" className="btn-primary">Shop Amara &mdash; {product ? inr(product.price) : 'Rs 1,499'}</Link>
               <Link href="/product/amara-marble-swirl-coord-set" className="text-sm underline text-espresso">See fabric + fit</Link>
             </div>
             <div className="mt-8 flex gap-6 text-xs uppercase tracking-widest text-espresso/60">
@@ -73,19 +69,19 @@ export default async function HomePage() {
           <div className="p-8 bg-blush/20 border border-taupe/10">
             <div className="font-display text-xl text-wine">The print</div>
             <p className="mt-2 text-sm text-espresso/70 leading-relaxed">
-              Hand-painted marble swirl in three tones &mdash; deep rose, wine, warm ivory. Because it is hand-painted, no two sets look identical.
+              Hand-painted, three tones - deep rose, wine, warm ivory. Every set is slightly different. Yours will not be identical to the photos. That&apos;s the point.
             </p>
           </div>
           <div className="p-8 bg-blush/20 border border-taupe/10">
             <div className="font-display text-xl text-wine">The fabric</div>
             <p className="mt-2 text-sm text-espresso/70 leading-relaxed">
-              Poly-satin blend, around 90 to 100 GSM. Has weight to it. Falls close to the body without clinging.
+              Poly-satin, 90 to 100 GSM. Falls, doesn&apos;t cling. If you\'ve bought a Rs 500 satin skirt off Meesho and been disappointed, this is not that.
             </p>
           </div>
           <div className="p-8 bg-blush/20 border border-taupe/10">
             <div className="font-display text-xl text-wine">The fit</div>
             <p className="mt-2 text-sm text-espresso/70 leading-relaxed">
-              Fitted top, A-line midi skirt. True to size for most women. Model is 5ft 7in in size S.
+              True to Zara / H&amp;M sizing. Between XS and S, go XS. Between S and M, go S. Model is 5&apos;7&quot; wearing size S.
             </p>
           </div>
         </div>
@@ -107,19 +103,16 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="container-x py-20">
+      <CustomerPhotos />
+
+      <section className="container-x py-16 bg-blush/10">
         <div className="text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine">What buyers say</div>
-          <h2 className="font-display text-4xl md:text-5xl mt-3 text-espresso">Notes from the first drop</h2>
+          <div className="text-xs uppercase tracking-[0.3em] text-wine">From buyers</div>
+          <h2 className="font-display text-4xl md:text-5xl mt-3 text-espresso">What they told us after wearing it</h2>
+          <p className="mt-3 text-sm text-espresso/60">Verified orders. Emails and DMs, lightly edited for length.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
-          {reviews.map((r, i) => (
-            <div key={i} className="p-6 border border-taupe/20 bg-ivory">
-              <div className="text-wine">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-              <p className="mt-3 text-espresso italic leading-relaxed">&ldquo;{r.r}&rdquo;</p>
-              <div className="mt-4 text-xs uppercase tracking-widest text-espresso/60">&mdash; {r.n}, {r.c}</div>
-            </div>
-          ))}
+        <div className="mt-10">
+          <TestimonialsCarousel />
         </div>
       </section>
 
@@ -140,10 +133,10 @@ export default async function HomePage() {
 
       <section className="container-x pb-24">
         <div className="bg-blush/40 border border-taupe/20 p-8 md:p-12 text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine">Read the journal</div>
-          <h2 className="font-display text-3xl md:text-4xl mt-3 text-espresso">Guides on fabric, styling, and Indian D2C fashion</h2>
+          <div className="text-xs uppercase tracking-[0.3em] text-wine">The journal</div>
+          <h2 className="font-display text-3xl md:text-4xl mt-3 text-espresso">On fabric, styling, and what other brands are actually doing</h2>
           <p className="mt-3 text-espresso/70 max-w-xl mx-auto">
-            What we learned about satin, and honest comparisons of what else exists at this price.
+            We test our competitors and write about it. Also fabric science, styling for Indian body types, and the occasional rant.
           </p>
           <div className="mt-6">
             <Link href="/journal" className="btn-secondary">Read the Journal &rarr;</Link>

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { headers } from 'next/headers';
 import './globals.css';
@@ -6,14 +6,18 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AnnouncementBar from '@/components/AnnouncementBar';
 import UtmCapture from '@/components/UtmCapture';
+import WhatsAppButton from '@/components/WhatsAppButton';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import { CartProvider } from '@/components/CartContext';
+import { WishlistProvider } from '@/components/WishlistContext';
 import { SITE } from '@/lib/constants';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
-  title: { default: `${SITE.name} — ${SITE.tagline}`, template: `%s | ${SITE.name}` },
-  description: 'Small-batch co-ord sets in hand-painted marble prints. Ships from Delhi NCR in 24-48 hours. Free shipping across India. Prepay via UPI, save ₹100.',
+  title: { default: `${SITE.name} - ${SITE.tagline}`, template: `%s | ${SITE.name}` },
+  description: 'Small-batch co-ord sets in hand-painted marble prints. Ships from Delhi NCR in 24-48 hours. Free shipping across India. Prepay via UPI, save Rs 100.',
   keywords: ['co-ord set', 'marble print', 'satin skirt', 'party wear india', 'rose and co', 'amara set'],
+  manifest: '/manifest.json',
   openGraph: {
     title: SITE.name, description: SITE.tagline,
     url: SITE.url, siteName: SITE.name, locale: 'en_IN', type: 'website',
@@ -21,6 +25,19 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: SITE.name, description: SITE.tagline },
   robots: { index: true, follow: true },
   alternates: { canonical: '/' },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Rose & Co',
+  },
+};
+
+// themeColor moved here per Next.js 14+ convention
+export const viewport: Viewport = {
+  themeColor: '#5C1A2B',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -39,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="apple-touch-icon" href="/products/amara-front.png" />
       </head>
       <body>
         {loadPixel && (
@@ -64,11 +82,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </>
         )}
         <CartProvider>
-          <UtmCapture />
-          <AnnouncementBar />
-          <Header />
-          <main className="min-h-[60vh]">{children}</main>
-          <Footer />
+          <WishlistProvider>
+            <UtmCapture />
+            <AnnouncementBar />
+            <Header />
+            <main className="min-h-[60vh]">{children}</main>
+            <Footer />
+            {!isAdminRoute && (
+              <>
+                <WhatsAppButton />
+                <PWAInstallPrompt />
+              </>
+            )}
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

@@ -9,6 +9,9 @@ import { PAYMENT } from '@/lib/constants';
 import { lookupPincode } from '@/lib/pincode';
 import { serializedUtm } from '@/lib/utm';
 import UpiButtons from '@/components/UpiButtons';
+import UpiLogos from '@/components/UpiLogos';
+import CheckoutProgressBar from '@/components/CheckoutProgressBar';
+import GiftWrap from '@/components/GiftWrap';
 
 type Step = 'address' | 'verify' | 'payment' | 'done';
 
@@ -41,6 +44,7 @@ export default function CheckoutPage() {
   const [captchaInput, setCaptchaInput] = useState<string>('');
 
   const [paymentMethod, setPaymentMethod] = useState<'PREPAID' | 'PARTIAL_COD'>('PREPAID');
+  const [giftWrap, setGiftWrap] = useState(false);
   const [qrData, setQrData] = useState<string | null>(null);
   const [paymentStarted, setPaymentStarted] = useState(false);
   const [returnedFromApp, setReturnedFromApp] = useState(false);
@@ -80,13 +84,14 @@ export default function CheckoutPage() {
   const setField = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const qty = items.reduce((s, i) => s + i.quantity, 0);
-  const fullTotal    = PAYMENT.fullPrice * qty;
-  const prepaidTotal = PAYMENT.prepaidPrice * qty;
-  const codDeposit   = PAYMENT.codDeposit * qty;
+  const giftWrapAmount = giftWrap ? 49 : 0;
+  const fullTotal    = PAYMENT.fullPrice * qty + giftWrapAmount;
+  const prepaidTotal = PAYMENT.prepaidPrice * qty + giftWrapAmount;
+  const codDeposit   = PAYMENT.codDeposit * qty + giftWrapAmount;
   const codRemaining = PAYMENT.codRemaining * qty;
 
   const amountToPay = paymentMethod === 'PREPAID' ? prepaidTotal : codDeposit;
-  const orderNote = ('RoseAndCo ' + (form.fullName || 'Order')).slice(0, 60);
+  const orderNote = `RoseAndCo ${form.fullName || 'Order'}${giftWrap ? ' [GIFT-WRAP]' : ''}`.slice(0, 60);
 
   const submitAddress = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(null);
@@ -180,7 +185,7 @@ export default function CheckoutPage() {
       if (!res.ok) throw new Error(data.error || 'Order failed');
 
       setStep('done');
-      const successUrl = '/order-success?id=' + data.orderNumber;
+      const successUrl = `/order-success?id=${data.orderNumber}`;
       window.location.href = successUrl;
       setTimeout(() => {
         try { clear(); } catch {}
@@ -201,11 +206,13 @@ export default function CheckoutPage() {
         style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
         aria-hidden="true" />
 
+      <CheckoutProgressBar step={step} />
+
       <div className="flex items-center justify-between mb-8 text-xs uppercase tracking-widest">
         {[
-          { s: 'address', l: '1 · Address' },
-          { s: 'verify',  l: '2 · Verify' },
-          { s: 'payment', l: '3 · Payment' },
+          { s: 'address', l: '1 - Address' },
+          { s: 'verify',  l: '2 - Verify' },
+          { s: 'payment', l: '3 - Payment' },
         ].map(x => (
           <div key={x.s} className={'flex-1 text-center py-2 border-b-2 ' + (step === x.s ? 'border-wine text-wine' : 'border-taupe/20 text-espresso/40')}>{x.l}</div>
         ))}
@@ -215,8 +222,8 @@ export default function CheckoutPage() {
 
       {step === 'done' && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto rounded-full bg-wine text-ivory flex items-center justify-center text-3xl mb-4">✓</div>
-          <div className="font-display text-2xl text-espresso">Order placed. Taking you to your confirmation…</div>
+          <div className="w-16 h-16 mx-auto rounded-full bg-wine text-ivory flex items-center justify-center text-3xl mb-4">OK</div>
+          <div className="font-display text-2xl text-espresso">Order placed. Taking you to your confirmation...</div>
         </div>
       )}
 
@@ -230,74 +237,54 @@ export default function CheckoutPage() {
 
                 <div>
                   <label htmlFor="fullName" className="label">Full name *</label>
-                  <input id="fullName" name="name" type="text" required autoFocus autoComplete="name"
-                    enterKeyHint="next" className="input"
-                    value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
+                  <input id="fullName" name="name" type="text" required autoFocus autoComplete="name" enterKeyHint="next" className="input" value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="mobile" className="label">Mobile *</label>
-                    <input id="mobile" name="tel" type="tel" required inputMode="numeric"
-                      pattern="[6-9][0-9]{9}" maxLength={10} autoComplete="tel-national"
-                      enterKeyHint="next" className="input" placeholder="10-digit mobile"
-                      value={form.mobile} onChange={e => setField('mobile', e.target.value.replace(/\D/g, ''))} />
+                    <input id="mobile" name="tel" type="tel" required inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength={10} autoComplete="tel-national" enterKeyHint="next" className="input" placeholder="10-digit mobile" value={form.mobile} onChange={e => setField('mobile', e.target.value.replace(/\D/g, ''))} />
                   </div>
                   <div>
                     <label htmlFor="email" className="label">Email (optional)</label>
-                    <input id="email" name="email" type="email" autoComplete="email"
-                      enterKeyHint="next" className="input"
-                      value={form.email} onChange={e => setField('email', e.target.value)} />
+                    <input id="email" name="email" type="email" autoComplete="email" enterKeyHint="next" className="input" value={form.email} onChange={e => setField('email', e.target.value)} />
                   </div>
                 </div>
-
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label htmlFor="pincode" className="label">PIN *</label>
-                    <input id="pincode" name="postal-code" type="text" required
-                      inputMode="numeric" maxLength={6} autoComplete="postal-code"
-                      enterKeyHint="next" className="input"
-                      value={form.pincode} onChange={e => setField('pincode', e.target.value.replace(/\D/g, ''))} />
+                    <input id="pincode" name="postal-code" type="text" required inputMode="numeric" maxLength={6} autoComplete="postal-code" enterKeyHint="next" className="input" value={form.pincode} onChange={e => setField('pincode', e.target.value.replace(/\D/g, ''))} />
                   </div>
                   <div>
                     <label htmlFor="city" className="label">City *</label>
-                    <input id="city" name="city" type="text" required autoComplete="address-level2"
-                      enterKeyHint="next" className="input"
-                      value={form.city} onChange={e => setField('city', e.target.value)} />
+                    <input id="city" name="city" type="text" required autoComplete="address-level2" enterKeyHint="next" className="input" value={form.city} onChange={e => setField('city', e.target.value)} />
                   </div>
                   <div>
                     <label htmlFor="state" className="label">State *</label>
-                    <input id="state" name="state" type="text" required autoComplete="address-level1"
-                      enterKeyHint="next" className="input"
-                      value={form.state} onChange={e => setField('state', e.target.value)} />
+                    <input id="state" name="state" type="text" required autoComplete="address-level1" enterKeyHint="next" className="input" value={form.state} onChange={e => setField('state', e.target.value)} />
                   </div>
                 </div>
-
                 <div>
                   <label htmlFor="addressLine1" className="label">Address line 1 *</label>
-                  <input id="addressLine1" name="address-line1" type="text" required
-                    autoComplete="address-line1" enterKeyHint="next" className="input"
-                    placeholder="House / flat / building, street"
-                    value={form.addressLine1} onChange={e => setField('addressLine1', e.target.value)} />
+                  <input id="addressLine1" name="address-line1" type="text" required autoComplete="address-line1" enterKeyHint="next" className="input" placeholder="House / flat / building, street" value={form.addressLine1} onChange={e => setField('addressLine1', e.target.value)} />
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="landmark" className="label">Landmark (optional)</label>
-                    <input id="landmark" name="address-line2" type="text" autoComplete="address-line2"
-                      enterKeyHint="next" className="input"
-                      value={form.landmark} onChange={e => setField('landmark', e.target.value)} />
+                    <input id="landmark" name="address-line2" type="text" autoComplete="address-line2" enterKeyHint="next" className="input" value={form.landmark} onChange={e => setField('landmark', e.target.value)} />
                   </div>
                   <div>
                     <label htmlFor="altPhone" className="label">Alt phone (optional)</label>
-                    <input id="altPhone" name="tel-alt" type="tel" inputMode="numeric" maxLength={10}
-                      autoComplete="tel-national" enterKeyHint="done" className="input"
-                      value={form.altPhone} onChange={e => setField('altPhone', e.target.value.replace(/\D/g, ''))} />
+                    <input id="altPhone" name="tel-alt" type="tel" inputMode="numeric" maxLength={10} autoComplete="tel-national" enterKeyHint="done" className="input" value={form.altPhone} onChange={e => setField('altPhone', e.target.value.replace(/\D/g, ''))} />
                   </div>
                 </div>
 
+                <div className="pt-3">
+                  <div className="label mb-2">Add-on (optional)</div>
+                  <GiftWrap enabled={giftWrap} onChange={setGiftWrap} />
+                </div>
+
                 <button type="submit" disabled={loading} className="btn-primary w-full">
-                  {loading ? 'Please wait…' : 'Continue →'}
+                  {loading ? 'Please wait...' : 'Continue \u2192'}
                 </button>
               </form>
             )}
@@ -308,17 +295,15 @@ export default function CheckoutPage() {
                 <p className="text-sm text-espresso/70">Type the characters shown below exactly as they appear.</p>
                 <div className="p-6 bg-blush/30 border border-taupe/20 flex items-center gap-4 flex-wrap">
                   <div dangerouslySetInnerHTML={{ __html: captchaSVG }} className="inline-block" />
-                  <button type="button" onClick={refreshCaptcha} className="text-xs uppercase tracking-widest text-wine underline">↻ Refresh</button>
+                  <button type="button" onClick={refreshCaptcha} className="text-xs uppercase tracking-widest text-wine underline">Refresh</button>
                 </div>
                 <div>
                   <label className="label">Type it here *</label>
-                  <input required autoFocus autoComplete="off"
-                    className="input uppercase tracking-[0.3em] text-center text-lg" maxLength={6}
-                    value={captchaInput} onChange={e => setCaptchaInput(e.target.value.toUpperCase())} />
+                  <input required autoFocus autoComplete="off" className="input uppercase tracking-[0.3em] text-center text-lg" maxLength={6} value={captchaInput} onChange={e => setCaptchaInput(e.target.value.toUpperCase())} />
                 </div>
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => setStep('address')} className="btn-secondary">← Back</button>
-                  <button type="submit" disabled={loading} className="btn-primary flex-1">{loading ? 'Checking…' : 'Continue →'}</button>
+                  <button type="button" onClick={() => setStep('address')} className="btn-secondary">Back</button>
+                  <button type="submit" disabled={loading} className="btn-primary flex-1">{loading ? 'Checking...' : 'Continue \u2192'}</button>
                 </div>
               </form>
             )}
@@ -332,7 +317,7 @@ export default function CheckoutPage() {
                     <input type="radio" name="pm" className="sr-only" checked={paymentMethod === 'PREPAID'} onChange={() => setPaymentMethod('PREPAID')} />
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <div className="text-xs uppercase tracking-widest text-green-800 font-semibold">Recommended · Save ₹{PAYMENT.prepaidSavings * qty}</div>
+                        <div className="text-xs uppercase tracking-widest text-green-800 font-semibold">Recommended - Save Rs {PAYMENT.prepaidSavings * qty}</div>
                         <div className="font-display text-lg mt-1 text-espresso">Full prepaid via UPI</div>
                         <div className="text-sm text-espresso/70 mt-1">Pay <b className="text-espresso">{inr(prepaidTotal)}</b> now. No cash on delivery.</div>
                       </div>
@@ -362,12 +347,17 @@ export default function CheckoutPage() {
                 <div className="p-5 bg-ivory border border-taupe/30 text-center">
                   <div className="text-xs uppercase tracking-widest text-espresso/60">Amount to pay now</div>
                   <div className="text-4xl font-semibold text-wine mt-1">{inr(amountToPay)}</div>
+                  {giftWrap && <div className="mt-1 text-xs text-espresso/60">Includes Rs 49 gift wrap</div>}
                   {paymentMethod === 'PARTIAL_COD' && (
                     <div className="mt-2 text-sm text-espresso/70">Remaining <b>{inr(codRemaining)}</b> in cash at delivery.</div>
                   )}
                   {paymentMethod === 'PREPAID' && (
-                    <div className="mt-2 text-sm text-green-800 font-medium">You are saving ₹{PAYMENT.prepaidSavings * qty} with prepaid.</div>
+                    <div className="mt-2 text-sm text-green-800 font-medium">You are saving Rs {PAYMENT.prepaidSavings * qty} with prepaid.</div>
                   )}
+                </div>
+
+                <div className="flex justify-center py-2">
+                  <UpiLogos />
                 </div>
 
                 {isMobile ? (
@@ -380,8 +370,7 @@ export default function CheckoutPage() {
                       {qrData && <img src={qrData} alt="UPI QR Code" width={220} height={220} className="border p-2 shrink-0" />}
                       <div className="text-sm text-espresso/80 space-y-2">
                         <div className="text-lg font-display text-wine">Scan with any UPI app</div>
-                        <div>Open GPay, PhonePe, Paytm or any UPI app on your phone → scan the QR → pay {inr(amountToPay)}.</div>
-                        <div className="pt-2 text-xs text-espresso/60">The amount and payment details are already inside the QR.</div>
+                        <div>Open GPay, PhonePe, Paytm or any UPI app on your phone. Scan the QR. Pay {inr(amountToPay)}.</div>
                       </div>
                     </div>
                   </div>
@@ -391,15 +380,14 @@ export default function CheckoutPage() {
                   <div className="text-xs uppercase tracking-widest text-espresso/70">Step 2</div>
                   <div className="font-display text-lg text-espresso mt-1">Done paying?</div>
                   <p className="text-xs text-espresso/60 mt-1">Once you have paid {inr(amountToPay)}, tap the button below. We check the payment within 2 hours.</p>
-                  <button type="button" onClick={submitOrder} disabled={loading}
-                    className="btn-primary w-full mt-4 text-base">
-                    {loading ? 'Placing order…' : 'I have paid ' + inr(amountToPay) + ' — confirm order'}
+                  <button type="button" onClick={submitOrder} disabled={loading} className="btn-primary w-full mt-4 text-base">
+                    {loading ? 'Placing order...' : 'I have paid ' + inr(amountToPay) + ' - confirm order'}
                   </button>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <button type="button" onClick={() => setStep('verify')} className="text-xs uppercase tracking-widest text-espresso/60 underline">← Back</button>
-                  <p className="text-[11px] text-espresso/60 text-right">🔒 By placing this order you accept our <Link href="/terms" className="underline">Terms</Link> and <Link href="/privacy-policy" className="underline">Privacy</Link>.</p>
+                  <button type="button" onClick={() => setStep('verify')} className="text-xs uppercase tracking-widest text-espresso/60 underline">Back</button>
+                  <p className="text-[11px] text-espresso/60 text-right">Secure. Accept our <Link href="/terms" className="underline">Terms</Link> and <Link href="/privacy-policy" className="underline">Privacy</Link>.</p>
                 </div>
               </div>
             )}
@@ -414,17 +402,21 @@ export default function CheckoutPage() {
                 </div>
                 <div className="text-sm">
                   <div className="text-espresso font-medium">{it.name}</div>
-                  <div className="text-xs text-espresso/60">Size {it.size} · Qty {it.quantity}</div>
+                  <div className="text-xs text-espresso/60">Size {it.size} - Qty {it.quantity}</div>
                   <div className="text-wine font-semibold mt-1">{inr(it.price * it.quantity)}</div>
                 </div>
               </div>
             ))}
             <div className="space-y-1 text-sm">
-              <div className="flex justify-between"><span>Subtotal</span><span>{inr(fullTotal)}</span></div>
+              <div className="flex justify-between"><span>Subtotal</span><span>{inr(PAYMENT.fullPrice * qty)}</span></div>
+              {giftWrap && (
+                <div className="flex justify-between text-espresso/70"><span>Gift wrap</span><span>+ Rs 49</span></div>
+              )}
               <div className="flex justify-between"><span>Shipping</span><span className="text-wine">Free</span></div>
               {paymentMethod === 'PREPAID' && (
                 <div className="flex justify-between text-green-800">
-                  <span>UPI discount</span><span>-{inr(PAYMENT.prepaidSavings * qty)}</span>
+                  <span>UPI discount</span>
+                  <span>-{inr(PAYMENT.prepaidSavings * qty)}</span>
                 </div>
               )}
             </div>
