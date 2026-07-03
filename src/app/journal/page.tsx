@@ -6,12 +6,14 @@ import { SITE } from '@/lib/constants';
 import JsonLd from '@/components/JsonLd';
 import type { Metadata } from 'next';
 
+export const revalidate = 3600; // 1 hour
+
 export const metadata: Metadata = {
   title: 'Journal — guides on fabric, styling, and Indian D2C fashion',
-  description: 'Honest guides on satin fabric, styling co-ord sets, and how small-batch Indian brands make things. From Rosé & Co, Gurugram.',
+  description: 'Honest guides on satin fabric, styling co-ord sets, and how small-batch Indian brands make things. From Rose & Co, Gurugram.',
   alternates: { canonical: '/journal' },
   openGraph: {
-    title: 'Journal | Rosé & Co',
+    title: 'Journal | Rose & Co',
     description: 'Guides on satin, styling, and Indian D2C fashion.',
     url: `${SITE.url}/journal`,
     type: 'website',
@@ -34,30 +36,38 @@ export default function JournalIndex() {
           Notes on fabric, fit, and Indian D2C fashion.
         </h1>
         <p className="mt-4 text-espresso/70 max-w-2xl leading-relaxed">
-          What we learned building a small-batch co-ord brand out of Gurugram — fabric details we obsess over, styling that actually works, honest comparisons of what else exists.
+          What we learned building a small-batch co-ord brand out of Gurugram &mdash; fabric details we obsess over, styling that actually works, honest comparisons of what else exists.
         </p>
 
         <div className="mt-12 space-y-8">
           {posts.length === 0 ? (
             <p className="text-espresso/60">No posts yet.</p>
-          ) : posts.map(post => (
+          ) : posts.map((post, idx) => (
             <article key={post.slug} className="border-b border-taupe/20 pb-8">
-              <Link href={`/journal/${post.slug}`} className="block group">
+              <Link href={`/journal/${post.slug}`} prefetch={idx < 3} className="block group">
                 <div className="grid md:grid-cols-3 gap-6">
                   {post.cover && (
                     <div className="relative aspect-[4/3] bg-blush/20 md:col-span-1">
-                      <Image src={post.cover} alt={post.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+                      <Image
+                        src={post.cover}
+                        alt={post.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        loading={idx < 2 ? 'eager' : 'lazy'}
+                        className="object-cover"
+                        quality={75}
+                      />
                     </div>
                   )}
                   <div className={post.cover ? 'md:col-span-2' : 'md:col-span-3'}>
                     <div className="text-xs uppercase tracking-widest text-espresso/60">
-                      {new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} · {post.readingTime}
+                      {new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} &middot; {post.readingTime}
                     </div>
                     <h2 className="font-display text-2xl md:text-3xl text-espresso mt-2 group-hover:text-wine transition">
                       {post.title}
                     </h2>
                     <p className="mt-3 text-espresso/70 leading-relaxed">{post.excerpt}</p>
-                    <div className="mt-4 text-xs uppercase tracking-widest text-wine">Read →</div>
+                    <div className="mt-4 text-xs uppercase tracking-widest text-wine">Read &rarr;</div>
                   </div>
                 </div>
               </Link>

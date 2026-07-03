@@ -1,22 +1,37 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { REVIEWS, daysAgoText } from '@/lib/reviews';
 
 export default function TestimonialsCarousel() {
   const [idx, setIdx] = useState(0);
-  const visible = REVIEWS.slice(0, 6); // show top 6 in rotation
+  const [inView, setInView] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const visible = REVIEWS.slice(0, 6);
+
+  // Only auto-rotate when the carousel is actually on screen
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') { setInView(true); return; }
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.2 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
+    if (!inView) return;
     const t = setInterval(() => setIdx(i => (i + 1) % visible.length), 6000);
     return () => clearInterval(t);
-  }, [visible.length]);
+  }, [inView, visible.length]);
 
   const stars = (n: number) => '\u2605'.repeat(n) + '\u2606'.repeat(5 - n);
 
   return (
-    <div className="relative max-w-2xl mx-auto">
+    <div className="relative max-w-2xl mx-auto" ref={containerRef}>
       <div className="overflow-hidden">
-        <div className="flex transition-transform duration-700 ease-out" style={{ transform: `translateX(-${idx * 100}%)` }}>
+        <div
+          className="flex transition-transform duration-700 ease-out will-change-transform"
+          style={{ transform: `translateX(-${idx * 100}%)` }}
+        >
           {visible.map((r, i) => (
             <div key={i} className="min-w-full px-4">
               <div className="text-wine text-center text-lg tracking-widest">{stars(r.rating)}</div>

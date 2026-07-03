@@ -6,10 +6,22 @@ import { productSchema, breadcrumbSchema, faqSchema } from '@/lib/schemas';
 import type { Metadata } from 'next';
 import { SITE } from '@/lib/constants';
 
-export const revalidate = 60;
+// Static-generate every product page. Regenerate on demand only.
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({
+    where: { active: true },
+    select: { slug: true },
+  });
+  return products.map(p => ({ slug: p.slug }));
+}
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const p = await prisma.product.findUnique({ where: { slug: params.slug } });
+  const p = await prisma.product.findUnique({
+    where: { slug: params.slug },
+    select: { name: true, description: true, price: true, images: true, slug: true },
+  });
   if (!p) return { title: 'Product' };
   return {
     title: `${p.name} - Rs ${p.price} - Hand-painted marble swirl satin`,

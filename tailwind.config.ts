@@ -1,35 +1,32 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  content: [
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
+    './content/**/*.md',
+  ],
   theme: {
     extend: {
       colors: {
-        blush:      '#F4DCD6',
-        rose:       '#B03A4C',
-        champagne:  '#E8D5B7',
-        wine:       '#5C1A2B',
-        ivory:      '#FAF6F0',
-        taupe:      '#8B7568',
-        espresso:   '#2B1810',
+        ivory:     '#FAF6F0',
+        blush:     '#F4DCD6',
+        rose:      '#B03A4C',
+        wine:      '#5C1A2B',
+        espresso:  '#2B1810',
+        taupe:     '#8B7568',
+        champagne: '#D4C4A0',
       },
       fontFamily: {
-        display: ['Georgia', 'Didot', 'serif'],
-        italiana: ['Georgia', 'serif'],
-        sans:    ['system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        sans:    ['var(--font-sans)', 'system-ui', 'sans-serif'],
       },
       animation: {
-        'fade-in':  'fadeIn .5s ease-out',
-        'slide-up': 'slideUp .4s ease-out',
-        'marquee':  'marquee 25s linear infinite',
-      },
-      keyframes: {
-        fadeIn:  { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-        marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
+        marquee: 'marquee 30s linear infinite',
+        'fade-in': 'fadeIn 0.5s ease-out',
       },
     },
   },
   plugins: [],
 };
+
 export default config;

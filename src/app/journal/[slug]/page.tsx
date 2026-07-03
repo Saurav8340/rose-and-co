@@ -7,6 +7,8 @@ import { SITE } from '@/lib/constants';
 import JsonLd from '@/components/JsonLd';
 import type { Metadata } from 'next';
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   return getAllPosts().map(p => ({ slug: p.slug }));
 }
@@ -56,14 +58,23 @@ export default function JournalPost({ params }: { params: { slug: string } }) {
         </nav>
 
         <div className="text-xs uppercase tracking-widest text-espresso/60">
-          {new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} · {post.readingTime}
+          {new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} &middot; {post.readingTime}
         </div>
         <h1 className="font-display text-3xl md:text-5xl text-espresso mt-3 leading-tight">{post.title}</h1>
         <p className="mt-4 text-lg text-espresso/70 leading-relaxed">{post.excerpt}</p>
 
         {post.cover && (
           <div className="mt-8 relative aspect-[16/9] bg-blush/20">
-            <Image src={post.cover} alt={post.title} fill priority sizes="(max-width: 768px) 100vw, 800px" className="object-cover" />
+            <Image
+              src={post.cover}
+              alt={post.title}
+              fill
+              priority
+              fetchPriority="high"
+              sizes="(max-width: 768px) 100vw, 800px"
+              className="object-cover"
+              quality={85}
+            />
           </div>
         )}
 
@@ -74,14 +85,14 @@ export default function JournalPost({ params }: { params: { slug: string } }) {
             <div className="text-xs uppercase tracking-[0.3em] text-wine">The product</div>
             <h3 className="font-display text-2xl text-espresso mt-2">Amara Marble Swirl Co-ord Set</h3>
             <p className="mt-2 text-sm text-espresso/70">
-              What this journal is really about. Hand-painted marble print on soft-drape satin. ₹1,499. Ships from Delhi NCR in 24-48 hours.
+              What this journal is really about. Hand-painted marble print on soft-drape satin. Rs 1,499. Ships from Delhi NCR in 24-48 hours.
             </p>
-            <Link href="/product/amara-marble-swirl-coord-set" className="btn-primary mt-4">See the set →</Link>
+            <Link href="/product/amara-marble-swirl-coord-set" prefetch className="btn-primary mt-4">See the set &rarr;</Link>
           </div>
         </div>
 
         <div className="mt-12">
-          <Link href="/journal" className="text-xs uppercase tracking-widest text-wine underline">← Back to Journal</Link>
+          <Link href="/journal" className="text-xs uppercase tracking-widest text-wine underline">&larr; Back to Journal</Link>
         </div>
       </article>
     </>

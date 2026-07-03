@@ -8,10 +8,14 @@ import CustomerPhotos from '@/components/CustomerPhotos';
 import TestimonialsCarousel from '@/components/TestimonialsCarousel';
 import { organizationSchema, websiteSchema } from '@/lib/schemas';
 
-export const revalidate = 60;
+// ISR — regenerate every 5 minutes at most
+export const revalidate = 300;
 
 export default async function HomePage() {
-  const product = await prisma.product.findUnique({ where: { slug: 'amara-marble-swirl-coord-set' } });
+  const product = await prisma.product.findUnique({
+    where: { slug: 'amara-marble-swirl-coord-set' },
+    select: { name: true, price: true, images: true },
+  });
   const images: string[] = product ? JSON.parse(product.images) : [];
   const hero = images[0] || '/products/amara-front.png';
 
@@ -23,9 +27,9 @@ export default async function HomePage() {
   ];
 
   const facts = [
-    { n: '200',    t: 'sets per drop', d: 'That\'s it. When your size is out, wait for the next drop. No restock guilt trips.' },
+    { n: '200',    t: 'sets per drop', d: 'That is it. When your size is out, wait for the next drop. No restock guilt trips.' },
     { n: '24-48',  t: 'hour dispatch', d: 'Real numbers from our Delhivery pickup data. Not marketing.' },
-    { n: 'Every',  t: 'set checked',   d: 'Loose threads, print smudges, missing labels - we catch them before it leaves the studio.' },
+    { n: 'Every',  t: 'set checked',   d: 'Loose threads, print smudges, missing labels &mdash; we catch them before it leaves the studio.' },
     { n: '7 days', t: 'to return',     d: 'Free pickup by Delhivery. Refund in 5 to 7 working days.' },
   ];
 
@@ -44,15 +48,24 @@ export default async function HomePage() {
               Crop top, high-waist A-line midi. Hand-painted marble swirl on satin that actually has weight. 200 sets, then it&apos;s done.
             </p>
             <div className="mt-8 flex items-center gap-4">
-              <Link href="/product/amara-marble-swirl-coord-set" className="btn-primary">Shop Amara &mdash; {product ? inr(product.price) : 'Rs 1,499'}</Link>
-              <Link href="/product/amara-marble-swirl-coord-set" className="text-sm underline text-espresso">See fabric + fit</Link>
+              <Link href="/product/amara-marble-swirl-coord-set" prefetch className="btn-primary">Shop Amara &mdash; {product ? inr(product.price) : 'Rs 1,499'}</Link>
+              <Link href="/product/amara-marble-swirl-coord-set" prefetch className="text-sm underline text-espresso">See fabric + fit</Link>
             </div>
             <div className="mt-8 flex gap-6 text-xs uppercase tracking-widest text-espresso/60">
               <span>Free shipping</span><span>GST included</span><span>Ships in 24-48 hrs</span>
             </div>
           </div>
           <div className="relative aspect-[3/4] md:aspect-[4/5] max-w-lg mx-auto w-full">
-            <Image src={hero} alt="Amara Marble Swirl Co-ord Set" fill priority sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+            <Image
+              src={hero}
+              alt="Amara Marble Swirl Co-ord Set"
+              fill
+              priority
+              fetchPriority="high"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+              placeholder="empty"
+            />
             <div className="absolute top-4 right-4 badge bg-wine text-ivory">New drop</div>
           </div>
         </div>
@@ -69,7 +82,7 @@ export default async function HomePage() {
           <div className="p-8 bg-blush/20 border border-taupe/10">
             <div className="font-display text-xl text-wine">The print</div>
             <p className="mt-2 text-sm text-espresso/70 leading-relaxed">
-              Hand-painted, three tones - deep rose, wine, warm ivory. Every set is slightly different. Yours will not be identical to the photos. That&apos;s the point.
+              Hand-painted, three tones &mdash; deep rose, wine, warm ivory. Every set is slightly different. Yours will not be identical to the photos. That is the point.
             </p>
           </div>
           <div className="p-8 bg-blush/20 border border-taupe/10">
@@ -96,7 +109,7 @@ export default async function HomePage() {
               <div key={x.t}>
                 <div className="text-5xl font-display text-champagne">{x.n}</div>
                 <div className="mt-2 uppercase tracking-widest text-sm">{x.t}</div>
-                <p className="text-sm text-ivory/60 mt-2 leading-relaxed">{x.d}</p>
+                <p className="text-sm text-ivory/60 mt-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: x.d }} />
               </div>
             ))}
           </div>
@@ -127,7 +140,7 @@ export default async function HomePage() {
           ))}
         </div>
         <div className="text-center mt-8">
-          <Link href="/faq" className="text-sm underline text-wine">See all questions</Link>
+          <Link href="/faq" prefetch={false} className="text-sm underline text-wine">See all questions</Link>
         </div>
       </section>
 
@@ -139,7 +152,7 @@ export default async function HomePage() {
             We test our competitors and write about it. Also fabric science, styling for Indian body types, and the occasional rant.
           </p>
           <div className="mt-6">
-            <Link href="/journal" className="btn-secondary">Read the Journal &rarr;</Link>
+            <Link href="/journal" prefetch={false} className="btn-secondary">Read the Journal &rarr;</Link>
           </div>
         </div>
       </section>

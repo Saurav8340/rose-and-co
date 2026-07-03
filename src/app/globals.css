@@ -2,25 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { --scroll-behavior: smooth; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+:root {
+  --scroll-behavior: smooth;
+  /* Fallback in case next/font vars are missing */
+  --font-display: Georgia, 'Playfair Display', serif;
+  --font-sans: system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeSpeed;
+}
+
 body {
   background: #FAF6F0;
   color: #2B1810;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
+
 ::selection { background: #B03A4C; color: #FAF6F0; }
+
+/* Reserve space for images to avoid layout shift */
+img { max-width: 100%; height: auto; }
+
 .container-x { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+.font-display { font-family: var(--font-display), Georgia, serif; }
 .btn-primary { @apply inline-flex items-center justify-center px-6 py-3 bg-wine text-ivory font-medium tracking-wide uppercase text-sm transition-all hover:bg-rose active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed; }
 .btn-secondary { @apply inline-flex items-center justify-center px-6 py-3 border border-espresso text-espresso font-medium tracking-wide uppercase text-sm transition-all hover:bg-espresso hover:text-ivory; }
 .input { @apply w-full px-4 py-3 bg-white border border-taupe/30 rounded-none focus:outline-none focus:border-wine transition-colors text-espresso placeholder:text-taupe/60; }
 .label { @apply block text-xs uppercase tracking-widest text-espresso/70 mb-2 font-medium; }
 .badge { @apply inline-flex items-center px-2 py-1 text-[10px] uppercase tracking-widest font-semibold; }
 
-.journal-content h2 { font-family: Georgia, 'Playfair Display', serif; font-size: 1.75rem; color: #2B1810; margin-top: 2.5rem; margin-bottom: 1rem; font-weight: 500; }
-.journal-content h3 { font-family: Georgia, 'Playfair Display', serif; font-size: 1.375rem; color: #2B1810; margin-top: 2rem; margin-bottom: 0.75rem; font-weight: 500; }
+/* Journal typography */
+.journal-content h2 { font-family: var(--font-display), Georgia, serif; font-size: 1.75rem; color: #2B1810; margin-top: 2.5rem; margin-bottom: 1rem; font-weight: 500; }
+.journal-content h3 { font-family: var(--font-display), Georgia, serif; font-size: 1.375rem; color: #2B1810; margin-top: 2rem; margin-bottom: 0.75rem; font-weight: 500; }
 .journal-content p { color: rgba(43, 24, 16, 0.85); line-height: 1.75; margin: 1.25rem 0; font-size: 1.05rem; }
 .journal-content ul, .journal-content ol { margin: 1.25rem 0; padding-left: 1.5rem; color: rgba(43, 24, 16, 0.85); line-height: 1.75; }
 .journal-content li { margin: 0.5rem 0; }
@@ -32,3 +49,24 @@ body {
 .journal-content td { padding: 0.75rem; border: 1px solid rgba(139, 117, 104, 0.2); color: rgba(43, 24, 16, 0.85); }
 .journal-content strong { color: #2B1810; font-weight: 600; }
 .journal-content hr { border: none; border-top: 1px solid rgba(139, 117, 104, 0.3); margin: 3rem 0; }
+
+/* Marquee animation for announcement bar */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee { animation: marquee 30s linear infinite; }
+
+/* Smooth fade for hero */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 0.5s ease-out; }
+
+/* Prevent CLS from web fonts */
+@font-face {
+  font-family: 'system-fallback';
+  size-adjust: 100%;
+  src: local('Arial');
+}
