@@ -5,7 +5,7 @@ export const pincodeSchema = z.string().regex(/^[1-9]\d{5}$/, 'Enter valid 6-dig
 
 export const captchaVerifySchema = z.object({
   token:  z.string().min(10),
-  code:   z.string().min(4).max(8),
+  code:   z.string().min(1).max(10),
   mobile: mobileSchema,
 });
 
@@ -29,7 +29,7 @@ export const orderSchema = z.object({
   metaFbc:       z.string().optional().or(z.literal('')),
   metaFbp:       z.string().optional().or(z.literal('')),
   utm:           z.string().max(500).optional().or(z.literal('')),
-  website:       z.string().optional().or(z.literal('')),  // honeypot
+  website:       z.string().optional().or(z.literal('')),
   startedAt:     z.number().int().positive(),
 });
 

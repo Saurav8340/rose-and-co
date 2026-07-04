@@ -8,49 +8,49 @@ datasource db {
 }
 
 model Product {
-  id           String    @id @default(cuid())
-  slug         String    @unique
-  name         String
-  description  String
-  price        Int
-  compareAt    Int?
-  images       String
-  sizes        String
-  active       Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  orderItems   OrderItem[]
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String
+  price       Int
+  compareAt   Int?
+  images      String
+  sizes       String
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
 }
 
 model Order {
-  id              String    @id @default(cuid())
-  orderNumber     String    @unique
-  fullName        String
-  mobile          String
-  email           String?
-  altPhone        String?
-  pincode         String
-  state           String
-  city            String
-  addressLine1    String
-  addressLine2    String?
-  landmark        String?
-  paymentMethod   String
-  paidAmount      Int
-  codAmount       Int
-  totalAmount     Int
-  discountAmount  Int       @default(0)
-  paymentStatus   String    @default("PENDING")
-  orderStatus     String    @default("PLACED")
-  utr             String?
-  notes           String?
-  metaFbc         String?
-  metaFbp         String?
-  utmData         String?
-  capiFired       Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  items           OrderItem[]
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique
+  fullName       String
+  mobile         String
+  email          String?
+  altPhone       String?
+  pincode        String
+  state          String
+  city           String
+  addressLine1   String
+  addressLine2   String?
+  landmark       String?
+  paymentMethod  String
+  paidAmount     Int
+  codAmount      Int
+  totalAmount    Int
+  discountAmount Int         @default(0)
+  paymentStatus  String      @default("PENDING")
+  orderStatus    String      @default("PLACED")
+  utr            String?
+  notes          String?
+  metaFbc        String?
+  metaFbp        String?
+  utmData        String?
+  capiFired      Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  items          OrderItem[]
 
   @@index([mobile])
   @@index([paymentStatus])
@@ -59,15 +59,15 @@ model Order {
 }
 
 model OrderItem {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   orderId     String
   productId   String
   productName String
   size        String
   quantity    Int
   price       Int
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product  @relation(fields: [productId], references: [id])
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
 }
 
 model VerificationSession {

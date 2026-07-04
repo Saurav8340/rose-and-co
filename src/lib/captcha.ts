@@ -1,38 +1,51 @@
-// Server-side captcha generation (mixed alphanumeric)
-export function generateCaptcha(length = 6): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing chars (I,O,0,1)
-  let out = '';
-  for (let i = 0; i < length; i++) {
-    out += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return out;
+// Fast, human-friendly captcha (final v24)
+// 60% math (2 + 3 = ?), 40% 4-char alphanumeric (AB3D)
+
+const SAFE_CHARS = 'ACDEFGHJKMNPQRTUVWXY3467';
+
+export type CaptchaChallenge = {
+  question: string;
+  answer: string;
+  type: 'math' | 'text';
+};
+
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// Simple SVG captcha renderer (server-side; distortion + noise)
-export function renderCaptchaSVG(code: string): string {
-  const w = 220, h = 70;
-  const colors = ['#B03A4C', '#5C1A2B', '#8B7568', '#2B1810'];
-  let chars = '';
-  code.split('').forEach((c, i) => {
-    const x = 22 + i * 30 + (Math.random() * 6 - 3);
-    const y = 45 + (Math.random() * 12 - 6);
-    const rot = (Math.random() * 40 - 20).toFixed(1);
-    const col = colors[Math.floor(Math.random() * colors.length)];
-    const size = 30 + Math.floor(Math.random() * 6);
-    chars += `<text x="${x}" y="${y}" fill="${col}" font-family="Georgia,serif" font-weight="700" font-size="${size}" transform="rotate(${rot} ${x} ${y})">${c}</text>`;
-  });
-  let noise = '';
-  for (let i = 0; i < 6; i++) {
-    const x1 = Math.random() * w, y1 = Math.random() * h;
-    const x2 = Math.random() * w, y2 = Math.random() * h;
-    noise += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#B03A4C" stroke-opacity="0.35" stroke-width="1"/>`;
-  }
-  for (let i = 0; i < 40; i++) {
-    noise += `<circle cx="${Math.random()*w}" cy="${Math.random()*h}" r="1" fill="#5C1A2B" fill-opacity="0.3"/>`;
-  }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-    <rect width="100%" height="100%" fill="#FAF6F0"/>
-    ${noise}
-    ${chars}
-  </svg>`;
+function generateMath(): CaptchaChallenge {
+  const ops = ['+', '-', 'x'];
+  const op = ops[randomInt(0, 2)];
+  let a = randomInt(1, 9);
+  let b = randomInt(1, 9);
+  if (op === '-' && b > a) [a, b] = [b, a];
+  let answer: number;
+  if (op === '+') answer = a + b;
+  else if (op === '-') answer = a - b;
+  else answer = a * b;
+  return { question: `${a} ${op} ${b}`, answer: String(answer), type: 'math' };
+}
+
+function generateText(): CaptchaChallenge {
+  let code = '';
+  for (let i = 0; i < 4; i++) code += SAFE_CHARS[randomInt(0, SAFE_CHARS.length - 1)];
+  return { question: code, answer: code.toLowerCase(), type: 'text' };
+}
+
+export function generateChallenge(): CaptchaChallenge {
+  return Math.random() < 0.6 ? generateMath() : generateText();
+}
+
+export function normalizeAnswer(input: string): string {
+  return String(input || '').trim().toLowerCase().replace(/\s+/g, '');
+}
+
+export function isCorrect(userInput: string, expectedAnswer: string): boolean {
+  return normalizeAnswer(userInput) === normalizeAnswer(expectedAnswer);
+}
+
+// Legacy compat (some old references)
+export function generateCaptcha(): { text: string; svg: string } {
+  const c = generateChallenge();
+  return { text: c.answer, svg: '' };
 }

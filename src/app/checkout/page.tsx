@@ -9,7 +9,6 @@ import { PAYMENT } from '@/lib/constants';
 import { lookupPincode } from '@/lib/pincode';
 import { serializedUtm } from '@/lib/utm';
 import UpiButtons from '@/components/UpiButtons';
-import UpiLogos from '@/components/UpiLogos';
 import CheckoutProgressBar from '@/components/CheckoutProgressBar';
 import GiftWrap from '@/components/GiftWrap';
 
@@ -23,7 +22,7 @@ function readCookie(name: string): string {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, total, clear } = useCart();
+  const { items, clear } = useCart();
   const [step, setStep] = useState<Step>('address');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -39,7 +38,8 @@ export default function CheckoutPage() {
     addressLine1: '', addressLine2: '', landmark: '',
   });
 
-  const [captchaSVG, setCaptchaSVG] = useState<string>('');
+  const [captchaQuestion, setCaptchaQuestion] = useState<string>('');
+  const [captchaType, setCaptchaType] = useState<'math' | 'text'>('math');
   const [captchaToken, setCaptchaToken] = useState<string>('');
   const [captchaInput, setCaptchaInput] = useState<string>('');
 
@@ -49,9 +49,7 @@ export default function CheckoutPage() {
   const [paymentStarted, setPaymentStarted] = useState(false);
   const [returnedFromApp, setReturnedFromApp] = useState(false);
 
-  useEffect(() => {
-    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
-  }, []);
+  useEffect(() => { setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)); }, []);
 
   useEffect(() => {
     const onVis = () => {
@@ -91,16 +89,15 @@ export default function CheckoutPage() {
   const codRemaining = PAYMENT.codRemaining * qty;
 
   const amountToPay = paymentMethod === 'PREPAID' ? prepaidTotal : codDeposit;
-  const orderNote = `RoseAndCo ${form.fullName || 'Order'}${giftWrap ? ' [GIFT-WRAP]' : ''}`.slice(0, 60);
+  const orderNote = ('RoseAndCo ' + (form.fullName || 'Order') + (giftWrap ? ' [GIFT-WRAP]' : '')).slice(0, 60);
 
   const submitAddress = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(null);
     if (!/^[6-9]\d{9}$/.test(form.mobile)) return setErr('Enter valid 10-digit mobile');
     if (!/^[1-9]\d{5}$/.test(form.pincode)) return setErr('Enter valid PIN');
     if (!form.fullName || form.fullName.length < 2) return setErr('Enter your full name');
-    if (!form.addressLine1 || form.addressLine1.length < 5) return setErr('Enter your full address');
-    if (!form.city || !form.state) return setErr('City & State required');
-
+    if (!form.addressLine1 || form.addressLine1.length < 5) return setErr('Enter your address');
+    if (!form.city || !form.state) return setErr('City and state required');
     setLoading(true);
     try {
       const res = await fetch('/api/captcha/generate', {
@@ -109,7 +106,10 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
-      setCaptchaSVG(data.svg); setCaptchaToken(data.token);
+      setCaptchaQuestion(data.question);
+      setCaptchaType(data.type);
+      setCaptchaToken(data.token);
+      setCaptchaInput('');
       setStep('verify');
     } catch (e: any) { setErr(e.message); }
     finally { setLoading(false); }
@@ -123,8 +123,12 @@ export default function CheckoutPage() {
         body: JSON.stringify({ mobile: form.mobile }),
       });
       const data = await res.json();
-      setCaptchaSVG(data.svg); setCaptchaToken(data.token);
-    } finally { setLoading(false); }
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      setCaptchaQuestion(data.question);
+      setCaptchaType(data.type);
+      setCaptchaToken(data.token);
+    } catch (e: any) { setErr(e.message); }
+    finally { setLoading(false); }
   };
 
   const verifyCaptcha = async (e: React.FormEvent) => {
@@ -132,11 +136,10 @@ export default function CheckoutPage() {
     try {
       const res = await fetch('/api/captcha/verify', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: captchaToken, code: captchaInput.toUpperCase(), mobile: form.mobile }),
+        body: JSON.stringify({ token: captchaToken, code: captchaInput, mobile: form.mobile }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Verification failed');
-
       const qrRes = await fetch('/api/payment/upi-qr', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: amountToPay, orderNote }),
@@ -161,40 +164,25 @@ export default function CheckoutPage() {
     if (items.length === 0) return setErr('Cart empty');
     setLoading(true);
     submitting.current = true;
-
     try {
       const it = items[0];
       const res = await fetch('/api/orders/create', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          verificationToken: captchaToken,
-          ...form,
-          paymentMethod,
-          productId: it.productId,
-          size: it.size,
-          quantity: it.quantity,
-          paidConfirmed: true,
-          website: honeypot,
-          startedAt: startedAt.current,
-          metaFbc: readCookie('_fbc'),
-          metaFbp: readCookie('_fbp'),
-          utm: serializedUtm(),
+          verificationToken: captchaToken, ...form,
+          paymentMethod, productId: it.productId, size: it.size, quantity: it.quantity,
+          paidConfirmed: true, website: honeypot, startedAt: startedAt.current,
+          metaFbc: readCookie('_fbc'), metaFbp: readCookie('_fbp'), utm: serializedUtm(),
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Order failed');
-
       setStep('done');
       const successUrl = `/order-success?id=${data.orderNumber}`;
       window.location.href = successUrl;
-      setTimeout(() => {
-        try { clear(); } catch {}
-        router.push(successUrl);
-      }, 500);
-    } catch (e: any) {
-      submitting.current = false;
-      setErr(e.message);
-    } finally { setLoading(false); }
+      setTimeout(() => { try { clear(); } catch {} router.push(successUrl); }, 500);
+    } catch (e: any) { submitting.current = false; setErr(e.message); }
+    finally { setLoading(false); }
   };
 
   const markPaymentStarted = () => setPaymentStarted(true);
@@ -210,9 +198,9 @@ export default function CheckoutPage() {
 
       <div className="flex items-center justify-between mb-8 text-xs uppercase tracking-widest">
         {[
-          { s: 'address', l: '1 - Address' },
-          { s: 'verify',  l: '2 - Verify' },
-          { s: 'payment', l: '3 - Payment' },
+          { s: 'address', l: 'Address' },
+          { s: 'verify',  l: 'Quick check' },
+          { s: 'payment', l: 'Payment' },
         ].map(x => (
           <div key={x.s} className={'flex-1 text-center py-2 border-b-2 ' + (step === x.s ? 'border-wine text-wine' : 'border-taupe/20 text-espresso/40')}>{x.l}</div>
         ))}
@@ -222,7 +210,7 @@ export default function CheckoutPage() {
 
       {step === 'done' && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto rounded-full bg-wine text-ivory flex items-center justify-center text-3xl mb-4">OK</div>
+          <div className="w-16 h-16 mx-auto rounded-full bg-wine text-ivory flex items-center justify-center text-3xl mb-4">&#10003;</div>
           <div className="font-display text-2xl text-espresso">Order placed. Taking you to your confirmation...</div>
         </div>
       )}
@@ -232,17 +220,16 @@ export default function CheckoutPage() {
           <div className="md:col-span-2">
             {step === 'address' && (
               <form onSubmit={submitAddress} className="space-y-4" autoComplete="on">
-                <h2 className="font-display text-2xl text-espresso">Shipping details</h2>
-                <p className="text-xs text-espresso/60">Your browser can auto-fill saved addresses. Tap a field to see suggestions.</p>
+                <h2 className="font-display text-2xl text-espresso">Where should we send it?</h2>
 
                 <div>
-                  <label htmlFor="fullName" className="label">Full name *</label>
+                  <label htmlFor="fullName" className="label">Your name</label>
                   <input id="fullName" name="name" type="text" required autoFocus autoComplete="name" enterKeyHint="next" className="input" value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="mobile" className="label">Mobile *</label>
-                    <input id="mobile" name="tel" type="tel" required inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength={10} autoComplete="tel-national" enterKeyHint="next" className="input" placeholder="10-digit mobile" value={form.mobile} onChange={e => setField('mobile', e.target.value.replace(/\D/g, ''))} />
+                    <label htmlFor="mobile" className="label">Mobile</label>
+                    <input id="mobile" name="tel" type="tel" required inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength={10} autoComplete="tel-national" enterKeyHint="next" className="input" placeholder="10-digit number" value={form.mobile} onChange={e => setField('mobile', e.target.value.replace(/\D/g, ''))} />
                   </div>
                   <div>
                     <label htmlFor="email" className="label">Email (optional)</label>
@@ -251,21 +238,21 @@ export default function CheckoutPage() {
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label htmlFor="pincode" className="label">PIN *</label>
+                    <label htmlFor="pincode" className="label">PIN</label>
                     <input id="pincode" name="postal-code" type="text" required inputMode="numeric" maxLength={6} autoComplete="postal-code" enterKeyHint="next" className="input" value={form.pincode} onChange={e => setField('pincode', e.target.value.replace(/\D/g, ''))} />
                   </div>
                   <div>
-                    <label htmlFor="city" className="label">City *</label>
+                    <label htmlFor="city" className="label">City</label>
                     <input id="city" name="city" type="text" required autoComplete="address-level2" enterKeyHint="next" className="input" value={form.city} onChange={e => setField('city', e.target.value)} />
                   </div>
                   <div>
-                    <label htmlFor="state" className="label">State *</label>
+                    <label htmlFor="state" className="label">State</label>
                     <input id="state" name="state" type="text" required autoComplete="address-level1" enterKeyHint="next" className="input" value={form.state} onChange={e => setField('state', e.target.value)} />
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="addressLine1" className="label">Address line 1 *</label>
-                  <input id="addressLine1" name="address-line1" type="text" required autoComplete="address-line1" enterKeyHint="next" className="input" placeholder="House / flat / building, street" value={form.addressLine1} onChange={e => setField('addressLine1', e.target.value)} />
+                  <label htmlFor="addressLine1" className="label">Address</label>
+                  <input id="addressLine1" name="address-line1" type="text" required autoComplete="address-line1" enterKeyHint="next" className="input" placeholder="House / flat, street" value={form.addressLine1} onChange={e => setField('addressLine1', e.target.value)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -279,85 +266,90 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="pt-3">
-                  <div className="label mb-2">Add-on (optional)</div>
                   <GiftWrap enabled={giftWrap} onChange={setGiftWrap} />
                 </div>
 
                 <button type="submit" disabled={loading} className="btn-primary w-full">
-                  {loading ? 'Please wait...' : 'Continue \u2192'}
+                  {loading ? 'Please wait...' : 'Continue'}
                 </button>
               </form>
             )}
 
             {step === 'verify' && (
-              <form onSubmit={verifyCaptcha} className="space-y-6">
-                <h2 className="font-display text-2xl text-espresso">Quick check</h2>
-                <p className="text-sm text-espresso/70">Type the characters shown below exactly as they appear.</p>
-                <div className="p-6 bg-blush/30 border border-taupe/20 flex items-center gap-4 flex-wrap">
-                  <div dangerouslySetInnerHTML={{ __html: captchaSVG }} className="inline-block" />
-                  <button type="button" onClick={refreshCaptcha} className="text-xs uppercase tracking-widest text-wine underline">Refresh</button>
+              <form onSubmit={verifyCaptcha} className="space-y-6 max-w-md">
+                <h2 className="font-display text-2xl text-espresso">A quick check.</h2>
+                <p className="text-sm text-espresso/70">
+                  {captchaType === 'math' ? 'Solve this to confirm you are a person.' : 'Type the four characters below.'}
+                </p>
+
+                <div className="relative">
+                  <div className="p-8 bg-blush/40 border-2 border-taupe/30 flex items-center justify-center">
+                    <div
+                      className={`select-none font-display text-espresso ${captchaType === 'math' ? 'text-5xl' : 'text-5xl tracking-[0.3em]'}`}
+                      style={{
+                        textShadow: captchaType === 'text' ? '1px 1px 0 rgba(139,117,104,0.15)' : 'none',
+                        letterSpacing: captchaType === 'math' ? '0.15em' : '0.3em',
+                      }}
+                    >
+                      {captchaQuestion}{captchaType === 'math' ? ' = ?' : ''}
+                    </div>
+                  </div>
+                  <button type="button" onClick={refreshCaptcha} disabled={loading}
+                    className="absolute top-2 right-2 text-xs uppercase tracking-widest text-wine underline"
+                    aria-label="Get a new question">
+                    Refresh
+                  </button>
                 </div>
+
                 <div>
-                  <label className="label">Type it here *</label>
-                  <input required autoFocus autoComplete="off" className="input uppercase tracking-[0.3em] text-center text-lg" maxLength={6} value={captchaInput} onChange={e => setCaptchaInput(e.target.value.toUpperCase())} />
+                  <label className="label">Your answer</label>
+                  <input required autoFocus autoComplete="off"
+                    inputMode={captchaType === 'math' ? 'numeric' : 'text'}
+                    className={'input text-center text-2xl ' + (captchaType === 'text' ? 'uppercase tracking-[0.3em]' : '')}
+                    maxLength={captchaType === 'math' ? 4 : 6}
+                    value={captchaInput}
+                    onChange={e => setCaptchaInput(e.target.value)}
+                    placeholder={captchaType === 'math' ? '12' : 'AB3D'} />
                 </div>
+
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setStep('address')} className="btn-secondary">Back</button>
-                  <button type="submit" disabled={loading} className="btn-primary flex-1">{loading ? 'Checking...' : 'Continue \u2192'}</button>
+                  <button type="submit" disabled={loading || !captchaInput} className="btn-primary flex-1">{loading ? 'Checking...' : 'Continue'}</button>
                 </div>
               </form>
             )}
 
             {step === 'payment' && (
               <div className="space-y-6">
-                <h2 className="font-display text-2xl text-espresso">Payment</h2>
+                <h2 className="font-display text-2xl text-espresso">How would you like to pay?</h2>
 
                 <div className="space-y-3">
-                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PREPAID' ? 'border-green-600 bg-green-50' : 'border-taupe/30 bg-white')}>
+                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PREPAID' ? 'border-wine bg-blush/30' : 'border-taupe/30 bg-white')}>
                     <input type="radio" name="pm" className="sr-only" checked={paymentMethod === 'PREPAID'} onChange={() => setPaymentMethod('PREPAID')} />
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <div className="text-xs uppercase tracking-widest text-green-800 font-semibold">Recommended - Save Rs {PAYMENT.prepaidSavings * qty}</div>
-                        <div className="font-display text-lg mt-1 text-espresso">Full prepaid via UPI</div>
-                        <div className="text-sm text-espresso/70 mt-1">Pay <b className="text-espresso">{inr(prepaidTotal)}</b> now. No cash on delivery.</div>
+                        <div className="font-display text-lg text-espresso">Pay in full via UPI</div>
+                        <div className="text-sm text-espresso/70 mt-1">Rs 100 off.</div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-xs line-through text-espresso/40">{inr(fullTotal)}</div>
-                        <div className="text-xl font-semibold text-green-800">{inr(prepaidTotal)}</div>
-                      </div>
+                      <div className="text-xl font-semibold text-wine">{inr(prepaidTotal)}</div>
                     </div>
                   </label>
 
-                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PARTIAL_COD' ? 'border-wine bg-blush/40' : 'border-taupe/30 bg-white')}>
+                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PARTIAL_COD' ? 'border-wine bg-blush/30' : 'border-taupe/30 bg-white')}>
                     <input type="radio" name="pm" className="sr-only" checked={paymentMethod === 'PARTIAL_COD'} onChange={() => setPaymentMethod('PARTIAL_COD')} />
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <div className="text-xs uppercase tracking-widest text-espresso/60 font-semibold">Cash on delivery</div>
-                        <div className="font-display text-lg mt-1 text-espresso">Partial COD</div>
-                        <div className="text-sm text-espresso/70 mt-1">Pay <b>{inr(codDeposit)}</b> now + <b>{inr(codRemaining)}</b> in cash at delivery.</div>
+                        <div className="font-display text-lg text-espresso">Partial cash on delivery</div>
+                        <div className="text-sm text-espresso/70 mt-1">{inr(codDeposit)} now, {inr(codRemaining)} on delivery.</div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-xl font-semibold text-espresso">{inr(fullTotal)}</div>
-                        <div className="text-[10px] text-espresso/50 uppercase tracking-wider">Total</div>
-                      </div>
+                      <div className="text-xl font-semibold text-espresso">{inr(fullTotal)}</div>
                     </div>
                   </label>
                 </div>
 
                 <div className="p-5 bg-ivory border border-taupe/30 text-center">
-                  <div className="text-xs uppercase tracking-widest text-espresso/60">Amount to pay now</div>
+                  <div className="text-xs uppercase tracking-widest text-espresso/60">Pay now</div>
                   <div className="text-4xl font-semibold text-wine mt-1">{inr(amountToPay)}</div>
-                  {giftWrap && <div className="mt-1 text-xs text-espresso/60">Includes Rs 49 gift wrap</div>}
-                  {paymentMethod === 'PARTIAL_COD' && (
-                    <div className="mt-2 text-sm text-espresso/70">Remaining <b>{inr(codRemaining)}</b> in cash at delivery.</div>
-                  )}
-                  {paymentMethod === 'PREPAID' && (
-                    <div className="mt-2 text-sm text-green-800 font-medium">You are saving Rs {PAYMENT.prepaidSavings * qty} with prepaid.</div>
-                  )}
-                </div>
-
-                <div className="flex justify-center py-2">
-                  <UpiLogos />
                 </div>
 
                 {isMobile ? (
@@ -365,36 +357,36 @@ export default function CheckoutPage() {
                     <UpiButtons amount={amountToPay} note={orderNote} />
                   </div>
                 ) : (
-                  <div className="space-y-5">
-                    <div className="p-6 bg-white border border-taupe/30 flex flex-col sm:flex-row items-center gap-6">
-                      {qrData && <img src={qrData} alt="UPI QR Code" width={220} height={220} className="border p-2 shrink-0" />}
-                      <div className="text-sm text-espresso/80 space-y-2">
-                        <div className="text-lg font-display text-wine">Scan with any UPI app</div>
-                        <div>Open GPay, PhonePe, Paytm or any UPI app on your phone. Scan the QR. Pay {inr(amountToPay)}.</div>
-                      </div>
+                  <div className="p-6 bg-white border border-taupe/30 flex flex-col sm:flex-row items-center gap-6">
+                    {qrData && <img src={qrData} alt="UPI QR Code" width={220} height={220} className="border p-2 shrink-0" />}
+                    <div className="text-sm text-espresso/80">
+                      <div className="text-lg font-display text-wine">Scan with any UPI app.</div>
+                      <p className="mt-2">Open GPay, PhonePe, Paytm or any UPI app on your phone. Scan the QR. Pay {inr(amountToPay)}.</p>
                     </div>
                   </div>
                 )}
 
                 <div className={'p-5 border-2 ' + (returnedFromApp ? 'border-wine bg-blush/30 animate-pulse' : 'border-taupe/30 bg-white')}>
-                  <div className="text-xs uppercase tracking-widest text-espresso/70">Step 2</div>
-                  <div className="font-display text-lg text-espresso mt-1">Done paying?</div>
-                  <p className="text-xs text-espresso/60 mt-1">Once you have paid {inr(amountToPay)}, tap the button below. We check the payment within 2 hours.</p>
+                  <div className="font-display text-lg text-espresso">Done paying?</div>
+                  <p className="text-xs text-espresso/60 mt-1">We verify the payment within a couple of hours. Tap below when you have paid.</p>
                   <button type="button" onClick={submitOrder} disabled={loading} className="btn-primary w-full mt-4 text-base">
-                    {loading ? 'Placing order...' : 'I have paid ' + inr(amountToPay) + ' - confirm order'}
+                    {loading ? 'Placing order...' : 'I have paid ' + inr(amountToPay)}
                   </button>
                 </div>
 
                 <div className="flex justify-between items-center">
                   <button type="button" onClick={() => setStep('verify')} className="text-xs uppercase tracking-widest text-espresso/60 underline">Back</button>
-                  <p className="text-[11px] text-espresso/60 text-right">Secure. Accept our <Link href="/terms" className="underline">Terms</Link> and <Link href="/privacy-policy" className="underline">Privacy</Link>.</p>
+                  <p className="text-[11px] text-espresso/60 text-right">
+                    By placing this order you accept our <Link href="/terms" className="underline">terms</Link>.
+                  </p>
                 </div>
               </div>
             )}
           </div>
 
+          {/* Simple, quiet sidebar */}
           <div className="border border-taupe/20 p-6 bg-blush/20 h-fit md:sticky md:top-24">
-            <div className="text-xs uppercase tracking-widest text-espresso/60 mb-4">Order summary</div>
+            <div className="text-xs uppercase tracking-widest text-espresso/60 mb-4">Summary</div>
             {items.map((it, i) => (
               <div key={i} className="flex gap-3 pb-3 border-b border-taupe/20 mb-3">
                 <div className="relative w-16 h-20 bg-ivory shrink-0">
@@ -402,22 +394,17 @@ export default function CheckoutPage() {
                 </div>
                 <div className="text-sm">
                   <div className="text-espresso font-medium">{it.name}</div>
-                  <div className="text-xs text-espresso/60">Size {it.size} - Qty {it.quantity}</div>
+                  <div className="text-xs text-espresso/60">Size {it.size} &middot; Qty {it.quantity}</div>
                   <div className="text-wine font-semibold mt-1">{inr(it.price * it.quantity)}</div>
                 </div>
               </div>
             ))}
             <div className="space-y-1 text-sm">
               <div className="flex justify-between"><span>Subtotal</span><span>{inr(PAYMENT.fullPrice * qty)}</span></div>
-              {giftWrap && (
-                <div className="flex justify-between text-espresso/70"><span>Gift wrap</span><span>+ Rs 49</span></div>
-              )}
+              {giftWrap && (<div className="flex justify-between text-espresso/70"><span>Gift wrap</span><span>+ Rs 49</span></div>)}
               <div className="flex justify-between"><span>Shipping</span><span className="text-wine">Free</span></div>
               {paymentMethod === 'PREPAID' && (
-                <div className="flex justify-between text-green-800">
-                  <span>UPI discount</span>
-                  <span>-{inr(PAYMENT.prepaidSavings * qty)}</span>
-                </div>
+                <div className="flex justify-between text-wine"><span>UPI discount</span><span>-{inr(PAYMENT.prepaidSavings * qty)}</span></div>
               )}
             </div>
             <div className="flex justify-between mt-3 pt-3 border-t border-taupe/30 font-semibold">
