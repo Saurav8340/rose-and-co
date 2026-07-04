@@ -233,3 +233,47 @@ html, body {
   overflow: hidden;
   white-space: nowrap;
 }
+
+/* ============================================================
+   v31 FINAL POLISH — Kill remaining contrast + speed issues
+   Append to bottom of globals.css (or replace v30 block)
+   ============================================================ */
+
+/* Every espresso opacity variant — bumped to WCAG AA compliant */
+.text-espresso\/50,
+[class*="text-espresso/50"] { color: #4A2C2C !important; }
+
+.text-espresso\/60,
+[class*="text-espresso/60"] { color: #3D2323 !important; }
+
+.text-espresso\/70,
+[class*="text-espresso/70"] { color: #2E1A1A !important; }
+
+.text-espresso\/40,
+[class*="text-espresso/40"] { color: #5A3535 !important; }
+
+/* Fix ivory opacity variants used on dark backgrounds */
+.text-ivory\/60,
+[class*="text-ivory/60"] { color: #F5EBDE !important; }
+
+.text-ivory\/70,
+[class*="text-ivory/70"] { color: #F8EFE3 !important; }
+
+/* Fix taupe borders that may lack contrast */
+.border-taupe\/20 { border-color: #C8B8A8 !important; }
+.border-taupe\/30 { border-color: #A89888 !important; }
+
+/* Speed Index fix — swap async font loading */
+@font-face {
+  font-display: swap !important;
+}
+
+/* Prevent forced reflow on Header hover states */
+header nav {
+  will-change: auto;
+}
+
+/* Contain layout shifts on greeting banner */
+.bg-espresso {
+  contain: layout style;
+}

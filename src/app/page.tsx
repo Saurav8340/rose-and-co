@@ -72,10 +72,10 @@ export default async function HomePage() {
 
       <TrustBar />
 
-      <section className="container-x py-20">
+      <section className="container-x py-20" aria-labelledby="collection-heading">
         <div className="max-w-2xl mx-auto text-center">
           <div className="text-xs uppercase tracking-[0.3em] text-wine">The collection</div>
-          <h2 className="font-display text-3xl md:text-5xl mt-3 text-espresso">
+          <h2 id="collection-heading" className="font-display text-3xl md:text-5xl mt-3 text-espresso">
             Two sets. Two moods.
           </h2>
           <p className="mt-4 text-espresso/70">
@@ -89,24 +89,29 @@ export default async function HomePage() {
             const discount = p.compareAt
               ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
               : 0;
+            const firstName = p.name.split(' ')[0];
 
             return (
               <Link
                 key={p.slug}
                 href={`/product/${p.slug}`}
                 prefetch
+                aria-label={`View the ${p.name} product page, priced at ${inr(p.price)}`}
                 className="group block"
               >
                 <div className="relative aspect-[3/4] overflow-hidden bg-blush/20">
                   <Image
                     src={imgs[0]}
-                    alt={p.name}
+                    alt={`${p.name} — hand-painted marble swirl co-ord set`}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover object-top group-hover:scale-105 transition duration-700"
                   />
                   {discount > 0 && (
-                    <span className="absolute top-4 right-4 bg-ivory text-wine text-xs font-semibold px-3 py-1 uppercase tracking-widest">
+                    <span
+                      className="absolute top-4 right-4 bg-ivory text-wine text-xs font-semibold px-3 py-1 uppercase tracking-widest"
+                      aria-label={`${discount} percent off`}
+                    >
                       {discount}% off
                     </span>
                   )}
@@ -117,14 +122,17 @@ export default async function HomePage() {
                     <div className="mt-2 flex items-baseline gap-2">
                       <span className="text-lg font-semibold text-wine">{inr(p.price)}</span>
                       {p.compareAt && (
-                        <span className="text-sm line-through text-espresso/40">
+                        <span className="text-sm line-through text-espresso/40" aria-label={`Original price ${inr(p.compareAt)}`}>
                           {inr(p.compareAt)}
                         </span>
                       )}
                     </div>
                   </div>
-                  <span className="text-sm underline text-espresso group-hover:text-wine transition">
-                    See the set
+                  <span
+                    className="text-sm underline text-espresso group-hover:text-wine transition"
+                    aria-hidden="true"
+                  >
+                    See the {firstName}
                   </span>
                 </div>
               </Link>
@@ -133,10 +141,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="container-x pb-20">
+      <section className="container-x pb-20" aria-labelledby="details-heading">
         <div className="max-w-2xl mx-auto text-center">
           <div className="text-xs uppercase tracking-[0.3em] text-wine">The set</div>
-          <h2 className="font-display text-3xl md:text-5xl mt-3 text-espresso">Three things worth knowing.</h2>
+          <h2 id="details-heading" className="font-display text-3xl md:text-5xl mt-3 text-espresso">Three things worth knowing.</h2>
         </div>
         <div className="grid md:grid-cols-3 gap-8 mt-14 max-w-5xl mx-auto">
           <div>
@@ -160,10 +168,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-espresso text-ivory py-24">
+      <section className="bg-espresso text-ivory py-24" aria-labelledby="how-heading">
         <div className="container-x max-w-4xl text-center">
           <div className="text-xs uppercase tracking-[0.3em] text-champagne">How we work</div>
-          <h2 className="font-display text-3xl md:text-5xl mt-3">Two hundred sets, then we begin again.</h2>
+          <h2 id="how-heading" className="font-display text-3xl md:text-5xl mt-3">Two hundred sets, then we begin again.</h2>
           <p className="mt-6 text-lg text-ivory/70 leading-relaxed max-w-2xl mx-auto">
             A drop lasts as long as it lasts. Every piece is looked at before it leaves the studio. Ships from Gurugram, free anywhere in India, seven days to return if it isn&apos;t right.
           </p>
@@ -172,37 +180,51 @@ export default async function HomePage() {
 
       <CustomerPhotos />
 
-      <section className="container-x py-20 bg-blush/10">
+      <section className="container-x py-20 bg-blush/10" aria-labelledby="reviews-heading">
         <div className="text-center max-w-xl mx-auto">
           <div className="text-xs uppercase tracking-[0.3em] text-wine">Notes from buyers</div>
-          <h2 className="font-display text-3xl md:text-5xl mt-3 text-espresso">What they told us after.</h2>
+          <h2 id="reviews-heading" className="font-display text-3xl md:text-5xl mt-3 text-espresso">What they told us after.</h2>
         </div>
         <div className="mt-12"><TestimonialsCarousel /></div>
       </section>
 
-      <section className="container-x py-20 max-w-2xl">
-        <h2 className="font-display text-3xl md:text-4xl text-espresso text-center">A few questions.</h2>
+      <section className="container-x py-20 max-w-2xl" aria-labelledby="faqs-heading">
+        <h2 id="faqs-heading" className="font-display text-3xl md:text-4xl text-espresso text-center">A few questions.</h2>
         <div className="mt-10 space-y-3">
           {faqs.map(([q, a]) => (
             <details key={q} className="border-b border-taupe/20 pb-4 pt-4 group">
               <summary className="cursor-pointer flex justify-between text-espresso font-medium text-[15px]">
-                {q}<span className="group-open:rotate-45 transition-transform text-wine">+</span>
+                {q}<span className="group-open:rotate-45 transition-transform text-wine" aria-hidden="true">+</span>
               </summary>
               <p className="mt-3 text-sm text-espresso/70 leading-[1.8]">{a}</p>
             </details>
           ))}
         </div>
         <div className="text-center mt-10">
-          <Link href="/faq" prefetch={false} className="text-sm underline text-wine">All the questions</Link>
+          <Link
+            href="/faq"
+            prefetch={false}
+            aria-label="Read all frequently asked questions"
+            className="text-sm underline text-wine"
+          >
+            All the questions
+          </Link>
         </div>
       </section>
 
-      <section className="container-x pb-24">
+      <section className="container-x pb-24" aria-labelledby="journal-heading">
         <div className="bg-blush/40 p-10 md:p-16 text-center max-w-3xl mx-auto">
           <div className="text-xs uppercase tracking-[0.3em] text-wine">The journal</div>
-          <h2 className="font-display text-3xl md:text-4xl mt-3 text-espresso">On fabric, fit, and other quiet obsessions.</h2>
+          <h2 id="journal-heading" className="font-display text-3xl md:text-4xl mt-3 text-espresso">On fabric, fit, and other quiet obsessions.</h2>
           <div className="mt-6">
-            <Link href="/journal" prefetch={false} className="btn-secondary">Read a while</Link>
+            <Link
+              href="/journal"
+              prefetch={false}
+              aria-label="Read the Rosé and Co journal"
+              className="btn-secondary"
+            >
+              Read a while
+            </Link>
           </div>
         </div>
       </section>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import JsonLd from '@/components/JsonLd';
 import { CartProvider } from '@/components/CartContext';
 import { WishlistProvider } from '@/components/WishlistContext';
@@ -48,7 +49,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://api.postalpincode.in" />
       </head>
       <body>
-        {/* Skip to main content — invisible until keyboard focus */}
         <a href="#main-content" className="skip-link">Skip to main content</a>
 
         <JsonLd data={localBusinessJsonLd()} />
@@ -60,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <main id="main-content" role="main">
               {children}
             </main>
+            <Footer />
             <SocialProof />
             <WhatsAppButton />
           </WishlistProvider>
