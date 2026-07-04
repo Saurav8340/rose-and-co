@@ -108,3 +108,50 @@ model BlockedPincode {
   reason    String
   createdAt DateTime @default(now())
 }
+
+model Review {
+  id          String   @id @default(cuid())
+  productSlug String
+  orderId     String?
+  rating      Int
+  name        String
+  city        String?
+  title       String
+  body        String
+  photos      String
+  size        String?
+  verified    Boolean  @default(false)
+  approved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([productSlug])
+  @@index([approved])
+  @@index([createdAt])
+}
+
+model Referral {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  referrerName  String
+  referrerEmail String?
+  referrerPhone String?
+  invitesUsed   Int      @default(0)
+  creditsEarned Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([code])
+}
+
+model LoyaltyPoints {
+  id          String   @id @default(cuid())
+  customerId  String   @unique
+  points      Int      @default(0)
+  totalSpent  Int      @default(0)
+  totalOrders Int      @default(0)
+  tier        String   @default("bronze")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([tier])
+}

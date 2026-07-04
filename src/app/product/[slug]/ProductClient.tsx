@@ -17,6 +17,9 @@ import { addRecentlyViewed } from '@/lib/recentlyViewed';
 import { useCart } from '@/components/CartContext';
 import { inr } from '@/lib/format';
 import { PAYMENT, SITE } from '@/lib/constants';
+import ReviewsSection from '@/components/ReviewsSection';
+import InventoryCountdown from '@/components/InventoryCountdown';
+import SizeGuideModal from '@/components/SizeGuideModal';
 
 type Product = {
   id: string; slug: string; name: string; description: string;
@@ -61,7 +64,7 @@ export default function ProductClient({ product }: { product: Product }) {
   return (
     <>
       <div className="container-x py-6 md:py-10">
-        <nav className="text-xs uppercase tracking-widest text-espresso/60 mb-6">
+        <nav className="text-xs uppercase tracking-widest text-espresso/60 mb-6" aria-label="Breadcrumb">
           <a href="/">Home</a> / <span className="text-espresso">{product.name}</span>
         </nav>
         <div className="grid md:grid-cols-2 gap-8 md:gap-12">
@@ -86,16 +89,23 @@ export default function ProductClient({ product }: { product: Product }) {
               </div>
             </div>
 
+            {/* v34: Inventory countdown — replaces old "Only X left" line */}
+            <InventoryCountdown productSlug={product.slug} totalStock={totalStock} />
+
             <ShipsInCounter />
 
-            {totalStock > 0 && totalStock <= 20 && (
-              <div className="text-sm text-wine">Only {totalStock} left across all sizes.</div>
-            )}
             {totalStock === 0 && (
               <div className="text-sm text-wine">This drop is sold out. Next drop in four to six weeks.</div>
             )}
 
-            <SizeSelector sizes={product.sizes} value={size} onChange={setSize} />
+            {/* v34: Size selector with modal size guide button */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="label">Size</div>
+                <SizeGuideModal />
+              </div>
+              <SizeSelector sizes={product.sizes} value={size} onChange={setSize} />
+            </div>
 
             <div>
               <div className="label">Quantity</div>
@@ -155,7 +165,11 @@ export default function ProductClient({ product }: { product: Product }) {
           </div>
         </div>
       </div>
-      <StickyBuyBar price={displayPrice} onBuy={doBuyNow} />
+
+      {/* v34: Reviews section — auto-loads from /api/reviews/list */}
+      <ReviewsSection productSlug={product.slug} />
+
+      <StickyBuyBar price={displayPrice} onBuy={doBuyNow} productName={product.name} />
       <div className="h-20 md:hidden" />
       <RecentlyViewed currentSlug={product.slug} />
     </>

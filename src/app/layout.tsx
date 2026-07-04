@@ -9,6 +9,8 @@ import GreetingBanner from '@/components/GreetingBanner';
 import PersonalizedDiscount from '@/components/PersonalizedDiscount';
 import SocialProof from '@/components/SocialProof';
 import WhatsAppButton from '@/components/WhatsAppButton';
+import LeadCaptureChip from '@/components/LeadCaptureChip';
+import CartAbandonmentTracker from '@/components/CartAbandonmentTracker';
 import { localBusinessJsonLd, BRAND } from '@/lib/seo';
 
 export const metadata: Metadata = {
@@ -17,12 +19,7 @@ export const metadata: Metadata = {
     default: 'Rosé & Co - Hand-painted Marble Swirl Co-ord Sets',
     template: '%s | Rosé & Co',
   },
-  description: 'Hand-painted marble swirl satin co-ord sets. Two hundred pieces per drop. Ships from Gurugram in 24-48 hours. Free shipping across India.',
-  keywords: ['Rosé & Co', 'marble swirl co-ord', 'satin co-ord set', 'premium co-ord India', 'buy co-ord online India', 'Gurugram fashion brand'],
-  authors: [{ name: BRAND.name }],
-  creator: BRAND.name,
-  publisher: BRAND.name,
-  formatDetection: { email: false, address: false, telephone: false },
+  description: 'Hand-painted marble swirl satin co-ord sets. Ships from Gurugram in 24-48 hours. Free shipping across India.',
   openGraph: {
     type: 'website',
     locale: 'en_IN',
@@ -34,8 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: { card: 'summary_large_image' },
   robots: {
-    index: true,
-    follow: true,
+    index: true, follow: true,
     googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
   },
 };
@@ -63,6 +59,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Footer />
             <SocialProof />
             <WhatsAppButton />
+            <LeadCaptureChip />
+            <CartAbandonmentTracker />
           </WishlistProvider>
         </CartProvider>
       </body>

@@ -8,10 +8,20 @@ import { SITE } from '@/lib/constants';
 
 export const revalidate = 300;
 
+
 export async function generateStaticParams() {
-  const products = await prisma.product.findMany({ where: { active: true }, select: { slug: true } });
-  return products.map(p => ({ slug: p.slug }));
+  try {
+    const products = await prisma.product.findMany({
+      where: { active: true },
+      select: { slug: true },
+    });
+    return products.map((p) => ({ slug: p.slug }));
+  } catch (err) {
+    console.warn('DB not reachable at build time, using empty params', err);
+    return []; // fallback — pages will still be generated on-demand
+  }
 }
+
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const p = await prisma.product.findUnique({

@@ -14,6 +14,14 @@ export default function StickyBuyBar({ price, compareAt, onBuy, onBuyClick, prod
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    // Show immediately on mobile — no scroll requirement
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setShow(true);
+      return;
+    }
+
+    // On desktop, only show after scrolling
     const handleScroll = () => setShow(window.scrollY > 400);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -29,7 +37,7 @@ export default function StickyBuyBar({ price, compareAt, onBuy, onBuyClick, prod
   return (
     <div className="md:hidden fixed bottom-0 inset-x-0 bg-ivory border-t border-taupe/20 shadow-2xl z-40 p-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {productName && (
             <div className="text-xs text-espresso/70 truncate">{productName}</div>
           )}
