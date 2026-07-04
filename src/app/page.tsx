@@ -7,19 +7,55 @@ import TrustBar from '@/components/TrustBar';
 import JsonLd from '@/components/JsonLd';
 import CustomerPhotos from '@/components/CustomerPhotos';
 import TestimonialsCarousel from '@/components/TestimonialsCarousel';
+import HeroSlideshow from '@/components/HeroSlideshow';
 import { organizationSchema, websiteSchema } from '@/lib/schemas';
 
 export const revalidate = 300;
 
+const EDITORIAL: Record<string, { tagline: string; title: string; sub: string }> = {
+  'amara-marble-swirl-coord-set': {
+    tagline: 'A new drop',
+    title: 'Poured in rosé.\nWorn in fire.',
+    sub: 'Hand-painted marble swirl on satin that actually has weight. Two hundred sets, and then we begin again.',
+  },
+  'aarna-beige-marble-swirl-coord-set': {
+    tagline: 'A quieter drop',
+    title: 'Cast in caramel.\nKept in calm.',
+    sub: 'Warm marble on satin that actually has weight. Slow mornings, long lunches, the kind of day that does not rush.',
+  },
+};
+
 export default async function HomePage() {
-  const product = await prisma.product.findUnique({
-    where: { slug: 'amara-marble-swirl-coord-set' },
-    select: { name: true, price: true, compareAt: true, images: true },
+  const products = await prisma.product.findMany({
+    where: { active: true },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      slug: true,
+      name: true,
+      price: true,
+      compareAt: true,
+      images: true,
+    },
   });
-  const images = product ? JSON.parse(product.images) : [];
-  const hero = images[0] || '/products/amara-front.png';
-  const mrp = product?.compareAt || PAYMENT.mrp;
-  const sp  = product?.price || PAYMENT.fullPrice;
+
+  const slides = products.map((p) => {
+    const imgs = JSON.parse(p.images) as string[];
+    const editorial = EDITORIAL[p.slug] || {
+      tagline: 'A new drop',
+      title: p.name,
+      sub: 'One-of-a-kind. Handcrafted in Delhi NCR. Two hundred sets, then we begin again.',
+    };
+    return {
+      slug: p.slug,
+      name: p.name,
+      hero: imgs[0] || '/products/amara-front.png',
+      price: p.price || PAYMENT.fullPrice,
+      mrp: p.compareAt || PAYMENT.mrp,
+      tagline: editorial.tagline,
+      title: editorial.title,
+      sub: editorial.sub,
+    };
+  });
 
   const faqs = [
     ['When will it arrive?', 'Metros, three to five working days. Smaller cities, five to seven. Ships from Gurugram within forty-eight hours of your order.'],
@@ -32,36 +68,72 @@ export default async function HomePage() {
     <>
       <JsonLd data={[organizationSchema(), websiteSchema()]} />
 
-      <section className="relative bg-blush/40">
-        <div className="container-x grid md:grid-cols-2 gap-8 items-center py-12 md:py-20">
-          <div>
-            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-4">A new drop</div>
-            <h1 className="font-display text-5xl md:text-7xl leading-[1.05] text-espresso">
-              Poured in ros&eacute;.<br/>Worn in fire.
-            </h1>
-            <p className="mt-6 text-lg text-espresso/70 max-w-md leading-relaxed">
-              Hand-painted marble swirl on satin that actually has weight. Two hundred sets, and then we begin again.
-            </p>
-
-            <div className="mt-8 flex items-baseline gap-3">
-              <span className="text-3xl font-semibold text-wine">{inr(sp)}</span>
-              <span className="text-base line-through text-espresso/40">{inr(mrp)}</span>
-            </div>
-
-            <div className="mt-6 flex items-center gap-4">
-              <Link href="/product/amara-marble-swirl-coord-set" prefetch className="btn-primary">Shop the Amara</Link>
-              <Link href="/product/amara-marble-swirl-coord-set" prefetch className="text-sm underline text-espresso">See the set</Link>
-            </div>
-          </div>
-          <div className="relative aspect-[3/4] md:aspect-[4/5] max-w-lg mx-auto w-full">
-            <Image src={hero} alt="Amara Marble Swirl Co-ord Set" fill priority fetchPriority="high" sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
-          </div>
-        </div>
-      </section>
+      <HeroSlideshow slides={slides} />
 
       <TrustBar />
 
       <section className="container-x py-20">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="text-xs uppercase tracking-[0.3em] text-wine">The collection</div>
+          <h2 className="font-display text-3xl md:text-5xl mt-3 text-espresso">
+            Two sets. Two moods.
+          </h2>
+          <p className="mt-4 text-espresso/70">
+            Same fabric philosophy. Different quiet obsessions.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 mt-14 max-w-5xl mx-auto">
+          {products.map((p) => {
+            const imgs = JSON.parse(p.images) as string[];
+            const discount = p.compareAt
+              ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
+              : 0;
+
+            return (
+              <Link
+                key={p.slug}
+                href={`/product/${p.slug}`}
+                prefetch
+                className="group block"
+              >
+                <div className="relative aspect-[3/4] overflow-hidden bg-blush/20">
+                  <Image
+                    src={imgs[0]}
+                    alt={p.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover object-top group-hover:scale-105 transition duration-700"
+                  />
+                  {discount > 0 && (
+                    <span className="absolute top-4 right-4 bg-ivory text-wine text-xs font-semibold px-3 py-1 uppercase tracking-widest">
+                      {discount}% off
+                    </span>
+                  )}
+                </div>
+                <div className="mt-5 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-display text-2xl text-espresso">{p.name}</h3>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-lg font-semibold text-wine">{inr(p.price)}</span>
+                      {p.compareAt && (
+                        <span className="text-sm line-through text-espresso/40">
+                          {inr(p.compareAt)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-sm underline text-espresso group-hover:text-wine transition">
+                    See the set
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="container-x pb-20">
         <div className="max-w-2xl mx-auto text-center">
           <div className="text-xs uppercase tracking-[0.3em] text-wine">The set</div>
           <h2 className="font-display text-3xl md:text-5xl mt-3 text-espresso">Three things worth knowing.</h2>
@@ -70,7 +142,7 @@ export default async function HomePage() {
           <div>
             <div className="font-display text-xl text-wine">The print</div>
             <p className="mt-3 text-[15px] text-espresso/75 leading-[1.8]">
-              Hand-painted, one panel at a time. Three tones &mdash; deep rose, wine, warm ivory &mdash; that arrange themselves differently on every set. Yours will not be the one in the photo. That is the point.
+              Hand-painted, one panel at a time. Every set arranges itself differently. Yours will not be the one in the photo. That is the point.
             </p>
           </div>
           <div>

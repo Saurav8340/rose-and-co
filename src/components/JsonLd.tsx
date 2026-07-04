@@ -1,12 +1,16 @@
-export default function JsonLd({ data }: { data: object | object[] }) {
-  const payload = Array.isArray(data) ? data : [data];
+import Script from 'next/script';
+
+export default function JsonLd({ data }: { data: any | any[] }) {
+  const items = Array.isArray(data) ? data : [data];
   return (
     <>
-      {payload.map((d, i) => (
-        <script
+      {items.map((item, i) => (
+        <Script
           key={i}
+          id={`jsonld-${i}`}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(d) }}
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(item) }}
         />
       ))}
     </>

@@ -1,9 +1,17 @@
 import type { MetadataRoute } from 'next';
-import { SITE } from '@/lib/constants';
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/admin/', '/api/', '/checkout', '/cart'] }],
-    sitemap: `${SITE.url}/sitemap.xml`,
+    rules: [
+      { userAgent: '*', allow: '/', disallow: ['/api/', '/admin/', '/cart', '/checkout'] },
+      { userAgent: 'GPTBot', allow: '/' },
+      { userAgent: 'PerplexityBot', allow: '/' },
+      { userAgent: 'ClaudeBot', allow: '/' },
+      { userAgent: 'Google-Extended', allow: '/' },
+      { userAgent: 'CCBot', allow: '/' },
+      { userAgent: 'anthropic-ai', allow: '/' },
+    ],
+    sitemap: 'https://rose-and-co.vercel.app/sitemap.xml',
+    host: 'https://rose-and-co.vercel.app',
   };
 }
