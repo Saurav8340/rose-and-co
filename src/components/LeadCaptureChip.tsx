@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { generateCoupon } from '@/lib/coupon';
 
@@ -48,8 +48,6 @@ export default function LeadCaptureChip() {
     setEmail(localStorage.getItem('rc_email') || '');
     setPhone(localStorage.getItem('rc_phone') || '');
 
-    // Delay to 8 seconds - after LCP + first meaningful interaction
-    // Uses requestIdleCallback for non-blocking scheduling
     const schedule = (cb: () => void) => {
       if ('requestIdleCallback' in window) {
         (window as any).requestIdleCallback(cb, { timeout: 8000 });
@@ -63,9 +61,9 @@ export default function LeadCaptureChip() {
 
   useEffect(() => {
     if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
-      fetch(`https://api.postalpincode.in/pincode/${pincode}`)
-        .then(r => r.json())
-        .then(data => {
+      fetch('https://api.postalpincode.in/pincode/' + pincode)
+        .then((r) => r.json())
+        .then((data) => {
           if (data[0]?.Status === 'Success' && data[0].PostOffice?.[0]) {
             const p = data[0].PostOffice[0];
             setCity(p.District || p.Block || '');
@@ -130,15 +128,8 @@ export default function LeadCaptureChip() {
 
   const modal = (
     <>
-      <div
-        className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
-        onClick={stage === 'ask' ? handleNo : undefined}
-        style={{ willChange: 'auto' }}
-      />
-      <div
-        className="fixed inset-x-4 bottom-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-sm md:w-full bg-ivory shadow-2xl border border-taupe/20 z-50 overflow-hidden"
-        style={{ willChange: 'transform', contain: 'layout paint' }}
-      >
+      <div className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm" onClick={stage === 'ask' ? handleNo : undefined} />
+      <div className="fixed inset-x-4 bottom-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-sm md:w-full bg-ivory shadow-2xl border border-taupe/20 z-50 overflow-hidden">
         {stage === 'ask' && (
           <div className="p-6 relative">
             <button onClick={handleNo} aria-label="Dismiss" className="absolute top-3 right-3 text-espresso/50 hover:text-espresso text-2xl leading-none">×</button>
