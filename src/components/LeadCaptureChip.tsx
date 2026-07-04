@@ -1,53 +1,103 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { captureVisitor, updateLead, attachUnloadBeacon } from '@/lib/analytics';
+import { useEffect, useRef, useState } from 'react';
 import { generateCoupon } from '@/lib/coupon';
 
+// Sends full data to backend
+async function saveLead(data: Record<string, any>) {
+  try {
+    await fetch('/api/leads/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      keepalive: true,
+    });
+  } catch {}
+}
+
+function getSessionId(): string {
+  let id = sessionStorage.getItem('rc_session_id');
+  if (!id) {
+    id = 'sess_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+    sessionStorage.setItem('rc_session_id', id);
+  }
+  return id;
+}
+
 export default function LeadCaptureChip() {
-  const [stage, setStage] = useState<'hidden' | 'ask' | 'form' | 'done'>('hidden');
+  const [open, setOpen] = useState(false);
+  const [stage, setStage] = useState<'ask' | 'form' | 'done'>('ask');
+  const [coupon, setCoupon] = useState('WELCOME10');
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Pre-fill fields from localStorage (if user returns)
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [coupon, setCoupon] = useState('WELCOME10');
+  const [pincode, setPincode] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [address, setAddress] = useState('');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Capture visitor silently + attach unload beacon
-    captureVisitor();
-    attachUnloadBeacon();
+    // GATE 1: Already captured on this device? Skip forever.
+    if (localStorage.getItem('rc_lead_captured') === '1') {
+      return;
+    }
 
-    // Preload from localStorage
+    // Pre-fill from any previously stored partial data
     setName(localStorage.getItem('rc_name') || '');
     setEmail(localStorage.getItem('rc_email') || '');
     setPhone(localStorage.getItem('rc_phone') || '');
 
-    if (sessionStorage.getItem('rc_chip_shown')) return;
-    if (localStorage.getItem('rc_opted_in')) return;
-
-    const timer = setTimeout(() => {
-      setStage('ask');
-      sessionStorage.setItem('rc_chip_shown', '1');
-    }, 6000);
-
+    // Show after 5 seconds
+    const timer = setTimeout(() => setOpen(true), 5000);
     return () => clearTimeout(timer);
   }, []);
 
+  // Auto-fetch city/state when 6-digit PIN entered (India Postal API - free)
+  useEffect(() => {
+    if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
+      fetch(`https://api.postalpincode.in/pincode/${pincode}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data[0]?.Status === 'Success' && data[0].PostOffice?.[0]) {
+            const p = data[0].PostOffice[0];
+            setCity(p.District || p.Block || '');
+            setState(p.State || '');
+          }
+        })
+        .catch(() => {});
+    }
+  }, [pincode]);
+
   const handleYes = () => {
-    updateLead({ optedIn: true });
     setStage('form');
+    // Save Yes click immediately
+    saveLead({
+      sessionId: getSessionId(),
+      optedIn: true,
+      timestamp: Date.now(),
+    });
   };
 
   const handleNo = () => {
-    updateLead({ chipDismissed: true, optedIn: false });
-    localStorage.setItem('rc_chip_declined', '1');
-    setStage('hidden');
+    // Mark declined so we don't ask again this session
+    localStorage.setItem('rc_lead_declined', '1');
+    localStorage.setItem('rc_lead_captured', '1'); // Also block future asks
+    saveLead({
+      sessionId: getSessionId(),
+      chipDismissed: true,
+      timestamp: Date.now(),
+    });
+    setOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim().length < 2) return;
+    if (name.trim().length < 2 || phone.length !== 10) return;
 
     const cleanName = name.trim();
     const code = generateCoupon({
@@ -56,118 +106,188 @@ export default function LeadCaptureChip() {
       discountPct: 10,
     });
 
-    // Persist locally
+    // Persist everything locally for future autofill
     localStorage.setItem('rc_name', cleanName);
+    localStorage.setItem('rc_phone', phone);
     if (email) localStorage.setItem('rc_email', email);
-    if (phone) localStorage.setItem('rc_phone', phone);
+    if (pincode) localStorage.setItem('rc_pincode', pincode);
+    if (city) localStorage.setItem('rc_city', city);
+    if (state) localStorage.setItem('rc_state', state);
+    if (address) localStorage.setItem('rc_address', address);
     localStorage.setItem('rc_active_code', code);
     localStorage.setItem('rc_active_discount', '10');
-    localStorage.setItem('rc_opted_in', '1');
 
-    // Send to backend
-    updateLead({
+    // GATE 2: Mark captured forever on this device
+    localStorage.setItem('rc_lead_captured', '1');
+    localStorage.setItem('rc_lead_captured_at', String(Date.now()));
+
+    // Send FULL data to backend
+    await saveLead({
+      sessionId: getSessionId(),
       name: cleanName,
+      phone,
       email: email || undefined,
-      phone: phone || undefined,
+      pincode: pincode || undefined,
+      city: city || undefined,
+      state: state || undefined,
+      addressLine1: address || undefined,
       couponCode: code,
       couponPct: 10,
       segment: 'real_intent',
+      optedIn: true,
+      timestamp: Date.now(),
     });
 
     setCoupon(code);
     setStage('done');
-    setTimeout(() => setStage('hidden'), 5000);
+    setTimeout(() => setOpen(false), 4000);
   };
 
-  if (stage === 'hidden') return null;
+  if (!open) return null;
 
   return (
-    <div className="fixed bottom-24 md:bottom-6 left-4 md:left-6 max-w-xs bg-ivory shadow-2xl border border-taupe/20 z-30 overflow-hidden">
-      {stage === 'ask' && (
-        <div className="p-4 relative">
-          <button
-            onClick={handleNo}
-            aria-label="Dismiss"
-            className="absolute top-2 right-2 text-espresso/50 hover:text-espresso text-lg leading-none"
-          >×</button>
-          <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">A small favour</div>
-          <p className="text-sm text-espresso mb-4 leading-relaxed">
-            Can we send you a personal 10% off code?
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={handleYes}
-              className="flex-1 bg-wine text-ivory py-2 text-xs uppercase tracking-widest hover:bg-espresso transition"
-            >
-              Yes, please
-            </button>
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+        onClick={stage === 'ask' ? handleNo : undefined}
+      />
+
+      {/* Modal - center on desktop, bottom sheet on mobile */}
+      <div className="fixed inset-x-4 bottom-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-sm md:w-full bg-ivory shadow-2xl border border-taupe/20 z-50 overflow-hidden animate-in slide-in-from-bottom-4 md:slide-in-from-bottom-0 duration-300">
+
+        {stage === 'ask' && (
+          <div className="p-6 relative">
             <button
               onClick={handleNo}
-              className="px-4 py-2 text-xs uppercase tracking-widest text-espresso/60 hover:text-espresso"
-            >
-              Not now
-            </button>
+              aria-label="Dismiss"
+              className="absolute top-3 right-3 text-espresso/50 hover:text-espresso text-2xl leading-none"
+            >×</button>
+            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">A small welcome</div>
+            <h3 className="font-display text-2xl text-espresso mb-3">
+              10% off your first set?
+            </h3>
+            <p className="text-sm text-espresso/70 mb-6 leading-relaxed">
+              Your browser will fill everything. One tap, code is yours.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleYes}
+                className="flex-1 bg-wine text-ivory py-3 uppercase tracking-widest text-sm font-medium hover:bg-espresso transition"
+              >
+                Yes, send code
+              </button>
+              <button
+                onClick={handleNo}
+                className="px-4 py-3 text-xs uppercase tracking-widest text-espresso/60 hover:text-espresso"
+              >
+                No
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {stage === 'form' && (
-        <form onSubmit={handleSubmit} className="p-4" autoComplete="on">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">One quick moment</div>
-          <p className="text-sm text-espresso mb-3">Fill what you like. We autofill the rest.</p>
+        {stage === 'form' && (
+          <form ref={formRef} onSubmit={handleSubmit} className="p-6" autoComplete="on">
+            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">One quick moment</div>
+            <p className="text-sm text-espresso/70 mb-4 leading-relaxed">
+              Tap any field. Your browser fills the rest.
+            </p>
 
-          <input
-            type="text" autoFocus required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
-            autoComplete="given-name"
-            name="given-name"
-            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none text-sm mb-2"
-          />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email (optional)"
-            autoComplete="email"
-            name="email"
-            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none text-sm mb-2"
-          />
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
-            placeholder="Phone (optional)"
-            autoComplete="tel-national"
-            name="tel"
-            maxLength={10}
-            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none text-sm mb-3"
-          />
+            {/* All fields visible so browser autofill offers ALL at once */}
+            <div className="space-y-2">
+              <input
+                type="text"
+                autoFocus required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Full name"
+                autoComplete="name"
+                name="name"
+                className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+              />
+              <input
+                type="tel"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="Phone (10 digits)"
+                autoComplete="tel-national"
+                name="tel"
+                maxLength={10}
+                inputMode="numeric"
+                className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+              />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                autoComplete="email"
+                name="email"
+                className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+              />
+              <div className="grid grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="PIN"
+                  autoComplete="postal-code"
+                  name="postal-code"
+                  maxLength={6}
+                  inputMode="numeric"
+                  className="col-span-1 border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                />
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="City"
+                  autoComplete="address-level2"
+                  name="city"
+                  className="col-span-2 border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                />
+              </div>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Address (optional)"
+                autoComplete="street-address"
+                name="street-address"
+                className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={name.trim().length < 2}
-            className="w-full bg-wine text-ivory py-2 text-xs uppercase tracking-widest hover:bg-espresso transition disabled:opacity-40"
-          >
-            Send my code
-          </button>
-          <p className="text-[10px] text-espresso/50 mt-2 text-center">
-            Your browser can autofill these fields.
-          </p>
-        </form>
-      )}
+            <button
+              type="submit"
+              disabled={name.trim().length < 2 || phone.length !== 10}
+              className="mt-4 w-full bg-wine text-ivory py-3 uppercase tracking-widest text-sm font-medium hover:bg-espresso transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Continue
+            </button>
+            <p className="text-[10px] text-espresso/50 mt-2 text-center">
+              We save this once. You never see this again.
+            </p>
+          </form>
+        )}
 
-      {stage === 'done' && (
-        <div className="p-4 text-center">
-          <div className="text-2xl mb-2">🌹</div>
-          <p className="text-sm text-espresso mb-1">
-            Ready, {name || 'friend'}.
-          </p>
-          <p className="text-xs text-espresso/70 mb-2">Auto-applied at checkout.</p>
-          <div className="font-mono font-semibold text-wine text-lg">{coupon}</div>
-        </div>
-      )}
-    </div>
+        {stage === 'done' && (
+          <div className="p-8 text-center">
+            <div className="text-3xl mb-3">🌹</div>
+            <h3 className="font-display text-2xl text-espresso mb-2">
+              Ready, {name || 'friend'}.
+            </h3>
+            <p className="text-sm text-espresso/70 mb-4">
+              Auto-applied at checkout.
+            </p>
+            <div className="font-mono font-semibold text-wine text-xl bg-blush/40 py-3 px-4 inline-block">
+              {coupon}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

@@ -7,14 +7,14 @@ export async function POST(req: NextRequest) {
     const { sessionId, ...rest } = data;
 
     if (!sessionId) {
-      return NextResponse.json({ ok: true, note: 'no sessionId, ignored' });
+      return NextResponse.json({ ok: true });
     }
 
-    // Only pass known fields to Prisma to avoid errors
     const allowed: any = {};
     const fields = [
       'name', 'phone', 'email',
       'city', 'region', 'country', 'timezone', 'language',
+      'pincode', 'state', 'addressLine1',
       'deviceType', 'screenWidth', 'screenHeight', 'userAgent',
       'landingUrl', 'referrer',
       'utmSource', 'utmMedium', 'utmCampaign', 'utmTerm', 'utmContent',
@@ -37,11 +37,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error('[leads/create] error:', err?.message || err);
-    // Silent failure — do not block user experience
-    return NextResponse.json({ ok: true, error: 'internal' });
+    return NextResponse.json({ ok: true });
   }
 }
 
 export async function GET() {
-  return NextResponse.json({ ok: true, endpoint: 'POST to log a lead' });
+  return NextResponse.json({ ok: true });
 }
