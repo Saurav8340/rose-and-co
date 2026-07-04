@@ -176,3 +176,60 @@ html, body {
     min-height: 44px;
   }
 }
+
+/* ============================================================
+   v30 A11Y FIXES — Contrast, focus rings, tap targets
+   Append to bottom of globals.css
+   ============================================================ */
+
+/* Ensure adequate contrast on greeting banner + social proof */
+.text-espresso\/60 {
+  color: #4A2C2C !important; /* darker than /60, still elegant */
+}
+
+.text-espresso\/70 {
+  color: #3D2323 !important;
+}
+
+/* Focus ring for keyboard users */
+*:focus-visible {
+  outline: 2px solid #8B1E3F !important;
+  outline-offset: 2px !important;
+  border-radius: 2px;
+}
+
+/* Skip-to-content link (invisible until Tab is pressed) */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #8B1E3F;
+  color: #FDF6F0;
+  padding: 8px 16px;
+  z-index: 9999;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Minimum tap target size on mobile (44x44 per Google/Apple guidelines) */
+@media (max-width: 768px) {
+  button:not(.exempt-tap),
+  a[role="button"]:not(.exempt-tap),
+  [role="menuitem"]:not(.exempt-tap) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Ensure identical links (like "See the set") have distinct context */
+.link-context::before {
+  content: attr(data-context);
+  position: absolute;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+  white-space: nowrap;
+}

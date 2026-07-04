@@ -48,13 +48,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://api.postalpincode.in" />
       </head>
       <body>
+        {/* Skip to main content — invisible until keyboard focus */}
+        <a href="#main-content" className="skip-link">Skip to main content</a>
+
         <JsonLd data={localBusinessJsonLd()} />
         <CartProvider>
           <WishlistProvider>
             <PersonalizedDiscount />
             <GreetingBanner />
             <Header />
-            {children}
+            <main id="main-content" role="main">
+              {children}
+            </main>
             <SocialProof />
             <WhatsAppButton />
           </WishlistProvider>
