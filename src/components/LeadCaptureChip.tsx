@@ -24,11 +24,39 @@ function getSessionId(): string {
   return id;
 }
 
+function parseUTM() {
+  if (typeof window === 'undefined') return {};
+  const p = new URLSearchParams(window.location.search);
+  return {
+    utmSource: p.get('utm_source') || undefined,
+    utmMedium: p.get('utm_medium') || undefined,
+    utmCampaign: p.get('utm_campaign') || undefined,
+    utmTerm: p.get('utm_term') || undefined,
+    utmContent: p.get('utm_content') || undefined,
+  };
+}
+
+function isAdTraffic(): boolean {
+  if (typeof window === 'undefined') return false;
+  const utm = parseUTM();
+  if (utm.utmSource) return true;
+  const refs = ['facebook.com', 'instagram.com', 'l.facebook', 'lm.facebook', 'fb.me', 'ig.me', 't.co', 'lnkd.in', 'google.com/ads'];
+  return refs.some(r => document.referrer.includes(r));
+}
+
+function getDeviceType(): 'mobile' | 'desktop' | 'tablet' {
+  const ua = navigator.userAgent;
+  if (/iPad|tablet/i.test(ua)) return 'tablet';
+  if (/Android|iPhone|iPod/i.test(ua)) return 'mobile';
+  return 'desktop';
+}
+
 export default function LeadCaptureChip() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [stage, setStage] = useState<'ask' | 'form' | 'done'>('ask');
   const [coupon, setCoupon] = useState('WELCOME10');
+  const [fromAd, setFromAd] = useState(false);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,28 +70,61 @@ export default function LeadCaptureChip() {
     setMounted(true);
     if (typeof window === 'undefined') return;
 
+    const utm = parseUTM();
+    const sessionId = getSessionId();
+    const isAd = isAdTraffic();
+    setFromAd(isAd);
+
+    saveLead({
+      sessionId,
+      landingUrl: window.location.href,
+      referrer: document.referrer || 'direct',
+      userAgent: navigator.userAgent.slice(0, 500),
+      deviceType: getDeviceType(),
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+      language: navigator.language,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      visitCount: parseInt(localStorage.getItem('rc_visits') || '0', 10) + 1,
+      isReturning: parseInt(localStorage.getItem('rc_visits') || '0', 10) > 0,
+      hasAddress: !!localStorage.getItem('rc_address'),
+      ...utm,
+      timestamp: Date.now(),
+    });
+
+    localStorage.setItem('rc_visits', String(parseInt(localStorage.getItem('rc_visits') || '0', 10) + 1));
+
+    fetch('/api/geo', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(geo => {
+        if (geo?.city) {
+          saveLead({
+            sessionId,
+            city: geo.city,
+            country: geo.country,
+            region: geo.region,
+            timestamp: Date.now(),
+          });
+        }
+      })
+      .catch(() => {});
+
     if (localStorage.getItem('rc_lead_captured') === '1') return;
 
     setName(localStorage.getItem('rc_name') || '');
     setEmail(localStorage.getItem('rc_email') || '');
     setPhone(localStorage.getItem('rc_phone') || '');
 
-    const schedule = (cb: () => void) => {
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(cb, { timeout: 8000 });
-      } else {
-        setTimeout(cb, 8000);
-      }
-    };
-
-    schedule(() => setOpen(true));
+    const delay = isAd ? 3000 : 8000;
+    const timer = setTimeout(() => setOpen(true), delay);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
       fetch('https://api.postalpincode.in/pincode/' + pincode)
-        .then((r) => r.json())
-        .then((data) => {
+        .then(r => r.json())
+        .then(data => {
           if (data[0]?.Status === 'Success' && data[0].PostOffice?.[0]) {
             const p = data[0].PostOffice[0];
             setCity(p.District || p.Block || '');
@@ -119,6 +180,10 @@ export default function LeadCaptureChip() {
       timestamp: Date.now(),
     });
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('rc_identity_updated'));
+    }
+
     setCoupon(code);
     setStage('done');
     setTimeout(() => setOpen(false), 4000);
@@ -126,16 +191,23 @@ export default function LeadCaptureChip() {
 
   if (!mounted || !open) return null;
 
+  const askHeading = fromAd ? 'Welcome from the ad. 10% off?' : '10% off your first set?';
+  const askSub = fromAd
+    ? 'Your browser fills it in one tap. We save it once for faster checkout.'
+    : 'Your browser will fill everything. One tap, code is yours.';
+
   const modal = (
     <>
       <div className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm" onClick={stage === 'ask' ? handleNo : undefined} />
       <div className="fixed inset-x-4 bottom-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-sm md:w-full bg-ivory shadow-2xl border border-taupe/20 z-50 overflow-hidden">
         {stage === 'ask' && (
           <div className="p-6 relative">
-            <button onClick={handleNo} aria-label="Dismiss" className="absolute top-3 right-3 text-espresso/50 hover:text-espresso text-2xl leading-none">×</button>
-            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">A small welcome</div>
-            <h3 className="font-display text-2xl text-espresso mb-3">10% off your first set?</h3>
-            <p className="text-sm text-espresso/70 mb-6 leading-relaxed">Your browser will fill everything. One tap, code is yours.</p>
+            <button onClick={handleNo} aria-label="Dismiss" className="absolute top-3 right-3 text-espresso/50 hover:text-espresso text-2xl leading-none">x</button>
+            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">
+              {fromAd ? 'Thanks for tapping' : 'A small welcome'}
+            </div>
+            <h3 className="font-display text-2xl text-espresso mb-3">{askHeading}</h3>
+            <p className="text-sm text-espresso/70 mb-6 leading-relaxed">{askSub}</p>
             <div className="flex gap-2">
               <button onClick={handleYes} className="flex-1 bg-wine text-ivory py-3 uppercase tracking-widest text-sm font-medium hover:bg-espresso transition">Yes, send code</button>
               <button onClick={handleNo} className="px-4 py-3 text-xs uppercase tracking-widest text-espresso/60 hover:text-espresso">No</button>
@@ -164,8 +236,8 @@ export default function LeadCaptureChip() {
 
         {stage === 'done' && (
           <div className="p-8 text-center">
-            <div className="text-3xl mb-3">🌹</div>
-            <h3 className="font-display text-2xl text-espresso mb-2">Ready, {name || 'friend'}.</h3>
+            <div className="text-3xl mb-3">Ready</div>
+            <h3 className="font-display text-2xl text-espresso mb-2">Thanks, {name || 'friend'}.</h3>
             <p className="text-sm text-espresso/70 mb-4">Auto-applied at checkout.</p>
             <div className="font-mono font-semibold text-wine text-xl bg-blush/40 py-3 px-4 inline-block">{coupon}</div>
           </div>
