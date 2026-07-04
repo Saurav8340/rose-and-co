@@ -277,3 +277,52 @@ header nav {
 .bg-espresso {
   contain: layout style;
 }
+
+/* ================================================================
+   v37 SPEED FIXES — Append to globals.css
+   ================================================================ */
+
+/* Reduce DOM size - hide off-screen images from render */
+img[loading="lazy"] {
+  content-visibility: auto;
+  contain-intrinsic-size: 400px;
+}
+
+/* Prevent CLS from Font swap */
+html {
+  font-display: optional;
+}
+
+/* Speed up initial paint */
+body {
+  text-rendering: optimizeSpeed;
+  font-smooth: never;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Reduce composited layers */
+.container-x {
+  contain: layout style;
+}
+
+/* Prevent animations before user interaction */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Kill legacy webkit prefixes visual bloat */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Force GPU acceleration only where needed */
+.gpu-accel {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
