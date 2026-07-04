@@ -76,3 +76,65 @@ async function main() {
 }
 
 main().catch(e => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());
+
+// ============ SAMPLE REVIEWS ============
+  const AMARA_REVIEWS = [
+    {
+      productSlug: 'amara-marble-swirl-coord-set',
+      rating: 5,
+      name: 'Priya M.',
+      city: 'Mumbai',
+      title: 'Wore it to my sister engagement',
+      body: 'The fabric quality shocked me. So many compliments. Perfect fit on size M.',
+      photos: JSON.stringify([]),
+      size: 'M', verified: true, approved: true,
+    },
+    {
+      productSlug: 'amara-marble-swirl-coord-set',
+      rating: 5,
+      name: 'Ishita R.',
+      city: 'Delhi',
+      title: 'Better than I expected',
+      body: 'Ordered Monday, wore it Saturday. Shipped fast, fit true to size. Getting DMs asking where I got it.',
+      photos: JSON.stringify([]),
+      size: 'S', verified: true, approved: true,
+    },
+    {
+      productSlug: 'amara-marble-swirl-coord-set',
+      rating: 4,
+      name: 'Kavya S.',
+      city: 'Bangalore',
+      title: 'Beautiful but sized down',
+      body: 'Satin has real weight. Went one size down as they suggested. Would buy again.',
+      photos: JSON.stringify([]),
+      size: 'S', verified: true, approved: true,
+    },
+  ];
+
+  const AARNA_REVIEWS = [
+    {
+      productSlug: 'aarna-beige-marble-swirl-coord-set',
+      rating: 5,
+      name: 'Ananya P.',
+      city: 'Pune',
+      title: 'Slow morning perfection',
+      body: 'Wore it to a brunch and felt effortless. The beige is even prettier in person.',
+      photos: JSON.stringify([]),
+      size: 'M', verified: true, approved: true,
+    },
+    {
+      productSlug: 'aarna-beige-marble-swirl-coord-set',
+      rating: 5,
+      name: 'Meera K.',
+      city: 'Hyderabad',
+      title: 'My new favourite set',
+      body: 'The wide leg pants are so flattering. Ordering the red one next.',
+      photos: JSON.stringify([]),
+      size: 'L', verified: true, approved: true,
+    },
+  ];
+
+  for (const r of [...AMARA_REVIEWS, ...AARNA_REVIEWS]) {
+    await prisma.review.create({ data: r });
+  }
+  console.log('Seeded 5 reviews (3 Amara, 2 Aarna).');

@@ -155,3 +155,78 @@ model LoyaltyPoints {
   @@index([customerId])
   @@index([tier])
 }
+
+// ================================================================
+// v35: Add this Lead model to your prisma/schema.prisma
+// Then run: npx prisma db push (with Neon URL set)
+// ================================================================
+
+model Lead {
+  id            String   @id @default(cuid())
+  sessionId     String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Progressive contact info
+  name          String?
+  phone         String?
+  email         String?
+
+  // Geo signals
+  city          String?
+  region        String?
+  country       String?
+  timezone      String?
+  language      String?
+
+  // Device signals
+  deviceType    String?  // mobile / desktop / tablet
+  screenWidth   Int?
+  screenHeight  Int?
+  userAgent     String?  @db.Text
+
+  // Traffic source
+  landingUrl    String?  @db.Text
+  referrer      String?  @db.Text
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmTerm       String?
+  utmContent    String?
+
+  // Engagement signals
+  visitCount    Int      @default(1)
+  isReturning   Boolean  @default(false)
+  hasAddress    Boolean  @default(false)
+  timeOnSite    Int?     // seconds
+  pagesViewed   Int      @default(1)
+  scrolled      Boolean  @default(false)
+
+  // Discount
+  optedIn       Boolean  @default(false)   // clicked Yes on chip
+  chipDismissed Boolean  @default(false)   // clicked No
+  couponCode    String?
+  couponPct     Int?
+  segment       String?  // real_intent / returning_vip / browser / bounce_risk / coupon_hunter
+
+  // Cart signals
+  cartAdded     Boolean  @default(false)
+  cartValue     Int?
+  cartSummary   String?  @db.Text
+  cartAbandoned Boolean  @default(false)
+
+  // Purchase link (if converted)
+  orderNumber   String?
+  converted     Boolean  @default(false)
+
+  // Admin ops
+  status        String   @default("new") // new / contacted / converted / lost / spam
+  notes         String?  @db.Text
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([email])
+  @@index([phone])
+  @@index([converted])
+  @@index([utmCampaign])
+}
