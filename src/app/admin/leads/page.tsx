@@ -1,197 +1,333 @@
-import { prisma } from '@/lib/prisma';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import Link from 'next/link';
+"use client";
 
-export const dynamic = 'force-dynamic';
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
-export default async function AdminLeadsPage({
-  searchParams,
-}: {
-  searchParams: { status?: string; q?: string };
-}) {
-  const session = cookies().get('admin_session')?.value;
-  if (!session) redirect('/admin/login');
+type Lead = {
+  id: string;
+  createdAt: string;
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  address?: string | null;
+  device?: string | null;
+  source?: string | null;
+  campaign?: string | null;
+  visits?: number | null;
+  cartValue?: number | null;
+  cartStatus?: string | null;
+  coupon?: string | null;
+  status?: string | null;
+  optIn?: boolean | null;
+  returning?: boolean | null;
+};
 
-  const status = searchParams.status || 'all';
-  const q = searchParams.q || '';
+const STATUSES = ["all", "new", "contacted", "converted", "lost", "spam"] as const;
+type StatusFilter = typeof STATUSES[number];
 
-  const where: any = {};
-  if (status !== 'all') where.status = status;
-  if (q) {
-    where.OR = [
-      { name: { contains: q, mode: 'insensitive' } },
-      { phone: { contains: q } },
-      { email: { contains: q, mode: 'insensitive' } },
-      { city: { contains: q, mode: 'insensitive' } },
-      { pincode: { contains: q } },
-    ];
-  }
+export default function LeadsPage() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [q, setQ] = useState("");
+  const [exporting, setExporting] = useState(false);
 
-  const leads = await prisma.lead.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-    take: 300,
-  });
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/leads?limit=500", { cache: "no-store" });
+      const data = await res.json();
+      setLeads(Array.isArray(data.leads) ? data.leads : []);
+    } catch (e) {
+      console.error("leads load failed", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const total = await prisma.lead.count();
-  const withPhone = await prisma.lead.count({ where: { phone: { not: null } } });
-  const withEmail = await prisma.lead.count({ where: { email: { not: null } } });
-  const withAddress = await prisma.lead.count({ where: { pincode: { not: null } } });
-  const optedIn = await prisma.lead.count({ where: { optedIn: true } });
-  const returning = await prisma.lead.count({ where: { isReturning: true } });
-  const cartAbandoned = await prisma.lead.count({ where: { cartAbandoned: true } });
-  const converted = await prisma.lead.count({ where: { converted: true } });
+  useEffect(() => {
+    load();
+  }, []);
+
+  const filtered = useMemo(() => {
+    return leads.filter((l) => {
+      if (filter !== "all" && (l.status || "new") !== filter) return false;
+      if (q) {
+        const hay = [
+          l.name, l.phone, l.email, l.city, l.state, l.pincode,
+          l.address, l.source, l.campaign, l.coupon,
+        ].filter(Boolean).join(" ").toLowerCase();
+        if (!hay.includes(q.toLowerCase())) return false;
+      }
+      return true;
+    });
+  }, [leads, filter, q]);
+
+  const stats = useMemo(() => {
+    return {
+      total: leads.length,
+      optIn: leads.filter((l) => l.optIn).length,
+      phone: leads.filter((l) => !!l.phone).length,
+      email: leads.filter((l) => !!l.email).length,
+      address: leads.filter((l) => !!(l.city || l.pincode || l.address)).length,
+      returning: leads.filter((l) => l.returning).length,
+      abandoned: leads.filter((l) => (l.cartStatus || "").toLowerCase() === "abandoned").length,
+      converted: leads.filter((l) => (l.status || "") === "converted").length,
+    };
+  }, [leads]);
+
+  const exportCSV = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (filter !== "all") params.set("status", filter);
+      if (q) params.set("q", q);
+      const url = `/api/admin/leads/export?${params.toString()}`;
+      // Trigger browser download
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `rose-and-co-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } finally {
+      setTimeout(() => setExporting(false), 800);
+    }
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    // optimistic
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
+    try {
+      await fetch(`/api/admin/leads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+    } catch (e) {
+      console.error("status update failed", e);
+    }
+  };
+
+  const fmtTime = (iso: string) => {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString("en-IN", {
+        day: "2-digit", month: "short",
+        hour: "2-digit", minute: "2-digit", hour12: true,
+      });
+    } catch {
+      return iso;
+    }
+  };
+
+  const contactCell = (l: Lead) => {
+    const name = (l.name || "").trim();
+    const phone = (l.phone || "").trim();
+    const email = (l.email || "").trim();
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="font-medium text-neutral-900">
+          {name || <span className="italic text-neutral-400">anon</span>}
+        </span>
+        {phone ? (
+          <a href={`tel:${phone}`} className="text-sm text-neutral-700 hover:underline">
+            📞 {phone}
+          </a>
+        ) : (
+          <span className="text-xs text-neutral-400">no phone</span>
+        )}
+        {email ? (
+          <a href={`mailto:${email}`} className="text-xs text-neutral-500 hover:underline">
+            {email}
+          </a>
+        ) : null}
+      </div>
+    );
+  };
+
+  const addressCell = (l: Lead) => {
+    const parts = [l.address, l.city, l.state, l.pincode].filter(Boolean);
+    if (parts.length === 0) return <span className="text-neutral-400">—</span>;
+    return (
+      <div className="text-sm text-neutral-700 leading-snug">
+        {parts.join(", ")}
+      </div>
+    );
+  };
 
   return (
-    <div className="container-x py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display text-3xl text-espresso">Leads</h1>
-          <p className="text-sm text-espresso/70">Every visitor. Full contact + address captured.</p>
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/" className="text-sm text-neutral-600 hover:text-neutral-900">
+            ← Back
+          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={load}
+              className="px-3 py-1.5 text-sm bg-white border border-neutral-300 rounded hover:bg-neutral-100"
+            >
+              Refresh
+            </button>
+            <button
+              onClick={exportCSV}
+              disabled={exporting || filtered.length === 0}
+              className="px-4 py-1.5 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 disabled:opacity-50"
+            >
+              {exporting ? "Exporting…" : `⬇ Export CSV (${filtered.length})`}
+            </button>
+          </div>
         </div>
-        <Link href="/admin" className="text-xs uppercase tracking-widest underline text-wine">
-          Back
-        </Link>
-      </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-        <Stat label="Total" value={total} />
-        <Stat label="Opted in" value={optedIn} />
-        <Stat label="Phone" value={withPhone} />
-        <Stat label="Email" value={withEmail} />
-        <Stat label="Address" value={withAddress} />
-        <Stat label="Returning" value={returning} />
-        <Stat label="Abandoned" value={cartAbandoned} />
-        <Stat label="Converted" value={converted} />
-      </div>
+        <h1 className="text-2xl font-semibold text-neutral-900">Leads</h1>
+        <p className="text-sm text-neutral-500 mb-4">
+          Every visitor. Full contact + address captured.
+        </p>
 
-      <div className="flex gap-2 border-b border-taupe/20 mb-4 flex-wrap">
-        {['all', 'new', 'contacted', 'converted', 'lost', 'spam'].map((s) => (
-          <a
-            key={s}
-            href={`/admin/leads?status=${s}`}
-            className={`px-3 py-2 text-xs uppercase tracking-widest ${
-              status === s ? 'text-wine border-b-2 border-wine -mb-px' : 'text-espresso/60 hover:text-espresso'
-            }`}
-          >
-            {s}
-          </a>
-        ))}
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left border-b border-taupe/30 text-xs uppercase tracking-widest text-espresso/60">
-              <th className="py-2 px-3">Time</th>
-              <th className="py-2 px-3">Contact</th>
-              <th className="py-2 px-3">Address</th>
-              <th className="py-2 px-3">Device</th>
-              <th className="py-2 px-3">Source</th>
-              <th className="py-2 px-3">Visits</th>
-              <th className="py-2 px-3">Cart</th>
-              <th className="py-2 px-3">Coupon</th>
-              <th className="py-2 px-3">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leads.map((l: any) => (
-              <tr key={l.id} className="border-b border-taupe/10 hover:bg-blush/10 align-top">
-                <td className="py-3 px-3 text-xs text-espresso/70 whitespace-nowrap">
-                  {new Date(l.createdAt).toLocaleString('en-IN', {
-                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-                  })}
-                </td>
-                <td className="py-3 px-3">
-                  <div className="font-medium">{l.name || 'anon'}</div>
-                  <div className="text-xs text-espresso/70 space-y-0.5">
-                    {l.phone && <div className="font-mono">{l.phone}</div>}
-                    {l.email && <div className="truncate max-w-[180px]">{l.email}</div>}
-                  </div>
-                </td>
-                <td className="py-3 px-3 text-xs">
-                  {l.pincode && <div className="font-mono font-medium">{l.pincode}</div>}
-                  {l.city && <div>{l.city}</div>}
-                  {l.state && <div className="text-espresso/60">{l.state}</div>}
-                  {l.addressLine1 && (
-                    <div className="text-espresso/60 truncate max-w-[160px] mt-1" title={l.addressLine1}>
-                      {l.addressLine1}
-                    </div>
-                  )}
-                  {!l.pincode && !l.city && <span className="text-espresso/40">-</span>}
-                </td>
-                <td className="py-3 px-3 text-xs capitalize">{l.deviceType || '-'}</td>
-                <td className="py-3 px-3 text-xs">
-                  {l.utmCampaign ? (
-                    <div>
-                      <div className="bg-wine/10 text-wine px-2 py-0.5 text-[10px] rounded inline-block">
-                        {l.utmSource || 'meta'}
-                      </div>
-                      <div className="text-espresso/70 mt-1 truncate max-w-[140px]">{l.utmCampaign}</div>
-                    </div>
-                  ) : l.referrer && l.referrer !== 'direct' ? (
-                    <div className="text-espresso/60 text-[10px] truncate max-w-[140px]">{l.referrer}</div>
-                  ) : (
-                    <span className="text-espresso/40">Direct</span>
-                  )}
-                </td>
-                <td className="py-3 px-3 text-xs">
-                  <div><strong>{l.visitCount}</strong></div>
-                  {l.isReturning && <div className="text-green-700">Return</div>}
-                </td>
-                <td className="py-3 px-3 text-xs">
-                  {l.cartAdded ? (
-                    <div>
-                      <div className={l.cartAbandoned ? 'text-wine font-semibold' : 'text-green-700'}>
-                        {l.cartAbandoned ? 'Abandoned' : 'Active'}
-                      </div>
-                      {l.cartValue && <div className="text-espresso/70">Rs {l.cartValue}</div>}
-                    </div>
-                  ) : (<span className="text-espresso/40">-</span>)}
-                </td>
-                <td className="py-3 px-3 text-xs">
-                  {l.couponCode ? (
-                    <div>
-                      <div className="font-mono font-semibold">{l.couponCode}</div>
-                      <div className="text-espresso/60">{l.couponPct}%</div>
-                    </div>
-                  ) : (<span className="text-espresso/40">-</span>)}
-                </td>
-                <td className="py-3 px-3 text-xs">
-                  <span className={statusBadge(l.status)}>{l.status}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {leads.length === 0 && (
-        <div className="text-center py-16 text-espresso/60 bg-blush/10">
-          <p>No leads yet.</p>
+        {/* Stats */}
+        <div className="grid grid-cols-4 md:grid-cols-8 gap-2 mb-4">
+          <Stat label="Total" value={stats.total} />
+          <Stat label="Opted in" value={stats.optIn} />
+          <Stat label="Phone" value={stats.phone} />
+          <Stat label="Email" value={stats.email} />
+          <Stat label="Address" value={stats.address} />
+          <Stat label="Returning" value={stats.returning} />
+          <Stat label="Abandoned" value={stats.abandoned} />
+          <Stat label="Converted" value={stats.converted} />
         </div>
-      )}
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {STATUSES.map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={`px-3 py-1 text-sm rounded border ${
+                filter === s
+                  ? "bg-neutral-900 text-white border-neutral-900"
+                  : "bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-100"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name, phone, city, coupon…"
+            className="ml-auto px-3 py-1.5 text-sm border border-neutral-300 rounded w-64"
+          />
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-neutral-100 text-neutral-600 text-left">
+                <tr>
+                  <th className="px-3 py-2 font-medium">Time</th>
+                  <th className="px-3 py-2 font-medium">Contact</th>
+                  <th className="px-3 py-2 font-medium">Address</th>
+                  <th className="px-3 py-2 font-medium">Device</th>
+                  <th className="px-3 py-2 font-medium">Source</th>
+                  <th className="px-3 py-2 font-medium">Visits</th>
+                  <th className="px-3 py-2 font-medium">Cart</th>
+                  <th className="px-3 py-2 font-medium">Coupon</th>
+                  <th className="px-3 py-2 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={9} className="px-3 py-8 text-center text-neutral-500">
+                      Loading…
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-3 py-8 text-center text-neutral-500">
+                      No leads match this filter.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((l) => (
+                    <tr key={l.id} className="border-t border-neutral-100 hover:bg-neutral-50 align-top">
+                      <td className="px-3 py-2 whitespace-nowrap text-neutral-600">
+                        {fmtTime(l.createdAt)}
+                      </td>
+                      <td className="px-3 py-2 min-w-[200px]">{contactCell(l)}</td>
+                      <td className="px-3 py-2 min-w-[220px]">{addressCell(l)}</td>
+                      <td className="px-3 py-2">{l.device || "—"}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-col">
+                          <span>{l.source || "Direct"}</span>
+                          {l.campaign ? (
+                            <span className="text-xs text-neutral-400">{l.campaign}</span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-col">
+                          <span>{l.visits ?? 1}</span>
+                          {l.returning ? (
+                            <span className="text-xs text-emerald-600">Return</span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        {l.cartValue ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium">₹{l.cartValue.toLocaleString("en-IN")}</span>
+                            <span
+                              className={`text-xs ${
+                                (l.cartStatus || "").toLowerCase() === "abandoned"
+                                  ? "text-red-600"
+                                  : "text-emerald-600"
+                              }`}
+                            >
+                              {l.cartStatus || "Active"}
+                            </span>
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="px-3 py-2">{l.coupon || "—"}</td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={l.status || "new"}
+                          onChange={(e) => updateStatus(l.id, e.target.value)}
+                          className="px-2 py-1 text-xs border border-neutral-300 rounded bg-white"
+                        >
+                          {STATUSES.filter((s) => s !== "all").map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="border p-3 bg-blush/20 border-taupe/20">
-      <div className="text-2xl font-semibold">{value}</div>
-      <div className="text-[10px] uppercase tracking-widest text-espresso/70 mt-1">{label}</div>
+    <div className="bg-white border border-neutral-200 rounded p-2 text-center">
+      <div className="text-lg font-semibold text-neutral-900">{value}</div>
+      <div className="text-xs text-neutral-500">{label}</div>
     </div>
   );
-}
-
-function statusBadge(status: string): string {
-  const base = 'px-2 py-1 rounded text-[10px] uppercase tracking-widest ';
-  switch (status) {
-    case 'converted': return base + 'bg-green-100 text-green-800';
-    case 'contacted': return base + 'bg-blue-100 text-blue-800';
-    case 'lost': return base + 'bg-gray-100 text-gray-600';
-    case 'spam': return base + 'bg-red-100 text-red-800';
-    default: return base + 'bg-yellow-100 text-yellow-800';
-  }
 }
