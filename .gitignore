@@ -7,3 +7,9 @@ dev.db-journal
 *.log
 .DS_Store
 .vercel
+
+*.backup
+*-AUDIT.ps1
+site-audit*.txt
+rose-audit.txt
+wake-neon.ts

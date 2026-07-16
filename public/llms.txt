@@ -1,14 +1,17 @@
 # Rose & Co
-Small-batch, hand-painted marble swirl satin co-ord sets. Ships from Gurugram, India in 24-48 hours. Free shipping across India, 7-day returns.
+
+> Small-batch, hand-painted marble swirl satin co-ord sets. Ships from Gurugram, India in 24-48 hours. Free shipping across India, 7-day returns.
 
 ## Products
-- Amara Marble Swirl Co-ord Set: https://rose-and-co.vercel.app/product/amara-marble-swirl-coord-set
-- Aarna Beige Marble Swirl Co-ord Set: https://rose-and-co.vercel.app/product/aarna-beige-marble-swirl-coord-set
+- [Amara Marble Swirl Co-ord Set](https://rose-and-co.vercel.app/product/amara-marble-swirl-coord-set): Crop top and high-waist midi skirt in hand-painted satin, 95-105 GSM.
+- [Aarna Beige Marble Swirl Co-ord Set](https://rose-and-co.vercel.app/product/aarna-beige-marble-swirl-coord-set): Relaxed shirt and wide-leg pants in warm beige marble swirl satin.
 
-## Key pages
-- Shop: https://rose-and-co.vercel.app/shop
-- Journal (guides on satin, GSM, styling): https://rose-and-co.vercel.app/journal
-- FAQ: https://rose-and-co.vercel.app/faq
+## Guides
+- [Journal](https://rose-and-co.vercel.app/journal): Guides on satin fabric, GSM, fit, and styling.
+- [FAQ](https://rose-and-co.vercel.app/faq): Shipping, sizing, payment, and returns.
+
+## Shop
+- [Shop all](https://rose-and-co.vercel.app/shop): The full collection.
 
 ## Contact
 - Email: care@roseandco.in

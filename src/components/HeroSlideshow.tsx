@@ -31,53 +31,76 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
 
   return (
     <section className="relative bg-blush/40 overflow-hidden">
-      {slides.map((slide, i) => (
-        <div
-          key={slide.slug}
-          className={`transition-opacity duration-1000 ${
-            i === index ? 'opacity-100' : 'opacity-0 absolute inset-0 pointer-events-none'
-          }`}
-        >
-          <div className="container-x grid md:grid-cols-2 gap-8 items-center py-12 md:py-20">
-            <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-wine mb-4">{slide.tagline}</div>
-              <h1 className="font-display text-5xl md:text-7xl leading-[1.05] text-espresso whitespace-pre-line">
-                {slide.title}
-              </h1>
-              <p className="mt-6 text-lg text-espresso/70 max-w-md leading-relaxed">{slide.sub}</p>
+      {slides.map((slide, i) => {
+        const firstName = slide.name.split(' ')[0];
+        const discount = slide.mrp > slide.price
+          ? Math.round(((slide.mrp - slide.price) / slide.mrp) * 100)
+          : 0;
+        return (
+          <div
+            key={slide.slug}
+            className={`transition-opacity duration-700 ${
+              i === index ? 'opacity-100' : 'opacity-0 absolute inset-0 pointer-events-none'
+            }`}
+            aria-hidden={i === index ? undefined : true}
+          >
+            <div className="container-x grid md:grid-cols-2 gap-8 items-center py-12 md:py-20">
+              {/* Copy */}
+              <div className="order-2 md:order-1">
+                <p className="text-xs uppercase tracking-[0.3em] text-wine mb-4">
+                  {slide.tagline}
+                </p>
+                <h1 className="font-display text-4xl md:text-6xl text-espresso leading-[1.05] whitespace-pre-line">
+                  {slide.title}
+                </h1>
+                <p className="text-espresso/80 leading-relaxed mt-5 max-w-md">
+                  {slide.sub}
+                </p>
 
-              <div className="mt-8 flex items-baseline gap-3">
-                <span className="text-3xl font-semibold text-wine">{inr(slide.price)}</span>
-                <span className="text-base line-through text-espresso/40">{inr(slide.mrp)}</span>
+                <div className="flex items-baseline gap-3 mt-6">
+                  <span className="text-2xl text-wine font-medium">{inr(slide.price)}</span>
+                  {slide.mrp > slide.price && (
+                    <>
+                      <span className="text-lg text-espresso/40 line-through">{inr(slide.mrp)}</span>
+                      {discount > 0 && (
+                        <span className="text-xs uppercase tracking-widest bg-wine text-ivory px-2 py-1">
+                          {discount}% off
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-3 mt-8">
+                  <Link href={`/product/${slide.slug}`} className="btn-primary" prefetch>
+                    Shop the {firstName}
+                  </Link>
+                  <Link href="/shop" className="btn-secondary">
+                    See the collection
+                  </Link>
+                </div>
               </div>
 
-              <div className="mt-6 flex items-center gap-4">
-                <Link href={`/product/${slide.slug}`} prefetch className="btn-primary">
-                  Shop the {slide.name.split(' ')[0]}
-                </Link>
-                <Link href={`/product/${slide.slug}`} prefetch className="text-sm underline text-espresso">
-                  See the set
-                </Link>
+              {/* Image */}
+              <div className="order-1 md:order-2 relative aspect-[3/4] w-full">
+                <Image
+                  src={slide.hero}
+                  alt={slide.name}
+                  fill
+                  priority={i === 0}
+                  fetchPriority={i === 0 ? 'high' : 'auto'}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover object-top rounded-lg"
+                />
               </div>
-            </div>
-
-            <div className="relative aspect-[3/4] md:aspect-[4/5] max-w-lg mx-auto w-full">
-              <Image
-                src={slide.hero}
-                alt={slide.name}
-                fill
-                priority={i === 0}
-                fetchPriority={i === 0 ? 'high' : 'auto'}
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover object-top"
-              />
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
+      {/* Dots */}
       {slides.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        <div className="flex justify-center gap-2 pb-8">
           {slides.map((_, i) => (
             <button
               key={i}
