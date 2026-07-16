@@ -156,75 +156,52 @@ model LoyaltyPoints {
   @@index([tier])
 }
 
-// ================================================================
-// v35: Add this Lead model to your prisma/schema.prisma
-// Then run: npx prisma db push (with Neon URL set)
-// ================================================================
-
 model Lead {
   id            String   @id @default(cuid())
   sessionId     String   @unique
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
-  // Progressive contact info
   name          String?
   phone         String?
   email         String?
-
-  // Geo signals
   city          String?
-  pincode       String?
-  state         String?
-  addressLine1  String?
   region        String?
   country       String?
   timezone      String?
   language      String?
-
-  // Device signals
-  deviceType    String?  // mobile / desktop / tablet
+  deviceType    String?
   screenWidth   Int?
   screenHeight  Int?
-  userAgent     String?  @db.Text
-
-  // Traffic source
-  landingUrl    String?  @db.Text
-  referrer      String?  @db.Text
+  userAgent     String?
+  landingUrl    String?
+  referrer      String?
   utmSource     String?
   utmMedium     String?
   utmCampaign   String?
   utmTerm       String?
   utmContent    String?
-
-  // Engagement signals
   visitCount    Int      @default(1)
   isReturning   Boolean  @default(false)
   hasAddress    Boolean  @default(false)
-  timeOnSite    Int?     // seconds
+  timeOnSite    Int?
   pagesViewed   Int      @default(1)
   scrolled      Boolean  @default(false)
-
-  // Discount
-  optedIn       Boolean  @default(false)   // clicked Yes on chip
-  chipDismissed Boolean  @default(false)   // clicked No
+  optedIn       Boolean  @default(false)
+  chipDismissed Boolean  @default(false)
   couponCode    String?
   couponPct     Int?
-  segment       String?  // real_intent / returning_vip / browser / bounce_risk / coupon_hunter
-
-  // Cart signals
+  segment       String?
   cartAdded     Boolean  @default(false)
   cartValue     Int?
-  cartSummary   String?  @db.Text
+  cartSummary   String?
   cartAbandoned Boolean  @default(false)
-
-  // Purchase link (if converted)
   orderNumber   String?
   converted     Boolean  @default(false)
-
-  // Admin ops
-  status        String   @default("new") // new / contacted / converted / lost / spam
-  notes         String?  @db.Text
+  status        String   @default("new")
+  notes         String?
+  addressLine1  String?
+  pincode       String?
+  state         String?
 
   @@index([createdAt])
   @@index([status])
@@ -232,4 +209,10 @@ model Lead {
   @@index([phone])
   @@index([converted])
   @@index([utmCampaign])
+}
+
+model playing_with_neon {
+  id    Int    @id @default(autoincrement())
+  name  String
+  value Float? @db.Real
 }

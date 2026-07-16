@@ -1,0 +1,4227 @@
+unt:</b> {inr(order.codAmount)}</div>
+            <div><b>Payment status:</b> {order.paymentStatus}</div>
+            <div><b>CAPI fired:</b> {order.capiFired ? 'âœ“ Sent' : 'â€”'}</div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-taupe/20">
+            {order.items.map(i => (
+              <div key={i.id} className="text-sm">{i.productName} Â· Size {i.size} Ã— {i.quantity} Â· {inr(i.price)}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {Object.keys(utmParsed).length > 0 && (
+        <div className="mt-6 border border-taupe/20 p-6 bg-white">
+          <h3 className="uppercase tracking-widest text-xs text-espresso/60 mb-3">Attribution (UTM)</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs font-mono">
+            {Object.entries(utmParsed).filter(([k]) => k !== 'ts').map(([k, v]) => (
+              <div key={k} className="p-2 bg-blush/20 border border-taupe/20">
+                <div className="text-espresso/50">{k}</div>
+                <div className="text-espresso truncate">{String(v)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-6 border border-taupe/20 p-6 bg-blush/10">
+        <h3 className="uppercase tracking-widest text-xs text-espresso/60 mb-3">Update order</h3>
+        <UpdateOrderForm order={{
+          id: order.id,
+          orderStatus: order.orderStatus,
+          paymentStatus: order.paymentStatus,
+          paymentMethod: order.paymentMethod,
+          capiFired: order.capiFired,
+          notes: order.notes || '',
+          utr: order.utr || '',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\admin\orders\[id]\UpdateOrderForm.tsx -----
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+type Order = {
+  id: string;
+  orderStatus: string;
+  paymentStatus: string;
+  paymentMethod: string;
+  capiFired: boolean;
+  notes: string;
+  utr: string;
+};
+
+export default function UpdateOrderForm({ order }: { order: Order }) {
+  const router = useRouter();
+  const [orderStatus, setOrderStatus] = useState(order.orderStatus);
+  const [paymentStatus, setPaymentStatus] = useState(order.paymentStatus);
+  const [notes, setNotes] = useState(order.notes);
+  const [utr, setUtr] = useState(order.utr);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Preview whether CAPI will fire based on current selections
+  const isPrepaid = order.paymentMethod === 'PREPAID';
+  const willFireCapi = !order.capiFired && (
+    (isPrepaid && paymentStatus === 'VERIFIED') ||
+    (!isPrepaid && orderStatus === 'DELIVERED' && paymentStatus === 'VERIFIED')
+  );
+
+  const save = async () => {
+    setLoading(true); setMsg(null);
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderStatus, paymentStatus, notes, utr }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error('Update failed');
+      setMsg(data.capiFired ? 'Saved. Meta CAPI Purchase event sent.' : 'Saved.');
+      router.refresh();
+    } catch (e: any) { setMsg(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid md:grid-cols-2 gap-4">
+        <div>
+          <label className="label">Order status</label>
+          <select className="input" value={orderStatus} onChange={e => setOrderStatus(e.target.value)}>
+            <option>PLACED</option><option>CONFIRMED</option><option>PACKED</option>
+            <option>SHIPPED</option><option>DELIVERED</option><option>CANCELLED</option>
+          </select>
+        </div>
+        <div>
+          <label className="label">Payment status</label>
+          <select className="input" value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)}>
+            <option>PENDING</option><option>VERIFIED</option><option>FAILED</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label className="label">UPI transaction ref (UTR) â€” internal only</label>
+        <input className="input font-mono" value={utr} onChange={e => setUtr(e.target.value)} placeholder="Paste the UTR you matched in your UPI app" />
+      </div>
+      <div>
+        <label className="label">Internal notes</label>
+        <textarea className="input min-h-[80px]" value={notes} onChange={e => setNotes(e.target.value)} />
+      </div>
+
+      {/* CAPI PREVIEW */}
+      <div className={`p-4 border-2 ${willFireCapi ? 'border-green-600 bg-green-50' : order.capiFired ? 'border-green-800 bg-green-100' : 'border-taupe/30 bg-white'}`}>
+        <div className="text-xs uppercase tracking-widest text-espresso/70">Meta CAPI status</div>
+        {order.capiFired ? (
+          <div className="mt-1 text-sm text-green-800 font-medium">âœ“ Purchase event already sent to Meta.</div>
+        ) : willFireCapi ? (
+          <div className="mt-1 text-sm text-green-800 font-medium">
+            â†’ Saving this will fire Meta CAPI Purchase event now.
+            <div className="text-xs mt-1 text-espresso/70">
+              Only do this when money is actually in your bank account.
+            </div>
+          </div>
+        ) : (
+          <div className="mt-1 text-sm text-espresso/70">
+            CAPI will fire when: {isPrepaid ? 'Payment status = VERIFIED' : 'Order status = DELIVERED AND Payment status = VERIFIED'}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button onClick={save} disabled={loading} className="btn-primary">
+          {loading ? 'Savingâ€¦' : willFireCapi ? 'Save & fire Meta event' : 'Save changes'}
+        </button>
+        {msg && <span className="text-sm text-green-800">{msg}</span>}
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\admin\page.tsx -----
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { verifyAdminSession } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
+import { inr } from '@/lib/format';
+
+export const dynamic = 'force-dynamic';
+
+export default async function AdminDashboard({ searchParams }: { searchParams: { status?: string; q?: string } }) {
+  const ok = await verifyAdminSession();
+  if (!ok) redirect('/admin/login');
+
+  const where: any = {};
+  if (searchParams.status) where.orderStatus = searchParams.status;
+  if (searchParams.q) where.OR = [
+    { orderNumber: { contains: searchParams.q } },
+    { mobile: { contains: searchParams.q } },
+    { fullName: { contains: searchParams.q } },
+  ];
+
+  const orders = await prisma.order.findMany({
+    where, orderBy: { createdAt: 'desc' }, take: 100, include: { items: true },
+  });
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60_000);
+
+  const [
+    totalOrders, verifiedRevenueAgg, pendingCount,
+    todayCount, todayVerifiedRevAgg,
+    prepaidAll, codAll,
+    prepaidVerified, codVerified,
+    rtoCount, deliveredCount,
+    capiFiredCount,
+    waitlistCount,
+  ] = await Promise.all([
+    prisma.order.count(),
+    prisma.order.aggregate({ _sum: { paidAmount: true }, where: { paymentStatus: 'VERIFIED' } }),
+    prisma.order.count({ where: { paymentStatus: 'PENDING' } }),
+    prisma.order.count({ where: { createdAt: { gte: startOfToday } } }),
+    prisma.order.aggregate({ _sum: { paidAmount: true }, where: { paymentStatus: 'VERIFIED', createdAt: { gte: startOfToday } } }),
+    prisma.order.count({ where: { paymentMethod: 'PREPAID', createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.order.count({ where: { paymentMethod: 'PARTIAL_COD', createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.order.count({ where: { paymentMethod: 'PREPAID', paymentStatus: 'VERIFIED', createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.order.count({ where: { paymentMethod: 'PARTIAL_COD', orderStatus: 'DELIVERED', paymentStatus: 'VERIFIED', createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.order.count({ where: { orderStatus: 'CANCELLED', paymentMethod: 'PARTIAL_COD', createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.order.count({ where: { orderStatus: 'DELIVERED', paymentMethod: 'PARTIAL_COD', createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.order.count({ where: { capiFired: true, createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.waitlist.count({ where: { notified: false } }),
+  ]);
+
+  const total30d = prepaidAll + codAll;
+  const prepaidRate = total30d > 0 ? Math.round((prepaidAll / total30d) * 100) : 0;
+  const codDeliveryRate = (rtoCount + deliveredCount) > 0
+    ? Math.round((deliveredCount / (rtoCount + deliveredCount)) * 100)
+    : null;
+
+  const cityAgg = await prisma.order.groupBy({
+    by: ['city'],
+    where: { paymentStatus: 'VERIFIED', createdAt: { gte: thirtyDaysAgo } },
+    _count: { city: true },
+    orderBy: { _count: { city: 'desc' } },
+    take: 1,
+  });
+  const topCity = cityAgg[0]?.city || 'â€”';
+
+  return (
+    <div className="container-x py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="font-display text-3xl text-espresso">Admin dashboard</h1>
+          <p className="text-sm text-espresso/60">RosÃ© & Co Â· Order management</p>
+        </div>
+        <div className="flex gap-3">
+          <Link href="/admin/waitlist" className="btn-secondary">Waitlist {waitlistCount > 0 && <span className="ml-2 badge bg-wine text-ivory">{waitlistCount}</span>}</Link>
+          <Link href="/admin/products" className="btn-secondary">Products</Link>
+          <Link href="/api/admin/orders/export" className="btn-secondary">Export CSV</Link>
+          <form action="/api/admin/logout" method="POST"><button className="text-xs uppercase tracking-widest text-espresso/60 hover:text-wine">Logout</button></form>
+        </div>
+      </div>
+
+      {/* Today */}
+      <div className="mb-6 p-4 bg-blush/30 border-l-4 border-wine">
+        <div className="text-xs uppercase tracking-widest text-wine">Today</div>
+        <div className="mt-2 flex flex-wrap gap-6 text-sm">
+          <div><b className="text-espresso text-lg">{todayCount}</b> orders</div>
+          <div><b className="text-espresso text-lg">{inr(todayVerifiedRevAgg._sum.paidAmount || 0)}</b> verified revenue</div>
+          <div>Top city (30d): <b className="text-espresso">{topCity}</b></div>
+        </div>
+      </div>
+
+      {/* CORE KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <StatCard title="Total orders" value={totalOrders.toString()} />
+        <StatCard title="Verified revenue" value={inr(verifiedRevenueAgg._sum.paidAmount || 0)} />
+        <StatCard title="Pending verification" value={pendingCount.toString()} highlight />
+        <StatCard title="CAPI events fired (30d)" value={capiFiredCount.toString()} />
+      </div>
+
+      {/* AD SPEND EFFICIENCY (30-day) */}
+      <div className="mb-8 p-5 border-2 border-green-700/40 bg-green-50/50">
+        <div className="text-xs uppercase tracking-widest text-green-800 font-semibold mb-3">Ad-spend efficiency (30 days)</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <div className="text-xs text-espresso/60 uppercase tracking-widest">Prepaid share</div>
+            <div className="text-2xl font-display text-espresso mt-1">{prepaidRate}%</div>
+            <div className="text-xs text-espresso/50 mt-1">Target: 55%+</div>
+          </div>
+          <div>
+            <div className="text-xs text-espresso/60 uppercase tracking-widest">Prepaid verified</div>
+            <div className="text-2xl font-display text-espresso mt-1">{prepaidVerified}</div>
+            <div className="text-xs text-espresso/50 mt-1">of {prepaidAll} total</div>
+          </div>
+          <div>
+            <div className="text-xs text-espresso/60 uppercase tracking-widest">COD delivered</div>
+            <div className="text-2xl font-display text-espresso mt-1">{codDeliveryRate !== null ? `${codDeliveryRate}%` : 'â€”'}</div>
+            <div className="text-xs text-espresso/50 mt-1">Target: 85%+</div>
+          </div>
+          <div>
+            <div className="text-xs text-espresso/60 uppercase tracking-widest">COD RTO (30d)</div>
+            <div className="text-2xl font-display text-espresso mt-1">{rtoCount}</div>
+            <div className="text-xs text-espresso/50 mt-1">Cancelled after dispatch</div>
+          </div>
+        </div>
+        <p className="mt-4 text-xs text-espresso/60 leading-relaxed">
+          Meta CAPI fires only when money is in the bank. Prepaid: on payment VERIFIED. COD: on DELIVERED + VERIFIED. This keeps your Meta ROAS clean.
+        </p>
+      </div>
+
+      <form className="flex flex-wrap gap-3 mb-4" method="GET">
+        <input name="q" defaultValue={searchParams.q} placeholder="Search order/mobile/name" className="input flex-1 max-w-sm" />
+        <select name="status" defaultValue={searchParams.status || ''} className="input max-w-xs">
+          <option value="">All statuses</option>
+          <option>PLACED</option><option>CONFIRMED</option><option>PACKED</option>
+          <option>SHIPPED</option><option>DELIVERED</option><option>CANCELLED</option>
+        </select>
+        <button className="btn-primary">Filter</button>
+      </form>
+
+      <div className="overflow-x-auto border border-taupe/20">
+        <table className="w-full text-sm">
+          <thead className="bg-blush/40 text-xs uppercase tracking-widest">
+            <tr>
+              <th className="p-3 text-left">Order</th>
+              <th className="p-3 text-left">Customer</th>
+              <th className="p-3 text-left">Product</th>
+              <th className="p-3 text-left">Payment</th>
+              <th className="p-3 text-left">Status</th>
+              <th className="p-3 text-left">CAPI</th>
+              <th className="p-3 text-left">Date</th>
+              <th className="p-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map(o => (
+              <tr key={o.id} className="border-t border-taupe/20 hover:bg-blush/10">
+                <td className="p-3 font-mono">{o.orderNumber}</td>
+                <td className="p-3">{o.fullName}<br/><span className="text-xs text-espresso/60">{o.mobile}</span></td>
+                <td className="p-3 text-xs">{o.items.map(i => `${i.productName} Â· ${i.size} Ã— ${i.quantity}`).join(', ')}</td>
+                <td className="p-3">
+                  <div>{inr(o.paidAmount)} <span className={`text-xs ${o.paymentMethod === 'PREPAID' ? 'text-green-800 font-medium' : 'text-espresso/60'}`}>{o.paymentMethod === 'PREPAID' ? 'Prepaid' : 'COD'}</span></div>
+                  <div className={`text-xs ${o.paymentStatus === 'VERIFIED' ? 'text-green-700' : o.paymentStatus === 'FAILED' ? 'text-red-700' : 'text-wine'}`}>{o.paymentStatus}</div>
+                  {o.utr && <div className="text-[10px] text-espresso/50 font-mono">UTR: {o.utr}</div>}
+                </td>
+                <td className="p-3"><span className="badge bg-espresso text-ivory">{o.orderStatus}</span></td>
+                <td className="p-3 text-xs">{o.capiFired ? <span className="text-green-700">âœ“ Sent</span> : <span className="text-espresso/40">â€”</span>}</td>
+                <td className="p-3 text-xs">{new Date(o.createdAt).toLocaleString('en-IN')}</td>
+                <td className="p-3"><Link href={`/admin/orders/${o.id}`} className="text-wine underline text-xs">View</Link></td>
+              </tr>
+            ))}
+            {orders.length === 0 && <tr><td colSpan={8} className="p-10 text-center text-espresso/60">No orders yet.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ title, value, highlight }: { title: string; value: string; highlight?: boolean }) {
+  return (
+    <div className={`p-5 border ${highlight ? 'border-wine bg-blush/30' : 'border-taupe/20 bg-white'}`}>
+      <div className="text-xs uppercase tracking-widest text-espresso/60">{title}</div>
+      <div className="text-2xl font-display text-espresso mt-1">{value}</div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\admin\products\[slug]\edit\page.tsx -----
+// src/app/admin/products/[slug]/edit/page.tsx
+// NEW FILE. (c) EDIT screen. Loads the product from the database on the server,
+// then hands it to the shared form pre-filled. images/sizes are stored as JSON
+// strings in your DB, so we parse them back into arrays for the form.
+
+import { notFound } from "next/navigation";
+import ProductForm, { ProductFormValues } from "@/components/admin/ProductForm";
+import { prisma } from "@/lib/prisma";
+// import prisma from "@/lib/db";
+
+export const metadata = { title: "Edit product Ã¢â‚¬â€ RosÃƒÂ© & Co Admin" };
+
+// Safely turn a JSON string like '["XS","S"]' back into an array.
+function parseList(value: string | null | undefined): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function EditProductPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const p = await prisma.product.findUnique({ where: { slug: params.slug } });
+  if (!p) notFound();
+
+  const initial: ProductFormValues = {
+    slug: p.slug,
+    name: p.name,
+    description: p.description ?? "",
+    price: p.price,
+    compareAt: p.compareAt ?? 0,
+    sizes: parseList(p.sizes),
+    images: parseList(p.images),
+    active: p.active,
+  };
+
+  return <ProductForm mode="edit" initial={initial} />;
+}
+
+----- FILE: src\app\admin\products\DuplicateButton.tsx -----
+"use client";
+// src/app/admin/products/DuplicateButton.tsx
+// NEW FILE. (c) The one-click "Duplicate" button. Clones the product and sends
+// you straight into the editor for the copy (to rename + swap images).
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function DuplicateButton({ slug }: { slug: string }) {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  async function duplicate() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/products/${slug}/duplicate`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      router.push(data.editUrl); // jump into the new copy's editor
+    } catch (e: any) {
+      alert(e.message);
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={duplicate}
+      disabled={loading}
+      style={{ padding: "5px 12px", border: "1px solid #8a1c3b", borderRadius: 6,
+               background: "#fff", color: "#8a1c3b", cursor: "pointer", fontSize: 13 }}
+    >
+      {loading ? "CloningÃ¢â‚¬Â¦" : "Duplicate"}
+    </button>
+  );
+}
+
+----- FILE: src\app\admin\products\new\page.tsx -----
+// src/app/admin/products/new/page.tsx
+// NEW FILE. The "Create a listing" screen. Uses the shared ProductForm.
+import ProductForm from "@/components/admin/ProductForm";
+
+export const metadata = { title: "Create a listing Ã¢â‚¬â€ RosÃƒÂ© & Co Admin" };
+
+export default function NewProductPage() {
+  return <ProductForm mode="create" />;
+}
+
+----- FILE: src\app\admin\products\page.tsx -----
+// src/app/admin/products/page.tsx
+// REPLACES your current admin products page. Shows every product with its price,
+// status, live link, plus (c) Edit and Duplicate buttons and a "+ Create" button.
+//
+// Ã¢Å¡Â Ã¯Â¸Â Before overwriting, open your EXISTING file of the same path and check the
+// prisma import line Ã¢â‚¬â€ keep whichever matches your project.
+
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+// import prisma from "@/lib/db";
+import DuplicateButton from "./DuplicateButton";
+
+export const metadata = { title: "Products Ã¢â‚¬â€ RosÃƒÂ© & Co Admin" };
+
+function inr(n: number) {
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+}
+
+export default async function AdminProductsPage() {
+  const products = await prisma.product.findMany({ orderBy: { createdAt: "desc" } });
+
+  return (
+    <div style={{ maxWidth: 900, margin: "40px auto", padding: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <h1>Products ({products.length})</h1>
+        <Link href="/admin/products/new"
+          style={{ background: "#8a1c3b", color: "#fff", padding: "9px 16px", borderRadius: 8, textDecoration: "none" }}>
+          + Create a listing
+        </Link>
+      </div>
+
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <thead>
+          <tr style={{ textAlign: "left", borderBottom: "2px solid #eee" }}>
+            <th style={th}>Name</th>
+            <th style={th}>Status</th>
+            <th style={th}>Price</th>
+            <th style={th}>Link</th>
+            <th style={th}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((p) => (
+            <tr key={p.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
+              <td style={td}>{p.name}</td>
+              <td style={td}>
+                <span style={{ padding: "2px 10px", borderRadius: 999, fontSize: 12,
+                  background: p.active ? "#e6f6ea" : "#f1f1f1", color: p.active ? "#1e7d3a" : "#666" }}>
+                  {p.active ? "live" : "draft"}
+                </span>
+              </td>
+              <td style={td}>
+                {inr(p.price)}{" "}
+                {p.compareAt ? <s style={{ color: "#999" }}>{inr(p.compareAt)}</s> : null}
+              </td>
+              <td style={td}>
+                <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer">/product/{p.slug}</a>
+              </td>
+              <td style={{ ...td, display: "flex", gap: 8 }}>
+                <Link href={`/admin/products/${p.slug}/edit`}
+                  style={{ padding: "5px 12px", border: "1px solid #ccc", borderRadius: 6, textDecoration: "none", color: "#333", fontSize: 13 }}>
+                  Edit
+                </Link>
+                <DuplicateButton slug={p.slug} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const th: React.CSSProperties = { padding: "10px 8px" };
+const td: React.CSSProperties = { padding: "10px 8px" };
+
+----- FILE: src\app\api\admin\leads\export\route.ts -----
+import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+// CSV escape: wrap in quotes, escape internal quotes
+function csv(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v).replace(/"/g, '""').replace(/\r?\n/g, " ");
+  return `"${s}"`;
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get("status");
+    const q = (searchParams.get("q") || "").trim();
+
+    const where: any = {};
+    if (status && status !== "all") where.status = status;
+    if (q) {
+      where.OR = [
+        { name: { contains: q, mode: "insensitive" } },
+        { phone: { contains: q } },
+        { email: { contains: q, mode: "insensitive" } },
+        { city: { contains: q, mode: "insensitive" } },
+        { pincode: { contains: q } },
+        { coupon: { contains: q, mode: "insensitive" } },
+        { campaign: { contains: q, mode: "insensitive" } },
+      ];
+    }
+
+    const leads = await prisma.lead.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: 5000,
+    });
+
+    const headers = [
+      "Created At", "Name", "Phone", "Email",
+      "Address", "City", "State", "Pincode",
+      "Device", "Source", "Campaign", "Referrer",
+      "Visits", "Cart Value (INR)", "Cart Status", "Coupon",
+      "Status", "Opt-In", "Returning", "IP", "User Agent",
+    ];
+
+    const rows = leads.map((l: any) => [
+      new Date(l.createdAt).toISOString(),
+      l.name || "",
+      l.phone || "",
+      l.email || "",
+      l.address || "",
+      l.city || "",
+      l.state || "",
+      l.pincode || "",
+      l.device || "",
+      l.source || "",
+      l.campaign || "",
+      l.referrer || "",
+      l.visits ?? "",
+      l.cartValue ?? "",
+      l.cartStatus || "",
+      l.coupon || "",
+      l.status || "new",
+      l.optIn ? "yes" : "no",
+      l.returning ? "yes" : "no",
+      l.ip || "",
+      l.userAgent || "",
+    ]);
+
+    const csvBody =
+      headers.map(csv).join(",") + "\n" +
+      rows.map((r) => r.map(csv).join(",")).join("\n");
+
+    // BOM for Excel UTF-8 compatibility
+    const body = "\uFEFF" + csvBody;
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    return new NextResponse(body, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="rose-and-co-leads-${stamp}.csv"`,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (e: any) {
+    console.error("export failed", e);
+    return NextResponse.json({ error: "export_failed", message: e?.message }, { status: 500 });
+  }
+}
+
+
+----- FILE: src\app\api\admin\leads\page.tsx -----
+import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
+
+export default async function AdminLeadsPage({
+  searchParams,
+}: {
+  searchParams: { status?: string; q?: string };
+}) {
+  const session = cookies().get('admin_session')?.value;
+  if (!session) redirect('/admin/login');
+
+  const status = searchParams.status || 'all';
+  const q = searchParams.q || '';
+
+  const where: any = {};
+  if (status !== 'all') where.status = status;
+  if (q) {
+    where.OR = [
+      { name: { contains: q, mode: 'insensitive' } },
+      { phone: { contains: q } },
+      { email: { contains: q, mode: 'insensitive' } },
+      { city: { contains: q, mode: 'insensitive' } },
+    ];
+  }
+
+  const [leads, stats] = await Promise.all([
+    prisma.lead.findMany({ where, orderBy: { createdAt: 'desc' }, take: 300 }),
+    Promise.all([
+      prisma.lead.count(),
+      prisma.lead.count({ where: { optedIn: true } }),
+      prisma.lead.count({ where: { phone: { not: null } } }),
+      prisma.lead.count({ where: { email: { not: null } } }),
+      prisma.lead.count({ where: { isReturning: true } }),
+      prisma.lead.count({ where: { cartAdded: true } }),
+      prisma.lead.count({ where: { cartAbandoned: true } }),
+      prisma.lead.count({ where: { converted: true } }),
+    ]).then(([total, optedIn, withPhone, withEmail, returning, cartAdded, cartAbandoned, converted]) => ({
+      total, optedIn, withPhone, withEmail, returning, cartAdded, cartAbandoned, converted,
+    })),
+  ]);
+
+  return (
+    <div className="container-x py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-display text-3xl text-espresso">Leads</h1>
+          <p className="text-sm text-espresso/70">Every visitor tracked automatically. Live data.</p>
+        </div>
+        <Link href="/admin" className="text-xs uppercase tracking-widest underline text-wine">
+          Back to admin
+        </Link>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
+        <Stat label="Total" value={stats.total} />
+        <Stat label="Opted in" value={stats.optedIn} />
+        <Stat label="Has phone" value={stats.withPhone} />
+        <Stat label="Has email" value={stats.withEmail} />
+        <Stat label="Returning" value={stats.returning} />
+        <Stat label="Cart added" value={stats.cartAdded} />
+        <Stat label="Cart abandoned" value={stats.cartAbandoned} accent="warning" />
+        <Stat label="Converted" value={stats.converted} accent="success" />
+      </div>
+
+      {/* Filter + search */}
+      <form className="flex items-center gap-3 mb-4 flex-wrap">
+        <div className="flex gap-2 border-b border-taupe/20 flex-1">
+          {['all', 'new', 'contacted', 'converted', 'lost', 'spam'].map((s) => (
+            <a
+              key={s}
+              href={`/admin/leads?status=${s}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+              className={`px-3 py-2 text-xs uppercase tracking-widest ${
+                status === s ? 'text-wine border-b-2 border-wine -mb-px' : 'text-espresso/60 hover:text-espresso'
+              }`}
+            >
+              {s}
+            </a>
+          ))}
+        </div>
+        <input
+          type="text"
+          name="q"
+          defaultValue={q}
+          placeholder="Search name / phone / email / city"
+          className="border border-taupe/30 px-3 py-2 text-sm w-64 focus:border-wine focus:outline-none"
+        />
+        <input type="hidden" name="status" value={status} />
+        <button type="submit" className="text-xs uppercase tracking-widest px-4 py-2 border border-wine text-wine hover:bg-wine hover:text-ivory transition">
+          Search
+        </button>
+      </form>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left border-b border-taupe/30 text-xs uppercase tracking-widest text-espresso/60">
+              <th className="py-2 px-3">Time</th>
+              <th className="py-2 px-3">Contact</th>
+              <th className="py-2 px-3">Location</th>
+              <th className="py-2 px-3">Device</th>
+              <th className="py-2 px-3">Source</th>
+              <th className="py-2 px-3">Behavior</th>
+              <th className="py-2 px-3">Cart</th>
+              <th className="py-2 px-3">Coupon</th>
+              <th className="py-2 px-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leads.map((l) => (
+              <tr key={l.id} className="border-b border-taupe/10 hover:bg-blush/10 align-top">
+                <td className="py-3 px-3 text-xs text-espresso/70 whitespace-nowrap">
+                  {new Date(l.createdAt).toLocaleString('en-IN', {
+                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+                  })}
+                </td>
+                <td className="py-3 px-3">
+                  <div className="font-medium">{l.name || <span className="text-espresso/40 italic">anon</span>}</div>
+                  <div className="text-xs text-espresso/70 space-y-0.5 mt-1">
+                    {l.phone && <div>Phone: {l.phone}</div>}
+                    {l.email && <div>Email: {l.email}</div>}
+                  </div>
+                </td>
+                <td className="py-3 px-3 text-xs">
+                  {l.city && <div className="font-medium">{l.city}</div>}
+                  {l.region && <div className="text-espresso/60">{l.region}</div>}
+                  {l.timezone && <div className="text-espresso/40 text-[10px]">{l.timezone}</div>}
+                </td>
+                <td className="py-3 px-3 text-xs">
+                  <div className="capitalize">{l.deviceType || '-'}</div>
+                  {l.screenWidth && l.screenHeight && (
+                    <div className="text-espresso/60 text-[10px]">{l.screenWidth} x {l.screenHeight}</div>
+                  )}
+                </td>
+                <td className="py-3 px-3 text-xs">
+                  {l.utmCampaign ? (
+                    <div>
+                      <span className="bg-wine/10 text-wine px-2 py-0.5 text-[10px] rounded">
+                        {l.utmSource || 'meta'}
+                      </span>
+                      <div className="text-espresso/70 mt-1 max-w-[140px] truncate">{l.utmCampaign}</div>
+                      {l.utmContent && <div className="text-espresso/50 text-[10px] truncate max-w-[140px]">{l.utmContent}</div>}
+                    </div>
+                  ) : l.referrer && l.referrer !== 'direct' ? (
+                    <div className="text-espresso/60 text-[10px] truncate max-w-[140px]">{safeHostname(l.referrer)}</div>
+                  ) : (
+                    <span className="text-espresso/40">Direct</span>
+                  )}
+                </td>
+                <td className="py-3 px-3 text-xs space-y-1">
+                  <div>Visits: <strong>{l.visitCount}</strong></div>
+                  {l.isReturning && <div className="text-green-700">Returning</div>}
+                  {l.scrolled && <div className="text-blue-700">Scrolled</div>}
+                  {l.hasAddress && <div className="text-purple-700">Address saved</div>}
+                </td>
+                <td className="py-3 px-3 text-xs">
+                  {l.cartAdded ? (
+                    <div>
+                      <div className={l.cartAbandoned ? 'text-wine font-semibold' : 'text-green-700'}>
+                        {l.cartAbandoned ? 'Abandoned' : 'Active'}
+                      </div>
+                      {l.cartValue && <div className="text-espresso/70">Rs {l.cartValue.toLocaleString('en-IN')}</div>}
+                    </div>
+                  ) : (
+                    <span className="text-espresso/40">-</span>
+                  )}
+                </td>
+                <td className="py-3 px-3 text-xs">
+                  {l.couponCode ? (
+                    <div>
+                      <div className="font-mono font-semibold">{l.couponCode}</div>
+                      <div className="text-espresso/60">{l.couponPct}% off</div>
+                      {l.segment && <div className="text-[10px] text-espresso/50 capitalize">{l.segment.replace('_', ' ')}</div>}
+                    </div>
+                  ) : (
+                    <span className="text-espresso/40">-</span>
+                  )}
+                </td>
+                <td className="py-3 px-3 text-xs">
+                  <span className={statusBadge(l.status)}>{l.status}</span>
+                  {l.converted && <div className="text-green-700 text-[10px] mt-1">Order: {l.orderNumber}</div>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {leads.length === 0 && (
+        <div className="text-center py-16 text-espresso/60 bg-blush/10">
+          <p>No leads yet.</p>
+          <p className="text-xs mt-2">As soon as visitors land, they will appear here.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value, accent }: { label: string; value: number; accent?: 'success' | 'warning' }) {
+  const color =
+    accent === 'success' ? 'bg-green-50 border-green-200' :
+    accent === 'warning' ? 'bg-wine/10 border-wine/30' :
+    'bg-blush/20 border-taupe/20';
+  return (
+    <div className={`border p-3 ${color}`}>
+      <div className="text-2xl font-semibold">{value}</div>
+      <div className="text-[10px] uppercase tracking-widest text-espresso/70 mt-1">{label}</div>
+    </div>
+  );
+}
+
+function statusBadge(status: string): string {
+  const base = 'px-2 py-1 rounded text-[10px] uppercase tracking-widest ';
+  switch (status) {
+    case 'converted': return base + 'bg-green-100 text-green-800';
+    case 'contacted': return base + 'bg-blue-100 text-blue-800';
+    case 'lost': return base + 'bg-gray-100 text-gray-600';
+    case 'spam': return base + 'bg-red-100 text-red-800';
+    default: return base + 'bg-yellow-100 text-yellow-800';
+  }
+}
+
+function safeHostname(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url.slice(0, 40);
+  }
+}
+
+
+----- FILE: src\app\api\admin\login\route.ts -----
+import { NextResponse } from 'next/server';
+import { signAdminSession } from '@/lib/session';
+import { rateLimit, getIp } from '@/lib/rateLimit';
+
+export async function POST(req: Request) {
+  const ip = getIp(req);
+  const rl = rateLimit(`adminLogin:${ip}`, 10, 15 * 60_000);
+  if (!rl.ok) return NextResponse.json({ error: 'Too many attempts' }, { status: 429 });
+
+  const { email, password } = await req.json().catch(() => ({}));
+  const ok = email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD;
+  if (!ok) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+  await signAdminSession(email);
+  return NextResponse.json({ ok: true });
+}
+
+
+----- FILE: src\app\api\admin\logout\route.ts -----
+import { NextResponse } from 'next/server';
+import { destroyAdminSession } from '@/lib/session';
+
+export async function POST() {
+  destroyAdminSession();
+  return NextResponse.json({ ok: true });
+}
+
+
+----- FILE: src\app\api\admin\orders\[id]\route.ts -----
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { verifyAdminSession } from '@/lib/session';
+import { sendPurchaseCapi } from '@/lib/metaCapi';
+import { SITE } from '@/lib/constants';
+
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+  if (!(await verifyAdminSession())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  const data: any = {};
+  if (body.orderStatus)   data.orderStatus   = String(body.orderStatus);
+  if (body.paymentStatus) data.paymentStatus = String(body.paymentStatus);
+  if (typeof body.notes === 'string') data.notes = body.notes;
+  if (typeof body.utr === 'string')   data.utr = body.utr;
+
+  const before = await prisma.order.findUnique({ where: { id: params.id } });
+  if (!before) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+
+  const after = await prisma.order.update({ where: { id: params.id }, data });
+
+  await prisma.adminLog.create({
+    data: { action: 'update_order', metadata: JSON.stringify({ id: params.id, ...data }) },
+  });
+
+  // ============================================================
+  // CAPI FIRING RULE
+  // ============================================================
+  let capiFired = false;
+  if (!after.capiFired) {
+    const isPrepaidVerified = after.paymentMethod === 'PREPAID'
+      && after.paymentStatus === 'VERIFIED';
+    const isCodDeliveredAndPaid = after.paymentMethod === 'PARTIAL_COD'
+      && after.orderStatus === 'DELIVERED'
+      && after.paymentStatus === 'VERIFIED';
+
+    if (isPrepaidVerified || isCodDeliveredAndPaid) {
+      const value = after.paymentMethod === 'PREPAID' ? after.paidAmount : after.totalAmount;
+
+      // Extract original IP and UA from notes (stored as JSON at order creation)
+      let clientIp: string | null = null;
+      let clientUa: string | null = null;
+      if (after.notes) {
+        try {
+          const parsed = JSON.parse(after.notes);
+          if (parsed.ip) clientIp = String(parsed.ip);
+          if (parsed.ua) clientUa = String(parsed.ua);
+        } catch {
+          // notes may be free-text (from admin edits) â€” safe to skip
+        }
+      }
+
+      sendPurchaseCapi({
+        orderNumber: after.orderNumber,
+        paidAmount:  after.paidAmount,
+        valueOverride: value,
+        email:       after.email,
+        mobile:      after.mobile,
+        fullName:    after.fullName,
+        city:        after.city,
+        state:       after.state,
+        pincode:     after.pincode,
+        metaFbc:     after.metaFbc,
+        metaFbp:     after.metaFbp,
+        utmData:     after.utmData,
+        createdAt:   after.createdAt,
+        clientIp,
+        clientUa,
+        eventSourceUrl: SITE.url + '/product/amara-marble-swirl-coord-set',
+      }).catch(err => console.error('[CAPI] Send failed:', err));
+
+      await prisma.order.update({
+        where: { id: after.id },
+        data:  { capiFired: true },
+      });
+
+      await prisma.adminLog.create({
+        data: {
+          action:   'capi_purchase_sent',
+          metadata: JSON.stringify({
+            orderNumber:  after.orderNumber,
+            paymentMethod: after.paymentMethod,
+            value,
+            hasIp: !!clientIp,
+            hasUa: !!clientUa,
+          }),
+        },
+      });
+      capiFired = true;
+    }
+  }
+
+  return NextResponse.json({ ok: true, capiFired });
+}
+
+
+----- FILE: src\app\api\admin\orders\export\route.ts -----
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { verifyAdminSession } from '@/lib/session';
+
+export async function GET() {
+  if (!(await verifyAdminSession())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const orders = await prisma.order.findMany({ include: { items: true }, orderBy: { createdAt: 'desc' } });
+  const rows = [
+    ['OrderNumber','Date','Name','Mobile','Email','Address','City','State','Pincode','Product','Size','Qty','PaymentMethod','TotalAmount','PaidNow','COD','Discount','PaymentStatus','OrderStatus','CAPIFired','UTR'].join(','),
+    ...orders.flatMap(o => o.items.map(i => [
+      o.orderNumber, o.createdAt.toISOString(),
+      quote(o.fullName), o.mobile, quote(o.email||''),
+      quote(`${o.addressLine1} ${o.addressLine2||''} ${o.landmark ? 'Near '+o.landmark : ''}`),
+      quote(o.city), quote(o.state), o.pincode,
+      quote(i.productName), i.size, i.quantity,
+      o.paymentMethod, o.totalAmount, o.paidAmount, o.codAmount, o.discountAmount,
+      o.paymentStatus, o.orderStatus, o.capiFired ? 'YES' : 'NO', o.utr||'',
+    ].join(','))),
+  ].join('\n');
+
+  return new NextResponse(rows, {
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename=orders-${new Date().toISOString().slice(0,10)}.csv`,
+    },
+  });
+}
+
+function quote(s: string) { return `"${String(s).replace(/"/g, '""')}"`; }
+
+
+----- FILE: src\app\api\captcha\generate\route.ts -----
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { generateChallenge } from '@/lib/captcha';
+import { mobileSchema } from '@/lib/validate';
+import { rateLimit, getIp } from '@/lib/rateLimit';
+import crypto from 'crypto';
+
+export async function POST(req: Request) {
+  const ip = getIp(req);
+  const rl = rateLimit(`captcha:${ip}`, 10, 10 * 60_000);
+  if (!rl.ok) return NextResponse.json({ error: 'Too many attempts. Try again in a few minutes.' }, { status: 429 });
+
+  const body = await req.json().catch(() => ({}));
+  const parsed = mobileSchema.safeParse(body?.mobile);
+  if (!parsed.success) return NextResponse.json({ error: 'Enter valid mobile' }, { status: 400 });
+
+  const mobile = parsed.data;
+  const challenge = generateChallenge();
+  const token = crypto.randomBytes(24).toString('hex');
+  const expiresAt = new Date(Date.now() + 15 * 60_000);
+
+  await prisma.verificationSession.create({
+    data: { token, mobile, captcha: challenge.answer, verified: false, attempts: 0, expiresAt },
+  });
+
+  return NextResponse.json({ token, question: challenge.question, type: challenge.type });
+}
+
+
+----- FILE: src\app\api\captcha\verify\route.ts -----
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { isCorrect } from '@/lib/captcha';
+import { captchaVerifySchema } from '@/lib/validate';
+import { rateLimit, getIp } from '@/lib/rateLimit';
+
+export async function POST(req: Request) {
+  const ip = getIp(req);
+  const rl = rateLimit(`captchaverify:${ip}`, 20, 10 * 60_000);
+  if (!rl.ok) return NextResponse.json({ error: 'Too many attempts. Try again in a few minutes.' }, { status: 429 });
+
+  const body = await req.json().catch(() => ({}));
+  const parsed = captchaVerifySchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message || 'Invalid' }, { status: 400 });
+
+  const { token, code, mobile } = parsed.data;
+
+  const session = await prisma.verificationSession.findUnique({ where: { token } });
+  if (!session) return NextResponse.json({ error: 'Session expired. Please restart.' }, { status: 400 });
+  if (session.mobile !== mobile) return NextResponse.json({ error: 'Mobile mismatch. Please restart.' }, { status: 400 });
+  if (session.expiresAt < new Date()) return NextResponse.json({ error: 'Verification expired. Please try again.' }, { status: 400 });
+  if (session.attempts >= 5) return NextResponse.json({ error: 'Too many wrong answers. Please refresh.' }, { status: 400 });
+
+  await prisma.verificationSession.update({
+    where: { token }, data: { attempts: session.attempts + 1 },
+  });
+
+  if (!isCorrect(code, session.captcha)) {
+    return NextResponse.json({ error: 'Wrong answer. Try again.' }, { status: 400 });
+  }
+
+  await prisma.verificationSession.update({ where: { token }, data: { verified: true } });
+  return NextResponse.json({ ok: true });
+}
+
+
+----- FILE: src\app\api\geo\route.ts -----
+import { NextRequest, NextResponse } from 'next/server';
+
+export const runtime = 'edge';
+
+export async function GET(req: NextRequest) {
+  // Vercel provides these headers automatically at the edge
+  const city = req.headers.get('x-vercel-ip-city');
+  const country = req.headers.get('x-vercel-ip-country');
+  const region = req.headers.get('x-vercel-ip-country-region');
+
+  return NextResponse.json({
+    city: city ? decodeURIComponent(city) : undefined,
+    country: country || undefined,
+    region: region || undefined,
+  });
+}
+
+
+----- FILE: src\app\api\inventory\route.ts -----
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const slug = searchParams.get('product');
+  if (!slug) return NextResponse.json({ error: 'product param' }, { status: 400 });
+
+  const product = await prisma.product.findUnique({
+    where: { slug },
+    select: { sizes: true },
+  });
+  if (!product) return NextResponse.json({ remaining: null });
+
+  try {
+    const sizes = JSON.parse(product.sizes) as Array<{ size: string; stock: number }>;
+    const total = sizes.reduce((s, x) => s + (x.stock || 0), 0);
+    return NextResponse.json({ remaining: total, sizes });
+  } catch {
+    return NextResponse.json({ remaining: null });
+  }
+}
+
+
+----- FILE: src\app\api\leads\create\route.ts -----
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(req: NextRequest) {
+  let sessionId = '';
+  try {
+    const data = await req.json().catch(() => ({}));
+    sessionId = data.sessionId || '';
+    const { sessionId: _, ...rest } = data;
+
+    if (!sessionId) {
+      return NextResponse.json({ ok: true });
+    }
+
+    const safeData: any = {};
+
+    if (typeof rest.name === 'string') safeData.name = rest.name.slice(0, 100);
+    if (typeof rest.phone === 'string') safeData.phone = rest.phone.slice(0, 15);
+    if (typeof rest.email === 'string') safeData.email = rest.email.slice(0, 200);
+    if (typeof rest.city === 'string') safeData.city = rest.city.slice(0, 100);
+    if (typeof rest.region === 'string') safeData.region = rest.region.slice(0, 100);
+    if (typeof rest.country === 'string') safeData.country = rest.country.slice(0, 100);
+    if (typeof rest.timezone === 'string') safeData.timezone = rest.timezone.slice(0, 50);
+    if (typeof rest.language === 'string') safeData.language = rest.language.slice(0, 10);
+    if (typeof rest.pincode === 'string') safeData.pincode = rest.pincode.slice(0, 10);
+    if (typeof rest.state === 'string') safeData.state = rest.state.slice(0, 100);
+    if (typeof rest.addressLine1 === 'string') safeData.addressLine1 = rest.addressLine1.slice(0, 500);
+    if (typeof rest.deviceType === 'string') safeData.deviceType = rest.deviceType.slice(0, 20);
+    if (typeof rest.screenWidth === 'number') safeData.screenWidth = rest.screenWidth;
+    if (typeof rest.screenHeight === 'number') safeData.screenHeight = rest.screenHeight;
+    if (typeof rest.userAgent === 'string') safeData.userAgent = rest.userAgent.slice(0, 500);
+    if (typeof rest.landingUrl === 'string') safeData.landingUrl = rest.landingUrl.slice(0, 500);
+    if (typeof rest.referrer === 'string') safeData.referrer = rest.referrer.slice(0, 500);
+    if (typeof rest.utmSource === 'string') safeData.utmSource = rest.utmSource.slice(0, 100);
+    if (typeof rest.utmMedium === 'string') safeData.utmMedium = rest.utmMedium.slice(0, 100);
+    if (typeof rest.utmCampaign === 'string') safeData.utmCampaign = rest.utmCampaign.slice(0, 200);
+    if (typeof rest.utmTerm === 'string') safeData.utmTerm = rest.utmTerm.slice(0, 100);
+    if (typeof rest.utmContent === 'string') safeData.utmContent = rest.utmContent.slice(0, 200);
+    if (typeof rest.visitCount === 'number') safeData.visitCount = rest.visitCount;
+    if (typeof rest.isReturning === 'boolean') safeData.isReturning = rest.isReturning;
+    if (typeof rest.hasAddress === 'boolean') safeData.hasAddress = rest.hasAddress;
+    if (typeof rest.timeOnSite === 'number') safeData.timeOnSite = rest.timeOnSite;
+    if (typeof rest.pagesViewed === 'number') safeData.pagesViewed = rest.pagesViewed;
+    if (typeof rest.scrolled === 'boolean') safeData.scrolled = rest.scrolled;
+    if (typeof rest.optedIn === 'boolean') safeData.optedIn = rest.optedIn;
+    if (typeof rest.chipDismissed === 'boolean') safeData.chipDismissed = rest.chipDismissed;
+    if (typeof rest.couponCode === 'string') safeData.couponCode = rest.couponCode.slice(0, 50);
+    if (typeof rest.couponPct === 'number') safeData.couponPct = rest.couponPct;
+    if (typeof rest.segment === 'string') safeData.segment = rest.segment.slice(0, 50);
+    if (typeof rest.cartAdded === 'boolean') safeData.cartAdded = rest.cartAdded;
+    if (typeof rest.cartValue === 'number') safeData.cartValue = rest.cartValue;
+    if (typeof rest.cartSummary === 'string') safeData.cartSummary = rest.cartSummary.slice(0, 500);
+    if (typeof rest.cartAbandoned === 'boolean') safeData.cartAbandoned = rest.cartAbandoned;
+    if (typeof rest.orderNumber === 'string') safeData.orderNumber = rest.orderNumber.slice(0, 50);
+    if (typeof rest.converted === 'boolean') safeData.converted = rest.converted;
+
+    console.log('[leads/create]', sessionId, 'saving fields:', Object.keys(safeData).length);
+
+    try {
+      await prisma.lead.upsert({
+        where: { sessionId },
+        update: safeData,
+        create: { sessionId, ...safeData },
+      });
+      return NextResponse.json({ ok: true });
+    } catch (fullErr: any) {
+      console.error('[leads/create] full upsert failed:', fullErr.message);
+      const { pincode, state, addressLine1, ...basic } = safeData;
+      try {
+        await prisma.lead.upsert({
+          where: { sessionId },
+          update: basic,
+          create: { sessionId, ...basic },
+        });
+        return NextResponse.json({ ok: true, note: 'saved without new fields' });
+      } catch (basicErr: any) {
+        console.error('[leads/create] basic upsert also failed:', basicErr.message);
+        return NextResponse.json({ ok: false, error: basicErr.message }, { status: 500 });
+      }
+    }
+  } catch (err: any) {
+    console.error('[leads/create] fatal error:', sessionId, err.message);
+    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({ ok: true, endpoint: 'POST to log a lead' });
+}
+
+
+----- FILE: src\app\api\leads\debug\route.ts -----
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function GET() {
+  const results: any = {
+    timestamp: new Date().toISOString(),
+    checks: {},
+  };
+
+  // Check 1: Can we reach Prisma?
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    results.checks.prisma_connection = 'OK';
+  } catch (err: any) {
+    results.checks.prisma_connection = 'FAIL: ' + err.message;
+  }
+
+  // Check 2: Does Lead model exist with correct fields?
+  try {
+    const testWrite = await prisma.lead.create({
+      data: {
+        sessionId: 'debug_' + Date.now(),
+        name: 'DEBUG TEST',
+        phone: '9999999999',
+        email: 'debug@test.com',
+        pincode: '110001',
+        city: 'Debug City',
+        state: 'Debug State',
+        addressLine1: 'Debug address',
+      },
+    });
+    results.checks.lead_write = 'OK - id: ' + testWrite.id;
+
+    // Cleanup
+    await prisma.lead.delete({ where: { id: testWrite.id } });
+    results.checks.lead_cleanup = 'OK';
+  } catch (err: any) {
+    results.checks.lead_write = 'FAIL: ' + err.message;
+  }
+
+  // Check 3: How many leads exist?
+  try {
+    const count = await prisma.lead.count();
+    results.checks.lead_count = count;
+  } catch (err: any) {
+    results.checks.lead_count = 'FAIL: ' + err.message;
+  }
+
+  // Check 4: Latest 3 leads
+  try {
+    const recent = await prisma.lead.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+      select: { id: true, name: true, phone: true, pincode: true, createdAt: true },
+    });
+    results.checks.recent_leads = recent;
+  } catch (err: any) {
+    results.checks.recent_leads = 'FAIL: ' + err.message;
+  }
+
+  return NextResponse.json(results, {
+    headers: { 'Cache-Control': 'no-store' },
+  });
+}
+
+
+----- FILE: src\app\api\leads\list\route.ts -----
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
+
+export async function GET(req: NextRequest) {
+  const session = cookies().get('admin_session')?.value;
+  if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  const { searchParams } = new URL(req.url);
+  const status = searchParams.get('status') || undefined;
+  const search = searchParams.get('q') || undefined;
+  const limit = Math.min(500, parseInt(searchParams.get('limit') || '200', 10));
+
+  const where: any = {};
+  if (status && status !== 'all') where.status = status;
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { phone: { contains: search } },
+      { email: { contains: search, mode: 'insensitive' } },
+      { city: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  const leads = await prisma.lead.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
+
+  return NextResponse.json({ leads, count: leads.length });
+}
+
+
+----- FILE: src\app\api\leads\update\route.ts -----
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
+
+export async function POST(req: NextRequest) {
+  const session = cookies().get('admin_session')?.value;
+  if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  try {
+    const { id, status, notes } = await req.json();
+    if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+
+    const data: any = {};
+    if (status) data.status = status;
+    if (notes !== undefined) data.notes = notes;
+
+    await prisma.lead.update({ where: { id }, data });
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || 'update failed' }, { status: 500 });
+  }
+}
+
+
+----- FILE: src\app\api\orders\create\route.ts -----
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { orderSchema } from '@/lib/validate';
+import { generateOrderNumber } from '@/lib/orderNumber';
+import { rateLimit, getIp } from '@/lib/rateLimit';
+import { PAYMENT } from '@/lib/constants';
+import { isBotUA, isDisposableEmail } from '@/lib/blocklists';
+
+function isSuspiciousMobile(m: string): boolean {
+  if (/^(\d)\1+$/.test(m))            return true;
+  if (m === '1234567890' || m === '0987654321') return true;
+  if (/^(\d)\1{5,}/.test(m))          return true;
+  return false;
+}
+
+function isSuspiciousName(n: string): boolean {
+  if (n.trim().length < 3)              return true;
+  if (/^(.)\1+$/.test(n.replace(/\s/g, ''))) return true;
+  if (!/[a-zA-Z]/.test(n))              return true;
+  return false;
+}
+
+export async function POST(req: Request) {
+  const ip = getIp(req);
+  const ua = req.headers.get('user-agent') || '';
+
+  if (isBotUA(ua)) {
+    console.log('[Anti-bot] Bot UA blocked from IP', ip);
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+  }
+
+  const rl = rateLimit(`order:${ip}`, 5, 60 * 60_000);
+  if (!rl.ok) return NextResponse.json({ error: 'Too many order attempts. Try later.' }, { status: 429 });
+
+  const body = await req.json().catch(() => ({}));
+  const parsed = orderSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message || 'Invalid' }, { status: 400 });
+
+  const d = parsed.data;
+
+  if (d.website && d.website.length > 0) {
+    console.log('[Anti-bot] Honeypot triggered from IP', ip);
+    return NextResponse.json({ ok: true, orderNumber: 'FAKE-' + Date.now() });
+  }
+
+  const elapsedMs = Date.now() - d.startedAt;
+  if (elapsedMs < 4000) {
+    return NextResponse.json({ error: 'Please take a moment to review your details.' }, { status: 400 });
+  }
+  if (elapsedMs > 60 * 60_000) {
+    return NextResponse.json({ error: 'Session expired. Please start checkout again.' }, { status: 400 });
+  }
+
+  if (isSuspiciousMobile(d.mobile)) return NextResponse.json({ error: 'Please enter a valid mobile number.' }, { status: 400 });
+  if (isSuspiciousName(d.fullName)) return NextResponse.json({ error: 'Please enter your real full name.' }, { status: 400 });
+  if (d.email && isDisposableEmail(d.email)) return NextResponse.json({ error: 'Please use a real email address.' }, { status: 400 });
+  if (!d.paidConfirmed)             return NextResponse.json({ error: 'Please confirm the payment before placing the order.' }, { status: 400 });
+
+  const blocked = await prisma.blockedPincode.findUnique({ where: { pincode: d.pincode } });
+  if (blocked) {
+    return NextResponse.json({ error: 'We are unable to deliver to this pincode. Please email us.' }, { status: 400 });
+  }
+
+  const session = await prisma.verificationSession.findUnique({ where: { token: d.verificationToken } });
+  if (!session || !session.verified || session.mobile !== d.mobile) {
+    return NextResponse.json({ error: 'Verification failed. Please restart checkout.' }, { status: 400 });
+  }
+  if (session.expiresAt < new Date()) {
+    return NextResponse.json({ error: 'Session expired. Please restart checkout.' }, { status: 400 });
+  }
+
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60_000);
+  const mobileCount = await prisma.order.count({
+    where: { mobile: d.mobile, createdAt: { gte: oneDayAgo } },
+  });
+  if (mobileCount >= 2) {
+    return NextResponse.json({ error: 'You have already placed orders today. Please email us if you need help.' }, { status: 429 });
+  }
+
+  const thirtyMinAgo = new Date(Date.now() - 30 * 60_000);
+  const dup = await prisma.order.findFirst({
+    where: {
+      mobile: d.mobile,
+      createdAt: { gte: thirtyMinAgo },
+      items: { some: { productId: d.productId } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (dup) return NextResponse.json({ ok: true, orderId: dup.id, orderNumber: dup.orderNumber });
+
+  const product = await prisma.product.findUnique({ where: { id: d.productId } });
+  if (!product || !product.active) return NextResponse.json({ error: 'Product unavailable' }, { status: 400 });
+
+  const sizes: Array<{ size: string; stock: number }> = JSON.parse(product.sizes);
+  const sizeInfo = sizes.find(s => s.size === d.size);
+  if (!sizeInfo || sizeInfo.stock < d.quantity) {
+    return NextResponse.json({ error: 'Selected size is out of stock' }, { status: 400 });
+  }
+
+  const qty = d.quantity;
+  const isPrepaid = d.paymentMethod === 'PREPAID';
+
+  const totalAmount    = PAYMENT.fullPrice * qty;
+  const paidAmount     = isPrepaid ? (PAYMENT.prepaidPrice * qty) : (PAYMENT.codDeposit * qty);
+  const codAmount      = isPrepaid ? 0 : (PAYMENT.codRemaining * qty);
+  const discountAmount = isPrepaid ? ((PAYMENT.fullPrice - PAYMENT.prepaidPrice) * qty) : 0;
+
+  const orderNumber = generateOrderNumber();
+
+  // Store IP + UA in structured JSON in notes so we can retrieve for CAPI later
+  const notes = JSON.stringify({ ip, ua: ua.slice(0, 500) });
+
+  const order = await prisma.$transaction(async (tx) => {
+    const o = await tx.order.create({
+      data: {
+        orderNumber,
+        fullName: d.fullName,
+        mobile: d.mobile,
+        email: d.email || null,
+        altPhone: d.altPhone || null,
+        pincode: d.pincode,
+        state: d.state,
+        city: d.city,
+        addressLine1: d.addressLine1,
+        addressLine2: d.addressLine2 || null,
+        landmark: d.landmark || null,
+        paymentMethod: d.paymentMethod,
+        paidAmount, codAmount, totalAmount, discountAmount,
+        paymentStatus: 'PENDING',
+        orderStatus: 'PLACED',
+        notes,
+        metaFbc: d.metaFbc || null,
+        metaFbp: d.metaFbp || null,
+        utmData: d.utm || null,
+      },
+    });
+    await tx.orderItem.create({
+      data: {
+        orderId: o.id, productId: product.id, productName: product.name,
+        size: d.size, quantity: qty, price: PAYMENT.fullPrice,
+      },
+    });
+    const newSizes = sizes.map(s => s.size === d.size ? { ...s, stock: s.stock - qty } : s);
+    await tx.product.update({ where: { id: product.id }, data: { sizes: JSON.stringify(newSizes) } });
+    return o;
+  });
+
+  return NextResponse.json({ ok: true, orderId: order.id, orderNumber: order.orderNumber });
+}
+
+
+----- FILE: src\app\api\orders\track\route.ts -----
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(req: Request) {
+  const body = await req.json().catch(() => ({}));
+  const orderNumber = String(body.orderNumber || '').trim().toUpperCase();
+  const mobile = String(body.mobile || '').replace(/\D/g, '');
+
+  if (!orderNumber || !mobile) return NextResponse.json({ error: 'Order number and mobile required' }, { status: 400 });
+
+  const order = await prisma.order.findFirst({
+    where: { orderNumber, mobile },
+    include: { items: true },
+  });
+  if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+
+  return NextResponse.json({
+    orderNumber: order.orderNumber,
+    status: order.orderStatus,
+    paymentStatus: order.paymentStatus,
+    paymentMethod: order.paymentMethod,
+    createdAt: order.createdAt,
+    totalAmount: order.totalAmount,
+    items: order.items.map(i => ({ name: i.productName, size: i.size, qty: i.quantity })),
+  });
+}
+
+
+----- FILE: src\app\api\payment\upi-qr\route.ts -----
+import { NextResponse } from 'next/server';
+import QRCode from 'qrcode';
+import { UPI } from '@/lib/constants';
+
+export async function POST(req: Request) {
+  const body = await req.json().catch(() => ({}));
+  const amount = Number(body.amount || 0);
+  const note = String(body.orderNote || 'Rose And Co Order').slice(0, 60);
+  if (amount <= 0) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
+
+  const params = new URLSearchParams({
+    pa: UPI.id, pn: UPI.name, am: String(amount), cu: 'INR', tn: note,
+  }).toString();
+  const upiUri = `upi://pay?${params}`;
+
+  const qr = await QRCode.toDataURL(upiUri, {
+    errorCorrectionLevel: 'M', margin: 1, width: 400,
+    color: { dark: '#2B1810', light: '#FAF6F0' },
+  });
+  return NextResponse.json({ qr, upiUri });
+}
+
+
+----- FILE: src\app\api\products\[slug]\duplicate\route.ts -----
+// src/app/api/products/[slug]/duplicate/route.ts
+// NEW FILE. (c) DUPLICATE Ã¢â‚¬â€ clone Aarna into the wine / red colourways in 1 click.
+// Copies everything, gives it a fresh unique slug, and saves it as a DRAFT so you
+// can rename + swap images before it goes live.
+
+import { NextRequest, NextResponse } from "next/server";
+import { isAdmin } from "@/lib/adminAuth";
+import { prisma } from "@/lib/prisma";
+// import prisma from "@/lib/db";
+
+function slugify(name: string): string {
+  return name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
+}
+
+export async function POST(_req: NextRequest, { params }: { params: { slug: string } }) {
+  if (!(await isAdmin()))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const original = await prisma.product.findUnique({ where: { slug: params.slug } });
+  if (!original) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const copyName = `${original.name} (Copy)`;
+  let slug = slugify(copyName);
+  let n = 2;
+  while (await prisma.product.findUnique({ where: { slug } })) {
+    slug = `${slugify(copyName)}-${n++}`;
+  }
+
+  const clone = await prisma.product.create({
+    data: {
+      slug,
+      name: copyName,
+      description: original.description,
+      price: original.price,
+      compareAt: original.compareAt,
+      images: original.images,
+      sizes: original.sizes,
+      active: false, // always a draft Ã¢â‚¬â€ rename + swap images, then publish
+    },
+  });
+
+  // Return the edit URL so the admin lands straight in the editor.
+  return NextResponse.json(
+    { product: clone, editUrl: `/admin/products/${clone.slug}/edit` },
+    { status: 201 }
+  );
+}
+
+----- FILE: src\app\api\products\[slug]\route.ts -----
+// src/app/api/products/[slug]/route.ts
+// NEW FILE. Get one / EDIT (PUT) / DELETE a product. (c) Edit uses PUT.
+// (a) Protected by isAdmin().
+
+import { NextRequest, NextResponse } from "next/server";
+import { isAdmin } from "@/lib/adminAuth";
+import { prisma } from "@/lib/prisma";
+// import prisma from "@/lib/db";
+
+type Ctx = { params: { slug: string } };
+
+// GET one product (used to pre-fill the Edit form). Admin-only.
+export async function GET(_req: NextRequest, { params }: Ctx) {
+  if (!(await isAdmin()))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const product = await prisma.product.findUnique({ where: { slug: params.slug } });
+  if (!product) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(product);
+}
+
+// EDIT. Note: slug/URL stays the same so existing ad links keep working.
+export async function PUT(req: NextRequest, { params }: Ctx) {
+  if (!(await isAdmin()))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  try {
+    const body = await req.json();
+    const product = await prisma.product.update({
+      where: { slug: params.slug },
+      data: {
+        name: body.name,
+        description: body.description ?? "",
+        price: body.price,
+        compareAt: body.compareAt ?? null,
+        images: JSON.stringify(body.images ?? []),
+        sizes: JSON.stringify(body.sizes ?? []),
+        active: body.active ?? false,
+      },
+    });
+    return NextResponse.json({ product, url: `/product/${product.slug}` });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Could not update product." }, { status: 500 });
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: Ctx) {
+  if (!(await isAdmin()))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  try {
+    await prisma.product.delete({ where: { slug: params.slug } });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json({ error: "Could not delete." }, { status: 500 });
+  }
+}
+
+----- FILE: src\app\api\products\by-ids\route.ts -----
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(req: Request) {
+  const { ids } = await req.json().catch(() => ({ ids: [] }));
+  if (!Array.isArray(ids) || ids.length === 0) return NextResponse.json({ products: [] });
+
+  const products = await prisma.product.findMany({
+    where: { id: { in: ids.slice(0, 20) }, active: true },
+  });
+
+  return NextResponse.json({
+    products: products.map(p => {
+      const imgs = JSON.parse(p.images);
+      return {
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        price: p.price,
+        image: imgs[0] || '/products/amara-front.png',
+      };
+    }),
+  });
+}
+
+
+----- FILE: src\app\api\products\route.ts -----
+// src/app/api/products/route.ts
+// NEW FILE. Create + list products. Matches your Prisma "Product" model:
+//   slug, name, description, price, compareAt, images(String), sizes(String), active
+// (a) Protected by isAdmin() so only a logged-in admin can create.
+
+import { NextRequest, NextResponse } from "next/server";
+import { isAdmin } from "@/lib/adminAuth";
+
+// Ã¢Å¡Â Ã¯Â¸Â MATCH THIS IMPORT to your other files.
+// Open src/app/api/products/by-ids/route.ts and copy its prisma import line.
+// Keep the ONE that matches, delete the other:
+import { prisma } from "@/lib/prisma";
+// import prisma from "@/lib/db";
+
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+export async function GET() {
+  if (!(await isAdmin()))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const products = await prisma.product.findMany({ orderBy: { createdAt: "desc" } });
+  return NextResponse.json(products);
+}
+
+export async function POST(req: NextRequest) {
+  if (!(await isAdmin()))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  try {
+    const body = await req.json();
+    if (!body.name || typeof body.price !== "number")
+      return NextResponse.json({ error: "Name and numeric price required." }, { status: 400 });
+
+    let slug = slugify(body.name);
+    let n = 2;
+    while (await prisma.product.findUnique({ where: { slug } })) {
+      slug = `${slugify(body.name)}-${n++}`;
+    }
+
+    const product = await prisma.product.create({
+      data: {
+        slug,
+        name: body.name,
+        description: body.description ?? "",
+        price: body.price,
+        compareAt: body.compareAt ?? null,
+        images: JSON.stringify(body.images ?? []),
+        sizes: JSON.stringify(body.sizes ?? []),
+        active: body.active ?? false,
+      },
+    });
+
+    return NextResponse.json({ product, url: `/product/${product.slug}` }, { status: 201 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Could not create product." }, { status: 500 });
+  }
+}
+
+----- FILE: src\app\api\reviews\create\route.ts -----
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      productSlug, orderId, rating, name, city, title, body: text,
+      photos = [], size,
+    } = body;
+
+    if (!productSlug || !rating || !name || !title || !text) {
+      return NextResponse.json({ error: 'missing fields' }, { status: 400 });
+    }
+
+    // If linked to a real order, mark verified
+    let verified = false;
+    if (orderId) {
+      const order = await prisma.order.findUnique({ where: { id: orderId } }).catch(() => null);
+      if (order) verified = true;
+    }
+
+    const review = await prisma.review.create({
+      data: {
+        productSlug,
+        orderId,
+        rating: Math.min(5, Math.max(1, parseInt(rating, 10))),
+        name,
+        city,
+        title,
+        body: text,
+        photos: JSON.stringify(photos),
+        size,
+        verified,
+        approved: false, // needs admin approval
+      },
+    });
+
+    return NextResponse.json({ ok: true, id: review.id });
+  } catch (err) {
+    console.error('review create error', err);
+    return NextResponse.json({ error: 'internal error' }, { status: 500 });
+  }
+}
+
+
+----- FILE: src\app\api\reviews\list\route.ts -----
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const product = searchParams.get('product');
+
+  if (!product) {
+    return NextResponse.json({ error: 'product param required' }, { status: 400 });
+  }
+
+  const reviews = await prisma.review.findMany({
+    where: {
+      productSlug: product,
+      approved: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  });
+
+  const formatted = reviews.map((r) => ({
+    ...r,
+    photos: (() => {
+      try { return JSON.parse(r.photos); } catch { return []; }
+    })(),
+  }));
+
+  return NextResponse.json({ reviews: formatted, count: formatted.length });
+}
+
+
+----- FILE: src\app\api\upload\route.ts -----
+// src/app/api/upload/route.ts
+// NEW FILE. Receives an uploaded image, auto-compresses it with sharp (which you
+// already have installed), and returns a small data URL string.
+//
+// WHY THIS APPROACH: it works on Vercel with ZERO setup Ã¢â‚¬â€ no storage account,
+// no tokens, no config. The compressed image string is saved straight into your
+// existing Product.images field (already a String in your schema).
+//
+// (a) Protected by isAdmin() so only a logged-in admin can upload.
+
+import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
+import { isAdmin } from "@/lib/adminAuth";
+
+// Keep uploads sane. 8 MB in, compressed down to ~1000px webp out.
+const MAX_BYTES = 8 * 1024 * 1024;
+
+export async function POST(req: NextRequest) {
+  if (!(await isAdmin()))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  try {
+    const form = await req.formData();
+    const file = form.get("file") as File | null;
+    if (!file) return NextResponse.json({ error: "No file received." }, { status: 400 });
+
+    if (file.size > MAX_BYTES)
+      return NextResponse.json({ error: "Image is larger than 8 MB." }, { status: 400 });
+
+    const inputBuffer = Buffer.from(await file.arrayBuffer());
+
+    // Resize to max 1000px wide, convert to webp ~72% quality (small + sharp-looking).
+    const output = await sharp(inputBuffer)
+      .rotate() // respect phone photo orientation
+      .resize({ width: 1000, withoutEnlargement: true })
+      .webp({ quality: 72 })
+      .toBuffer();
+
+    const dataUrl = `data:image/webp;base64,${output.toString("base64")}`;
+
+    return NextResponse.json({ url: dataUrl, bytes: output.length });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Could not process image." }, { status: 500 });
+  }
+}
+
+----- FILE: src\app\cancellation-policy\page.tsx -----
+import { SITE } from '@/lib/constants';
+
+export const metadata = { title: 'Cancellation Policy' };
+
+export default function Page() {
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <h1 className="font-display text-4xl text-espresso mb-8">Cancellations</h1>
+
+      <div className="text-espresso/80 leading-relaxed space-y-6">
+        <p>You can cancel any order before it ships. Just email <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a> with your order number.</p>
+
+        <div className="p-5 bg-blush/30 border-l-4 border-wine">
+          <h2 className="font-display text-xl text-espresso mb-2">Before dispatch</h2>
+          <p>Full refund of anything you paid online. Refund lands in your original payment method in 5â€“7 working days.</p>
+        </div>
+
+        <div className="p-5 bg-white border border-taupe/20">
+          <h2 className="font-display text-xl text-espresso mb-2">After dispatch</h2>
+          <p>Can not cancel &mdash; the order is already with the courier. You have two options:</p>
+          <ul className="mt-2 list-disc pl-5 space-y-1">
+            <li>Refuse delivery when the courier arrives. It comes back to us and we refund the online-paid amount within 7 working days.</li>
+            <li>Accept delivery and return it under our Refund Policy within 7 days.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\care-guide\page.tsx -----
+import Link from 'next/link';
+
+export const metadata = { title: 'Care guide', description: 'How to wash, dry, iron, and store satin without damaging it. Rules that keep your Amara set looking new.' };
+
+export default function CareGuidePage() {
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Care guide</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">Keep your satin looking new</h1>
+      <p className="mt-4 text-espresso/70 leading-relaxed">
+        Satin lasts if you treat it right. Here are the rules.
+      </p>
+
+      <div className="mt-10 space-y-6 text-espresso/80 leading-relaxed">
+        <div className="p-5 bg-blush/30 border-l-4 border-wine">
+          <h2 className="font-display text-xl text-espresso">The four rules</h2>
+          <ol className="mt-3 list-decimal pl-5 space-y-2 text-sm">
+            <li><b>Never tumble dry.</b> Heat kills poly-satin. Air dry only.</li>
+            <li><b>Cold water only.</b> Warm water breaks down the fibre finish.</li>
+            <li><b>No wringing.</b> Squeeze water out gently.</li>
+            <li><b>Iron on the reverse only, low heat.</b> Or steam in a bathroom.</li>
+          </ol>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-3">Washing</h2>
+          <ul className="list-disc pl-5 text-sm space-y-1">
+            <li>Hand wash cold with mild detergent.</li>
+            <li>Or gentle cycle in a mesh bag.</li>
+            <li>Never bleach.</li>
+            <li>Never soak overnight.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-3">Drying</h2>
+          <ul className="list-disc pl-5 text-sm space-y-1">
+            <li>Hang or lay flat.</li>
+            <li>Never direct sunlight.</li>
+            <li>Never near a heater.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-3">Storage</h2>
+          <ul className="list-disc pl-5 text-sm space-y-1">
+            <li>Cotton bag, not plastic.</li>
+            <li>Away from perfume and hairspray.</li>
+            <li>Air out every 2 months.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-3">Read more</h2>
+          <ul className="list-disc pl-5 text-sm space-y-1">
+            <li><Link href="/journal/how-to-iron-satin" className="underline text-wine">How to iron satin without damaging it</Link></li>
+            <li><Link href="/journal/remove-wrinkles-no-iron" className="underline text-wine">Remove wrinkles without an iron</Link></li>
+            <li><Link href="/journal/storing-satin-yellowing-prevention" className="underline text-wine">Storing satin without yellowing</Link></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\cart\page.tsx -----
+'use client';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useCart } from '@/components/CartContext';
+import { inr } from '@/lib/format';
+import { PAYMENT } from '@/lib/constants';
+import CartReviewsSnippet from '@/components/CartReviewsSnippet';
+
+export default function CartPage() {
+  const { items, update, remove, total } = useCart();
+
+  if (items.length === 0) {
+    return (
+      <div className="container-x py-24 text-center max-w-lg mx-auto">
+        <h1 className="font-display text-4xl text-espresso">Your bag is empty.</h1>
+        <p className="mt-4 text-espresso/70">Take another look.</p>
+        <Link href="/product/amara-marble-swirl-coord-set" className="btn-primary mt-8">Shop the Amara</Link>
+      </div>
+    );
+  }
+
+  const qty = items.reduce((s, i) => s + i.quantity, 0);
+  const mrpTotal = PAYMENT.mrp * qty;
+
+  return (
+    <div className="container-x py-10">
+      <h1 className="font-display text-3xl md:text-4xl text-espresso mb-2">Your bag</h1>
+      <p className="text-sm text-espresso/60 mb-8">{items.length} {items.length === 1 ? 'item' : 'items'}</p>
+      <div className="grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-2 space-y-4">
+          {items.map((it, i) => (
+            <div key={i} className="flex gap-4 border border-taupe/20 p-4 bg-white">
+              <div className="relative w-24 h-32 bg-blush/20 shrink-0">
+                <Image src={it.image} alt={it.name} fill sizes="96px" className="object-cover" />
+              </div>
+              <div className="flex-1 flex flex-col">
+                <div className="text-espresso font-medium">{it.name}</div>
+                <div className="text-xs text-espresso/60 mt-1">Size {it.size}</div>
+                <div className="text-wine font-semibold mt-1">{inr(it.price)}</div>
+                <div className="mt-auto flex items-center justify-between">
+                  <div className="inline-flex items-center border border-taupe/40">
+                    <button onClick={() => update(i, it.quantity - 1)} className="px-3 py-1" aria-label="Decrease">-</button>
+                    <span className="px-3">{it.quantity}</span>
+                    <button onClick={() => update(i, it.quantity + 1)} className="px-3 py-1" aria-label="Increase">+</button>
+                  </div>
+                  <button onClick={() => remove(i)} className="text-xs uppercase tracking-widest text-espresso/60 hover:text-wine">Remove</button>
+                </div>
+              </div>
+            </div>
+          ))}
+          <CartReviewsSnippet />
+        </div>
+
+        <div className="border border-taupe/20 p-6 bg-blush/20 h-fit">
+          <div className="text-xs uppercase tracking-widest text-espresso/60 mb-4">Summary</div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between text-espresso/50"><span>Was</span><span className="line-through">{inr(mrpTotal)}</span></div>
+            <div className="flex justify-between"><span>Subtotal</span><span>{inr(total)}</span></div>
+            <div className="flex justify-between"><span>Shipping</span><span className="text-wine">Free</span></div>
+          </div>
+          <div className="flex justify-between mt-4 pt-4 border-t border-taupe/30 font-semibold text-lg">
+            <span>Total</span><span>{inr(total)}</span>
+          </div>
+          <Link href="/checkout" className="btn-primary w-full mt-6">Checkout</Link>
+          <p className="mt-4 text-[11px] text-espresso/60 text-center">
+            Payment method chosen at checkout.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\checkout\page.tsx -----
+'use client';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useCart } from '@/components/CartContext';
+import { inr } from '@/lib/format';
+import { PAYMENT } from '@/lib/constants';
+import { lookupPincode } from '@/lib/pincode';
+import { serializedUtm } from '@/lib/utm';
+import UpiButtons from '@/components/UpiButtons';
+import CheckoutProgressBar from '@/components/CheckoutProgressBar';
+import GiftWrap from '@/components/GiftWrap';
+
+type Step = 'address' | 'verify' | 'payment' | 'done';
+
+function readCookie(name: string): string {
+  if (typeof document === 'undefined') return '';
+  const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : '';
+}
+
+export default function CheckoutPage() {
+  const router = useRouter();
+  const { items, clear } = useCart();
+  const [step, setStep] = useState<Step>('address');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const startedAt = useRef<number>(Date.now());
+  const [honeypot, setHoneypot] = useState('');
+  const submitting = useRef(false);
+
+  const [form, setForm] = useState({
+    fullName: '', mobile: '', email: '', altPhone: '',
+    pincode: '', state: '', city: '',
+    addressLine1: '', addressLine2: '', landmark: '',
+  });
+
+  const [captchaQuestion, setCaptchaQuestion] = useState<string>('');
+  const [captchaType, setCaptchaType] = useState<'math' | 'text'>('math');
+  const [captchaToken, setCaptchaToken] = useState<string>('');
+  const [captchaInput, setCaptchaInput] = useState<string>('');
+
+  const [paymentMethod, setPaymentMethod] = useState<'PREPAID' | 'PARTIAL_COD'>('PREPAID');
+  const [giftWrap, setGiftWrap] = useState(false);
+  const [qrData, setQrData] = useState<string | null>(null);
+  const [paymentStarted, setPaymentStarted] = useState(false);
+  const [returnedFromApp, setReturnedFromApp] = useState(false);
+
+  useEffect(() => { setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)); }, []);
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === 'visible' && paymentStarted) setReturnedFromApp(true);
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [paymentStarted]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('rc_checkout');
+    if (saved) try { setForm(f => ({ ...f, ...JSON.parse(saved) })); } catch {}
+  }, []);
+  useEffect(() => { localStorage.setItem('rc_checkout', JSON.stringify(form)); }, [form]);
+
+  useEffect(() => {
+    if (submitting.current) return;
+    if (step === 'done') return;
+    if (items.length === 0) router.push('/cart');
+  }, [items.length, step, router]);
+
+  useEffect(() => {
+    if (form.pincode.length === 6) {
+      lookupPincode(form.pincode).then(res => {
+        if (res) setForm(f => ({ ...f, state: res.state, city: res.city }));
+      });
+    }
+  }, [form.pincode]);
+
+  const setField = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const qty = items.reduce((s, i) => s + i.quantity, 0);
+  const giftWrapAmount = giftWrap ? 49 : 0;
+  const fullTotal    = PAYMENT.fullPrice * qty + giftWrapAmount;
+  const prepaidTotal = PAYMENT.prepaidPrice * qty + giftWrapAmount;
+  const codDeposit   = PAYMENT.codDeposit * qty + giftWrapAmount;
+  const codRemaining = PAYMENT.codRemaining * qty;
+
+  const amountToPay = paymentMethod === 'PREPAID' ? prepaidTotal : codDeposit;
+  const orderNote = ('RoseAndCo ' + (form.fullName || 'Order') + (giftWrap ? ' [GIFT-WRAP]' : '')).slice(0, 60);
+
+  const submitAddress = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(null);
+    if (!/^[6-9]\d{9}$/.test(form.mobile)) return setErr('Enter valid 10-digit mobile');
+    if (!/^[1-9]\d{5}$/.test(form.pincode)) return setErr('Enter valid PIN');
+    if (!form.fullName || form.fullName.length < 2) return setErr('Enter your full name');
+    if (!form.addressLine1 || form.addressLine1.length < 5) return setErr('Enter your address');
+    if (!form.city || !form.state) return setErr('City and state required');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/captcha/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: form.mobile }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      setCaptchaQuestion(data.question);
+      setCaptchaType(data.type);
+      setCaptchaToken(data.token);
+      setCaptchaInput('');
+      setStep('verify');
+    } catch (e: any) { setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  const refreshCaptcha = async () => {
+    setCaptchaInput(''); setErr(null); setLoading(true);
+    try {
+      const res = await fetch('/api/captcha/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: form.mobile }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      setCaptchaQuestion(data.question);
+      setCaptchaType(data.type);
+      setCaptchaToken(data.token);
+    } catch (e: any) { setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  const verifyCaptcha = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(null); setLoading(true);
+    try {
+      const res = await fetch('/api/captcha/verify', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: captchaToken, code: captchaInput, mobile: form.mobile }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Verification failed');
+      const qrRes = await fetch('/api/payment/upi-qr', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: amountToPay, orderNote }),
+      });
+      const qrJson = await qrRes.json();
+      setQrData(qrJson.qr);
+      setStep('payment');
+    } catch (e: any) { setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    if (step !== 'payment') return;
+    fetch('/api/payment/upi-qr', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amountToPay, orderNote }),
+    }).then(r => r.json()).then(d => setQrData(d.qr));
+  }, [amountToPay, step, orderNote]);
+
+  const submitOrder = async () => {
+    setErr(null);
+    if (items.length === 0) return setErr('Cart empty');
+    setLoading(true);
+    submitting.current = true;
+    try {
+      const it = items[0];
+      const res = await fetch('/api/orders/create', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          verificationToken: captchaToken, ...form,
+          paymentMethod, productId: it.productId, size: it.size, quantity: it.quantity,
+          paidConfirmed: true, website: honeypot, startedAt: startedAt.current,
+          metaFbc: readCookie('_fbc'), metaFbp: readCookie('_fbp'), utm: serializedUtm(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Order failed');
+      setStep('done');
+      const successUrl = `/order-success?id=${data.orderNumber}`;
+      window.location.href = successUrl;
+      setTimeout(() => { try { clear(); } catch {} router.push(successUrl); }, 500);
+    } catch (e: any) { submitting.current = false; setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  const markPaymentStarted = () => setPaymentStarted(true);
+
+  return (
+    <div className="container-x py-6 md:py-10 max-w-4xl">
+      <input type="text" name="website" tabIndex={-1} autoComplete="off"
+        value={honeypot} onChange={e => setHoneypot(e.target.value)}
+        style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+        aria-hidden="true" />
+
+      <CheckoutProgressBar step={step} />
+
+      <div className="flex items-center justify-between mb-8 text-xs uppercase tracking-widest">
+        {[
+          { s: 'address', l: 'Address' },
+          { s: 'verify',  l: 'Quick check' },
+          { s: 'payment', l: 'Payment' },
+        ].map(x => (
+          <div key={x.s} className={'flex-1 text-center py-2 border-b-2 ' + (step === x.s ? 'border-wine text-wine' : 'border-taupe/20 text-espresso/40')}>{x.l}</div>
+        ))}
+      </div>
+
+      {err && <div className="p-3 mb-4 bg-wine/10 text-wine border border-wine/30 text-sm">{err}</div>}
+
+      {step === 'done' && (
+        <div className="text-center py-16">
+          <div className="w-16 h-16 mx-auto rounded-full bg-wine text-ivory flex items-center justify-center text-3xl mb-4">&#10003;</div>
+          <div className="font-display text-2xl text-espresso">Order placed. Taking you to your confirmation...</div>
+        </div>
+      )}
+
+      {step !== 'done' && (
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            {step === 'address' && (
+              <form onSubmit={submitAddress} className="space-y-4" autoComplete="on">
+                <h2 className="font-display text-2xl text-espresso">Where should we send it?</h2>
+
+                <div>
+                  <label htmlFor="fullName" className="label">Your name</label>
+                  <input id="fullName" name="name" type="text" required autoFocus autoComplete="name" enterKeyHint="next" className="input" value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="mobile" className="label">Mobile</label>
+                    <input id="mobile" name="tel" type="tel" required inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength={10} autoComplete="tel-national" enterKeyHint="next" className="input" placeholder="10-digit number" value={form.mobile} onChange={e => setField('mobile', e.target.value.replace(/\D/g, ''))} />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="label">Email (optional)</label>
+                    <input id="email" name="email" type="email" autoComplete="email" enterKeyHint="next" className="input" value={form.email} onChange={e => setField('email', e.target.value)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="pincode" className="label">PIN</label>
+                    <input id="pincode" name="postal-code" type="text" required inputMode="numeric" maxLength={6} autoComplete="postal-code" enterKeyHint="next" className="input" value={form.pincode} onChange={e => setField('pincode', e.target.value.replace(/\D/g, ''))} />
+                  </div>
+                  <div>
+                    <label htmlFor="city" className="label">City</label>
+                    <input id="city" name="city" type="text" required autoComplete="address-level2" enterKeyHint="next" className="input" value={form.city} onChange={e => setField('city', e.target.value)} />
+                  </div>
+                  <div>
+                    <label htmlFor="state" className="label">State</label>
+                    <input id="state" name="state" type="text" required autoComplete="address-level1" enterKeyHint="next" className="input" value={form.state} onChange={e => setField('state', e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="addressLine1" className="label">Address</label>
+                  <input id="addressLine1" name="address-line1" type="text" required autoComplete="address-line1" enterKeyHint="next" className="input" placeholder="House / flat, street" value={form.addressLine1} onChange={e => setField('addressLine1', e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="landmark" className="label">Landmark (optional)</label>
+                    <input id="landmark" name="address-line2" type="text" autoComplete="address-line2" enterKeyHint="next" className="input" value={form.landmark} onChange={e => setField('landmark', e.target.value)} />
+                  </div>
+                  <div>
+                    <label htmlFor="altPhone" className="label">Alt phone (optional)</label>
+                    <input id="altPhone" name="tel-alt" type="tel" inputMode="numeric" maxLength={10} autoComplete="tel-national" enterKeyHint="done" className="input" value={form.altPhone} onChange={e => setField('altPhone', e.target.value.replace(/\D/g, ''))} />
+                  </div>
+                </div>
+
+                <div className="pt-3">
+                  <GiftWrap enabled={giftWrap} onChange={setGiftWrap} />
+                </div>
+
+                <button type="submit" disabled={loading} className="btn-primary w-full">
+                  {loading ? 'Please wait...' : 'Continue'}
+                </button>
+              </form>
+            )}
+
+            {step === 'verify' && (
+              <form onSubmit={verifyCaptcha} className="space-y-6 max-w-md">
+                <h2 className="font-display text-2xl text-espresso">A quick check.</h2>
+                <p className="text-sm text-espresso/70">
+                  {captchaType === 'math' ? 'Solve this to confirm you are a person.' : 'Type the four characters below.'}
+                </p>
+
+                <div className="relative">
+                  <div className="p-8 bg-blush/40 border-2 border-taupe/30 flex items-center justify-center">
+                    <div
+                      className={`select-none font-display text-espresso ${captchaType === 'math' ? 'text-5xl' : 'text-5xl tracking-[0.3em]'}`}
+                      style={{
+                        textShadow: captchaType === 'text' ? '1px 1px 0 rgba(139,117,104,0.15)' : 'none',
+                        letterSpacing: captchaType === 'math' ? '0.15em' : '0.3em',
+                      }}
+                    >
+                      {captchaQuestion}{captchaType === 'math' ? ' = ?' : ''}
+                    </div>
+                  </div>
+                  <button type="button" onClick={refreshCaptcha} disabled={loading}
+                    className="absolute top-2 right-2 text-xs uppercase tracking-widest text-wine underline"
+                    aria-label="Get a new question">
+                    Refresh
+                  </button>
+                </div>
+
+                <div>
+                  <label className="label">Your answer</label>
+                  <input required autoFocus autoComplete="off"
+                    inputMode={captchaType === 'math' ? 'numeric' : 'text'}
+                    className={'input text-center text-2xl ' + (captchaType === 'text' ? 'uppercase tracking-[0.3em]' : '')}
+                    maxLength={captchaType === 'math' ? 4 : 6}
+                    value={captchaInput}
+                    onChange={e => setCaptchaInput(e.target.value)}
+                    placeholder={captchaType === 'math' ? '12' : 'AB3D'} />
+                </div>
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setStep('address')} className="btn-secondary">Back</button>
+                  <button type="submit" disabled={loading || !captchaInput} className="btn-primary flex-1">{loading ? 'Checking...' : 'Continue'}</button>
+                </div>
+              </form>
+            )}
+
+            {step === 'payment' && (
+              <div className="space-y-6">
+                <h2 className="font-display text-2xl text-espresso">How would you like to pay?</h2>
+
+                <div className="space-y-3">
+                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PREPAID' ? 'border-wine bg-blush/30' : 'border-taupe/30 bg-white')}>
+                    <input type="radio" name="pm" className="sr-only" checked={paymentMethod === 'PREPAID'} onChange={() => setPaymentMethod('PREPAID')} />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="font-display text-lg text-espresso">Pay in full via UPI</div>
+                        <div className="text-sm text-espresso/70 mt-1">Rs 100 off.</div>
+                      </div>
+                      <div className="text-xl font-semibold text-wine">{inr(prepaidTotal)}</div>
+                    </div>
+                  </label>
+
+                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PARTIAL_COD' ? 'border-wine bg-blush/30' : 'border-taupe/30 bg-white')}>
+                    <input type="radio" name="pm" className="sr-only" checked={paymentMethod === 'PARTIAL_COD'} onChange={() => setPaymentMethod('PARTIAL_COD')} />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="font-display text-lg text-espresso">Partial cash on delivery</div>
+                        <div className="text-sm text-espresso/70 mt-1">{inr(codDeposit)} now, {inr(codRemaining)} on delivery.</div>
+                      </div>
+                      <div className="text-xl font-semibold text-espresso">{inr(fullTotal)}</div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="p-5 bg-ivory border border-taupe/30 text-center">
+                  <div className="text-xs uppercase tracking-widest text-espresso/60">Pay now</div>
+                  <div className="text-4xl font-semibold text-wine mt-1">{inr(amountToPay)}</div>
+                </div>
+
+                {isMobile ? (
+                  <div onClick={markPaymentStarted}>
+                    <UpiButtons amount={amountToPay} note={orderNote} />
+                  </div>
+                ) : (
+                  <div className="p-6 bg-white border border-taupe/30 flex flex-col sm:flex-row items-center gap-6">
+                    {qrData && <img src={qrData} alt="UPI QR Code" width={220} height={220} className="border p-2 shrink-0" />}
+                    <div className="text-sm text-espresso/80">
+                      <div className="text-lg font-display text-wine">Scan with any UPI app.</div>
+                      <p className="mt-2">Open GPay, PhonePe, Paytm or any UPI app on your phone. Scan the QR. Pay {inr(amountToPay)}.</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className={'p-5 border-2 ' + (returnedFromApp ? 'border-wine bg-blush/30 animate-pulse' : 'border-taupe/30 bg-white')}>
+                  <div className="font-display text-lg text-espresso">Done paying?</div>
+                  <p className="text-xs text-espresso/60 mt-1">We verify the payment within a couple of hours. Tap below when you have paid.</p>
+                  <button type="button" onClick={submitOrder} disabled={loading} className="btn-primary w-full mt-4 text-base">
+                    {loading ? 'Placing order...' : 'I have paid ' + inr(amountToPay)}
+                  </button>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <button type="button" onClick={() => setStep('verify')} className="text-xs uppercase tracking-widest text-espresso/60 underline">Back</button>
+                  <p className="text-[11px] text-espresso/60 text-right">
+                    By placing this order you accept our <Link href="/terms" className="underline">terms</Link>.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Simple, quiet sidebar */}
+          <div className="border border-taupe/20 p-6 bg-blush/20 h-fit md:sticky md:top-24">
+            <div className="text-xs uppercase tracking-widest text-espresso/60 mb-4">Summary</div>
+            {items.map((it, i) => (
+              <div key={i} className="flex gap-3 pb-3 border-b border-taupe/20 mb-3">
+                <div className="relative w-16 h-20 bg-ivory shrink-0">
+                  <Image src={it.image} alt={it.name} fill sizes="64px" className="object-cover" />
+                </div>
+                <div className="text-sm">
+                  <div className="text-espresso font-medium">{it.name}</div>
+                  <div className="text-xs text-espresso/60">Size {it.size} &middot; Qty {it.quantity}</div>
+                  <div className="text-wine font-semibold mt-1">{inr(it.price * it.quantity)}</div>
+                </div>
+              </div>
+            ))}
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between"><span>Subtotal</span><span>{inr(PAYMENT.fullPrice * qty)}</span></div>
+              {giftWrap && (<div className="flex justify-between text-espresso/70"><span>Gift wrap</span><span>+ Rs 49</span></div>)}
+              <div className="flex justify-between"><span>Shipping</span><span className="text-wine">Free</span></div>
+              {paymentMethod === 'PREPAID' && (
+                <div className="flex justify-between text-wine"><span>UPI discount</span><span>-{inr(PAYMENT.prepaidSavings * qty)}</span></div>
+              )}
+            </div>
+            <div className="flex justify-between mt-3 pt-3 border-t border-taupe/30 font-semibold">
+              <span>Total</span>
+              <span>{paymentMethod === 'PREPAID' ? inr(prepaidTotal) : inr(fullTotal)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+----- FILE: src\app\collections\co-ord-sets\page.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+import { prisma } from '@/lib/prisma';
+import { inr } from '@/lib/format';
+
+export const metadata = { title: 'Co-ord sets', description: 'Matching top and skirt or top and pant sets. Small batch, hand-painted prints, satin fabric.' };
+
+export default async function CoordSetsCollection() {
+  const products = await prisma.product.findMany({ where: { active: true } });
+
+  return (
+    <div className="container-x py-12 max-w-6xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Co-ord sets</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">Matching top and bottom sets</h1>
+      <p className="mt-4 text-espresso/70 max-w-2xl leading-relaxed">
+        Party co-ords for engagements, cocktails, and dinners. Wear as a set for a full look, or split them for 3-4 different outfits.
+      </p>
+
+      <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-6">
+        {products.map(p => {
+          const imgs = JSON.parse(p.images);
+          return (
+            <Link key={p.id} href={`/product/${p.slug}`} className="group">
+              <div className="relative aspect-[3/4] bg-blush/20">
+                <Image src={imgs[0]} alt={p.name} fill sizes="33vw" className="object-cover group-hover:scale-105 transition" />
+              </div>
+              <div className="mt-3">
+                <div className="text-sm text-espresso font-medium">{p.name}</div>
+                <div className="text-sm text-wine mt-1">{inr(p.price)}</div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="mt-16 pt-8 border-t border-taupe/20">
+        <h2 className="font-display text-2xl text-espresso mb-4">Learn about co-ord sets</h2>
+        <ul className="space-y-2 text-espresso/70">
+          <li>&middot; <Link href="/journal/what-is-a-coord-set" className="underline text-wine">What is a co-ord set? Types and styles</Link></li>
+          <li>&middot; <Link href="/journal/best-satin-coord-sets-under-2000-india" className="underline text-wine">Best satin co-ord sets under Rs 2,000 in India</Link></li>
+          <li>&middot; <Link href="/journal/how-to-style-marble-swirl-coord" className="underline text-wine">How to style a marble swirl co-ord set</Link></li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\collections\engagement-outfits\page.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+import { prisma } from '@/lib/prisma';
+import { inr } from '@/lib/format';
+
+export const metadata = { title: 'Engagement outfits', description: 'Outfits for engagement functions and roka ceremonies. Warm tones, small batch, works for family functions.' };
+
+export default async function EngagementCollection() {
+  const products = await prisma.product.findMany({ where: { active: true } });
+
+  return (
+    <div className="container-x py-12 max-w-6xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Engagement outfits</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">Roka, engagement, family functions</h1>
+      <p className="mt-4 text-espresso/70 max-w-2xl leading-relaxed">
+        Warm-toned satin co-ords that work for engagement functions. Read as put-together, not competing with the bride.
+      </p>
+
+      <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-6">
+        {products.map(p => {
+          const imgs = JSON.parse(p.images);
+          return (
+            <Link key={p.id} href={`/product/${p.slug}`} className="group">
+              <div className="relative aspect-[3/4] bg-blush/20">
+                <Image src={imgs[0]} alt={p.name} fill sizes="33vw" className="object-cover group-hover:scale-105 transition" />
+              </div>
+              <div className="mt-3">
+                <div className="text-sm text-espresso font-medium">{p.name}</div>
+                <div className="text-sm text-wine mt-1">{inr(p.price)}</div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="mt-16 pt-8 border-t border-taupe/20 space-y-3 text-espresso/70">
+        <h2 className="font-display text-2xl text-espresso">Guides for engagement functions</h2>
+        <div>&middot; <Link href="/journal/roka-outfit-ideas-brides-family" className="underline text-wine">Roka outfit ideas for the bride\'s family</Link></div>
+        <div>&middot; <Link href="/journal/satin-coord-engagement-function" className="underline text-wine">Satin co-ord for engagement functions</Link></div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\collections\party-wear\page.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+import { prisma } from '@/lib/prisma';
+import { inr } from '@/lib/format';
+
+export const metadata = { title: 'Party wear', description: 'Satin co-ords, dresses, and evening wear for Indian parties. Made in small batches, shipped from Gurugram.' };
+
+export default async function PartyWearCollection() {
+  const products = await prisma.product.findMany({ where: { active: true }, orderBy: { createdAt: 'desc' } });
+
+  return (
+    <div className="container-x py-12 max-w-6xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Party wear</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">For cocktail parties, engagements, dinners</h1>
+      <p className="mt-4 text-espresso/70 max-w-2xl leading-relaxed">
+        Party wear that works for Indian occasions. Satin co-ords in muted tones for engagements. Fitted midis for cocktails. All under Rs 2,000.
+      </p>
+
+      <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-6">
+        {products.map(p => {
+          const imgs = JSON.parse(p.images);
+          return (
+            <Link key={p.id} href={`/product/${p.slug}`} className="group">
+              <div className="relative aspect-[3/4] bg-blush/20">
+                <Image src={imgs[0]} alt={p.name} fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition" />
+              </div>
+              <div className="mt-3">
+                <div className="text-sm text-espresso font-medium">{p.name}</div>
+                <div className="text-sm text-wine mt-1">{inr(p.price)}</div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="mt-16 pt-8 border-t border-taupe/20">
+        <h2 className="font-display text-2xl text-espresso mb-4">More on party wear</h2>
+        <ul className="space-y-2 text-espresso/70">
+          <li>&middot; <Link href="/journal/cocktail-party-outfit-ideas-2026" className="underline text-wine">Cocktail party outfit ideas for Indian women in 2026</Link></li>
+          <li>&middot; <Link href="/journal/20-party-wear-outfit-ideas-under-2000" className="underline text-wine">20 party wear outfit ideas under Rs 2,000</Link></li>
+          <li>&middot; <Link href="/journal/sangeet-outfit-ideas-not-lehengas" className="underline text-wine">Sangeet outfit ideas that aren\'t lehengas</Link></li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\collections\satin-skirts\page.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+import { prisma } from '@/lib/prisma';
+import { inr } from '@/lib/format';
+
+export const metadata = { title: 'Satin skirts', description: 'Poly-satin skirts at 95+ GSM. Falls with weight, doesn\'t cling. Small batch, hand-painted prints available.' };
+
+export default async function SatinSkirtsCollection() {
+  const products = await prisma.product.findMany({ where: { active: true } });
+
+  return (
+    <div className="container-x py-12 max-w-6xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Satin skirts</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">Real satin, real weight</h1>
+      <p className="mt-4 text-espresso/70 max-w-2xl leading-relaxed">
+        Poly-satin at 95-105 GSM. Not the thin plasticky kind. Weight, drape, and colour that photograph beautifully.
+      </p>
+
+      <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-6">
+        {products.map(p => {
+          const imgs = JSON.parse(p.images);
+          return (
+            <Link key={p.id} href={`/product/${p.slug}`} className="group">
+              <div className="relative aspect-[3/4] bg-blush/20">
+                <Image src={imgs[0]} alt={p.name} fill sizes="33vw" className="object-cover group-hover:scale-105 transition" />
+              </div>
+              <div className="mt-3">
+                <div className="text-sm text-espresso font-medium">{p.name}</div>
+                <div className="text-sm text-wine mt-1">{inr(p.price)}</div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="mt-16 pt-8 border-t border-taupe/20">
+        <h2 className="font-display text-2xl text-espresso mb-4">On satin</h2>
+        <ul className="space-y-2 text-espresso/70">
+          <li>&middot; <Link href="/journal/poly-satin-fabric-guide" className="underline text-wine">Poly-satin fabric guide: GSM and care</Link></li>
+          <li>&middot; <Link href="/journal/poly-satin-vs-silk-satin" className="underline text-wine">Poly-satin vs silk satin</Link></li>
+          <li>&middot; <Link href="/journal/best-satin-skirts-under-1500-india" className="underline text-wine">Best satin skirts under Rs 1,500</Link></li>
+          <li>&middot; <Link href="/journal/spot-cheap-satin-in-photos" className="underline text-wine">How to spot cheap satin in photos</Link></li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\contact\page.tsx -----
+import { SITE } from '@/lib/constants';
+
+export const metadata = { title: 'Contact' };
+
+export default function ContactPage() {
+  return (
+    <div className="container-x py-16 max-w-2xl">
+      <h1 className="font-display text-4xl text-espresso">Get in touch</h1>
+      <p className="mt-3 text-espresso/70 leading-relaxed">
+        Fastest way to reach us is email. We reply within 24 hours &mdash; usually much faster on weekdays.
+      </p>
+
+      <div className="mt-8 grid gap-4 text-espresso">
+        <div className="p-5 border border-taupe/30 bg-white">
+          <div className="text-xs uppercase tracking-widest text-espresso/60 mb-1">Email</div>
+          <a className="text-lg underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+        </div>
+        <div className="p-5 border border-taupe/30 bg-white">
+          <div className="text-xs uppercase tracking-widest text-espresso/60 mb-1">Instagram</div>
+          <a className="text-lg underline text-wine" href={SITE.instagram} target="_blank" rel="noopener">@roseandco</a>
+          <p className="text-xs text-espresso/60 mt-2">DMs are open. Slower than email but we do check.</p>
+        </div>
+        <div className="p-5 border border-taupe/30 bg-white">
+          <div className="text-xs uppercase tracking-widest text-espresso/60 mb-1">Address</div>
+          <div className="text-sm">{SITE.address}</div>
+          <p className="text-xs text-espresso/60 mt-2">Not a shopfront. Studio + fulfilment only.</p>
+        </div>
+      </div>
+
+      <div className="mt-10 p-5 bg-blush/30 border border-taupe/20">
+        <h2 className="font-display text-xl text-espresso">Before you write in</h2>
+        <ul className="mt-3 text-sm text-espresso/80 space-y-2 list-disc pl-5">
+          <li><b>Order help:</b> include your order number in the subject line.</li>
+          <li><b>Sizing help:</b> tell us your height and usual size in Zara or H&M. We will pick for you.</li>
+          <li><b>Payment issues:</b> attach your UPI transaction reference.</li>
+          <li><b>Return / exchange:</b> just say &ldquo;return&rdquo; or &ldquo;exchange&rdquo; and your order number. We do the rest.</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\fabric-guide\page.tsx -----
+import Link from 'next/link';
+
+export const metadata = { title: 'Fabric guide', description: 'What we look for in fabric and why. Complete guide to GSM, satin types, and quality signals.' };
+
+export default function FabricGuidePage() {
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Fabric guide</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">What we obsess over</h1>
+      <p className="mt-4 text-espresso/70 leading-relaxed">
+        Fabric is 80% of what makes a good piece. Here\'s what we look for and why.
+      </p>
+
+      <div className="mt-10 space-y-8 text-espresso/80 leading-relaxed">
+        <div>
+          <h2 className="font-display text-2xl text-espresso mb-3">The Amara fabric</h2>
+          <p>Poly-satin blend, 95-105 GSM. Sourced from a mill in Surat. We tested 9 swatches from 6 mills before choosing this one.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-2xl text-espresso mb-3">Why this GSM</h2>
+          <p>Under 90 GSM, satin looks flat and feels plasticky. Above 130 GSM, it starts feeling like curtain material. 95-110 is the sweet spot for drape and photographs.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-2xl text-espresso mb-3">Read more</h2>
+          <ul className="list-disc pl-5 space-y-1 text-sm">
+            <li><Link href="/journal/poly-satin-fabric-guide" className="underline text-wine">Full poly-satin GSM guide</Link></li>
+            <li><Link href="/journal/gsm-fabric-quality-guide" className="underline text-wine">What GSM means across all fabrics</Link></li>
+            <li><Link href="/journal/poly-satin-vs-silk-satin" className="underline text-wine">Poly-satin vs silk satin</Link></li>
+            <li><Link href="/journal/spot-cheap-satin-in-photos" className="underline text-wine">Spot cheap satin in product photos</Link></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\faq\page.tsx -----
+import { SITE } from '@/lib/constants';
+
+export const metadata = { title: 'Questions' };
+
+const sections: { title: string; items: [string, string][] }[] = [
+  {
+    title: 'Shipping and delivery',
+    items: [
+      ['When will my order reach me?', 'Metros usually see it in three to five working days. Smaller cities in five to seven. Everything ships from our Gurugram studio within forty-eight hours of your order.'],
+      ['Do you ship internationally?', 'Not yet. India only, for now.'],
+      ['Who handles the delivery?', 'Delhivery, mostly. A handful of remote pincodes are served by Ecom Express or Xpressbees.'],
+      ['How do I track it?', 'A tracking link goes to your registered mobile once the courier picks it up.'],
+      ["What happens if I'm not home?", 'The courier tries three times. If all three fail, it comes back to us and we refund what you paid.'],
+    ],
+  },
+  {
+    title: 'Payment',
+    items: [
+      ['Which methods do you accept?', 'UPI only. GPay, PhonePe, Paytm, BHIM, Amazon Pay, CRED. No cards or netbanking yet.'],
+      ['Why UPI only?', 'Because we are small. Card gateways cost more than they are worth at our volume. UPI does the same job at no fee.'],
+      ['Is cash on delivery available?', 'Partial. A small deposit online, the rest in cash when it arrives.'],
+      ['Why not full COD?', 'We tried, and thirty percent came back. Every refused delivery costs us in shipping. A small deposit keeps the piece here for someone who actually wants it.'],
+      ['My payment is pending, is something wrong?', "No. We check every UPI payment against our bank statement by hand. Usually done in an hour. If it's been more than four hours, email us with the UTR."],
+      ['My money left, but no order confirmation.', 'Write to us with the UPI reference and the amount. We create the order manually, usually within the hour.'],
+    ],
+  },
+  {
+    title: 'Product and fit',
+    items: [
+      ['Tell me about the fabric.', 'Poly-satin, around a hundred grams per square metre. It has weight. It falls without clinging.'],
+      ['Is it really hand-painted?', 'Yes. Every panel is painted before the cloth is cut. Yours will look a little different from the photos. Same three tones, different arrangement.'],
+      ['How does the sizing run?', 'True to Zara and H&amp;M. Between sizes, we usually say down for the top and up for the skirt.'],
+      ['How do I take care of it?', 'Dry clean is safest. Hand-wash cold works too. Never tumble dry. Never wring. Iron on the reverse, low heat, if needed.'],
+      ['Will the print fade?', 'The pigment sits inside the fibre. Wash cold, skip the bleach, and it stays true.'],
+    ],
+  },
+  {
+    title: 'Returns',
+    items: [
+      ['Can I return it?', 'Yes, within seven days of it arriving. Tags on, unworn, unwashed, original packaging.'],
+      ['How does the return work?', 'Email us at care@roseandco.in with your order number. We arrange a free pickup. Once we check it in, the refund is on its way &mdash; usually about a week.'],
+      ['Can I exchange for a different size?', 'Yes, free, if the size you want is in stock.'],
+      ['It arrived damaged.', 'Email within forty-eight hours with a photo. Full refund. We arrange the pickup. No back and forth.'],
+    ],
+  },
+  {
+    title: 'Order changes',
+    items: [
+      ['Can I change my address?', 'Yes, within four hours of ordering. After that, the courier has picked it up.'],
+      ['Can I cancel?', 'Any time before dispatch. Anything you paid online lands back in about a week.'],
+    ],
+  },
+];
+
+export default function FAQ() {
+  return (
+    <div className="container-x py-16 max-w-2xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Help</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">A few common questions.</h1>
+
+      <div className="mt-12 space-y-12">
+        {sections.map(sec => (
+          <div key={sec.title}>
+            <h2 className="font-display text-2xl text-espresso mb-4">{sec.title}</h2>
+            <div className="space-y-3">
+              {sec.items.map(([q, a]) => (
+                <details key={q} className="border-b border-taupe/20 pb-4 pt-4 group">
+                  <summary className="cursor-pointer font-medium text-espresso flex justify-between text-[15px]">
+                    <span dangerouslySetInnerHTML={{ __html: q }} />
+                    <span className="group-open:rotate-45 transition ml-4 text-wine">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm text-espresso/70 leading-[1.8]" dangerouslySetInnerHTML={{ __html: a }} />
+                </details>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-16 p-6 border border-taupe/20 text-center">
+        <p className="text-sm text-espresso/80">Anything else? Write to us.</p>
+        <a className="mt-2 inline-block underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\gift-cards\page.tsx -----
+import { SITE } from '@/lib/constants';
+
+export const metadata = { title: 'Gift cards', description: 'Give Rose &amp; Co credit as a gift. Rs 500, Rs 1,000, or Rs 2,000 amounts. Emailed instantly.' };
+
+export default function GiftCardsPage() {
+  const cards = [
+    { amount: 500, tagline: 'A small gift' },
+    { amount: 1500, tagline: 'A full Amara set' },
+    { amount: 3000, tagline: 'Two sets, or one plus another drop' },
+  ];
+
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Gift cards</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">Give a Rose &amp; Co gift card</h1>
+      <p className="mt-4 text-espresso/70 leading-relaxed">
+        A pre-paid credit code, emailed to your recipient. They redeem it at checkout. No expiry. Works for one full order (not multiple).
+      </p>
+
+      <div className="mt-10 grid md:grid-cols-3 gap-4">
+        {cards.map(c => (
+          <div key={c.amount} className="p-6 border border-taupe/30 bg-white text-center">
+            <div className="text-4xl font-display text-wine">Rs {c.amount.toLocaleString('en-IN')}</div>
+            <div className="text-sm text-espresso/70 mt-2">{c.tagline}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-10 p-6 bg-blush/30 border border-taupe/20">
+        <h2 className="font-display text-xl text-espresso mb-3">How it works</h2>
+        <ol className="list-decimal pl-5 space-y-2 text-sm text-espresso/70">
+          <li>Email us at <a href={`mailto:${SITE.email}`} className="underline text-wine">{SITE.email}</a> with the amount and recipient email.</li>
+          <li>Pay via UPI (send to the ID on our checkout page).</li>
+          <li>We generate the gift card code, email it to the recipient.</li>
+          <li>They enter the code at checkout when they order.</li>
+        </ol>
+        <p className="mt-4 text-xs text-espresso/60">
+          Turnaround: 4 hours during working hours (10 AM to 8 PM). Longer at night/weekends.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\globals.css -----
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --scroll-behavior: smooth;
+  /* Fallback in case next/font vars are missing */
+  --font-display: Georgia, 'Playfair Display', serif;
+  --font-sans: system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeSpeed;
+}
+
+body {
+  background: #FAF6F0;
+  color: #2B1810;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: #B03A4C; color: #FAF6F0; }
+
+/* Reserve space for images to avoid layout shift */
+img { max-width: 100%; height: auto; }
+
+.container-x { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+.font-display { font-family: var(--font-display), Georgia, serif; }
+.btn-primary { @apply inline-flex items-center justify-center px-6 py-3 bg-wine text-ivory font-medium tracking-wide uppercase text-sm transition-all hover:bg-rose active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed; }
+.btn-secondary { @apply inline-flex items-center justify-center px-6 py-3 border border-espresso text-espresso font-medium tracking-wide uppercase text-sm transition-all hover:bg-espresso hover:text-ivory; }
+.input { @apply w-full px-4 py-3 bg-white border border-taupe/30 rounded-none focus:outline-none focus:border-wine transition-colors text-espresso placeholder:text-taupe/60; }
+.label { @apply block text-xs uppercase tracking-widest text-espresso/70 mb-2 font-medium; }
+.badge { @apply inline-flex items-center px-2 py-1 text-[10px] uppercase tracking-widest font-semibold; }
+
+/* Journal typography */
+.journal-content h2 { font-family: var(--font-display), Georgia, serif; font-size: 1.75rem; color: #2B1810; margin-top: 2.5rem; margin-bottom: 1rem; font-weight: 500; }
+.journal-content h3 { font-family: var(--font-display), Georgia, serif; font-size: 1.375rem; color: #2B1810; margin-top: 2rem; margin-bottom: 0.75rem; font-weight: 500; }
+.journal-content p { color: rgba(43, 24, 16, 0.85); line-height: 1.75; margin: 1.25rem 0; font-size: 1.05rem; }
+.journal-content ul, .journal-content ol { margin: 1.25rem 0; padding-left: 1.5rem; color: rgba(43, 24, 16, 0.85); line-height: 1.75; }
+.journal-content li { margin: 0.5rem 0; }
+.journal-content a { color: #5C1A2B; text-decoration: underline; }
+.journal-content a:hover { color: #B03A4C; }
+.journal-content blockquote { border-left: 3px solid #5C1A2B; padding-left: 1.5rem; margin: 2rem 0; font-style: italic; color: rgba(43, 24, 16, 0.75); }
+.journal-content table { width: 100%; border-collapse: collapse; margin: 2rem 0; font-size: 0.95rem; }
+.journal-content th { background: #F4DCD6; padding: 0.75rem; text-align: left; font-weight: 600; color: #2B1810; border: 1px solid rgba(139, 117, 104, 0.3); }
+.journal-content td { padding: 0.75rem; border: 1px solid rgba(139, 117, 104, 0.2); color: rgba(43, 24, 16, 0.85); }
+.journal-content strong { color: #2B1810; font-weight: 600; }
+.journal-content hr { border: none; border-top: 1px solid rgba(139, 117, 104, 0.3); margin: 3rem 0; }
+
+/* Marquee animation for announcement bar */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee { animation: marquee 30s linear infinite; }
+
+/* Smooth fade for hero */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 0.5s ease-out; }
+
+/* Prevent CLS from web fonts */
+@font-face {
+  font-family: 'system-fallback';
+  size-adjust: 100%;
+  src: local('Arial');
+}
+/* ===== v25: Fix image crop on product pages ===== */
+.product-hero-image {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center top;
+  background: #FDF6F0;
+  border-radius: 1rem;
+}
+
+.product-thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+}
+
+.product-card-image {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center top;
+  background: #FDF6F0;
+}
+/* v27 image crop fix â€” faces always visible */
+[data-nimg="fill"] {
+  object-position: center 15% !important;
+}
+
+.object-top,
+img.object-top {
+  object-position: center top !important;
+}
+
+.aspect-\[3\/4\] img,
+.aspect-\[4\/5\] img {
+  object-position: center 15% !important;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* ============================================================
+   v28 MOBILE SPEED & UX BOOST â€” Append to globals.css
+   ============================================================ */
+
+/* Reduce motion for slow devices / user preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Optimize scroll performance on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeSpeed;
+}
+
+/* Prevent layout shift from images */
+img {
+  content-visibility: auto;
+}
+
+/* Lazy-load off-screen sections */
+section {
+  contain: content;
+}
+
+/* Fast focus states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid #8B1E3F;
+  outline-offset: 2px;
+}
+
+/* Prevent horizontal overflow on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Bigger tap targets on mobile */
+@media (max-width: 768px) {
+  button, a[role="button"], .btn-primary, .btn-secondary {
+    min-height: 44px;
+  }
+}
+
+/* ============================================================
+   v30 A11Y FIXES â€” Contrast, focus rings, tap targets
+   Append to bottom of globals.css
+   ============================================================ */
+
+/* Ensure adequate contrast on greeting banner + social proof */
+.text-espresso\/60 {
+  color: #4A2C2C !important; /* darker than /60, still elegant */
+}
+
+.text-espresso\/70 {
+  color: #3D2323 !important;
+}
+
+/* Focus ring for keyboard users */
+*:focus-visible {
+  outline: 2px solid #8B1E3F !important;
+  outline-offset: 2px !important;
+  border-radius: 2px;
+}
+
+/* Skip-to-content link (invisible until Tab is pressed) */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #8B1E3F;
+  color: #FDF6F0;
+  padding: 8px 16px;
+  z-index: 9999;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Minimum tap target size on mobile (44x44 per Google/Apple guidelines) */
+@media (max-width: 768px) {
+  button:not(.exempt-tap),
+  a[role="button"]:not(.exempt-tap),
+  [role="menuitem"]:not(.exempt-tap) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Ensure identical links (like "See the set") have distinct context */
+.link-context::before {
+  content: attr(data-context);
+  position: absolute;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   v31 FINAL POLISH â€” Kill remaining contrast + speed issues
+   Append to bottom of globals.css (or replace v30 block)
+   ============================================================ */
+
+/* Every espresso opacity variant â€” bumped to WCAG AA compliant */
+.text-espresso\/50,
+[class*="text-espresso/50"] { color: #4A2C2C !important; }
+
+.text-espresso\/60,
+[class*="text-espresso/60"] { color: #3D2323 !important; }
+
+.text-espresso\/70,
+[class*="text-espresso/70"] { color: #2E1A1A !important; }
+
+.text-espresso\/40,
+[class*="text-espresso/40"] { color: #5A3535 !important; }
+
+/* Fix ivory opacity variants used on dark backgrounds */
+.text-ivory\/60,
+[class*="text-ivory/60"] { color: #F5EBDE !important; }
+
+.text-ivory\/70,
+[class*="text-ivory/70"] { color: #F8EFE3 !important; }
+
+/* Fix taupe borders that may lack contrast */
+.border-taupe\/20 { border-color: #C8B8A8 !important; }
+.border-taupe\/30 { border-color: #A89888 !important; }
+
+/* Speed Index fix â€” swap async font loading */
+@font-face {
+  font-display: swap !important;
+}
+
+/* Prevent forced reflow on Header hover states */
+header nav {
+  will-change: auto;
+}
+
+/* Contain layout shifts on greeting banner */
+.bg-espresso {
+  contain: layout style;
+}
+
+/* ================================================================
+   v37 SPEED FIXES â€” Append to globals.css
+   ================================================================ */
+
+/* Reduce DOM size - hide off-screen images from render */
+img[loading="lazy"] {
+  content-visibility: auto;
+  contain-intrinsic-size: 400px;
+}
+
+/* Prevent CLS from Font swap */
+html {
+  font-display: optional;
+}
+
+/* Speed up initial paint */
+body {
+  text-rendering: optimizeSpeed;
+  font-smooth: never;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Reduce composited layers */
+.container-x {
+  contain: layout style;
+}
+
+/* Prevent animations before user interaction */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Kill legacy webkit prefixes visual bloat */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Force GPU acceleration only where needed */
+.gpu-accel {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+
+
+----- FILE: src\app\impact\page.tsx -----
+export const metadata = { title: 'Our impact', description: 'Small-batch production, transparent supply chain. What we actually do vs what other brands say.' };
+
+export default function ImpactPage() {
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Our impact</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">Small-batch, transparent, honest</h1>
+      <p className="mt-4 text-espresso/70 leading-relaxed">
+        We\'re not a sustainable brand in the strict sense. But here\'s what we actually do.
+      </p>
+
+      <div className="mt-10 space-y-8 text-espresso/80 leading-relaxed">
+        <div>
+          <h2 className="font-display text-2xl text-espresso mb-3">What we do</h2>
+          <ul className="list-disc pl-5 space-y-2 text-sm">
+            <li>Produce 200 sets per drop. No overstock. When it sells out, wait 4-6 weeks for the next drop.</li>
+            <li>Hand-paint each fabric panel. Not machine-printed. Not digital.</li>
+            <li>Source poly-satin from a single mill in Surat. We know their conditions and pay above market rate.</li>
+            <li>Stitch at a small unit near Karol Bagh, Delhi. 8 tailors, one supervisor. Fair wages.</li>
+            <li>Pack each order by hand at our Gurugram address.</li>
+            <li>Free return shipping via Delhivery. Returned pieces are inspected, repaired if needed, resold at a small discount (or donated if not resalable).</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-display text-2xl text-espresso mb-3">What we don\'t do</h2>
+          <ul className="list-disc pl-5 space-y-2 text-sm">
+            <li>Use organic or handloom fabric. Poly-satin is not eco-friendly. We\'re honest about that.</li>
+            <li>Claim carbon neutrality. We\'re not there yet.</li>
+            <li>Have take-back or resale programs. Considering both for future.</li>
+            <li>Charge extra for &quot;sustainability&quot;. Rs 1,499 is the price.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-display text-2xl text-espresso mb-3">Why we\'re transparent about this</h2>
+          <p className="text-sm">Most brands claim sustainability without doing the work. We think being honest about limitations is more valuable than performing perfection.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\journal\[slug]\page.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+import { notFound } from 'next/navigation';
+import { getAllPosts, getPostBySlug } from '@/lib/journal';
+import { articleSchema, breadcrumbSchema } from '@/lib/schemas';
+import { SITE } from '@/lib/constants';
+import JsonLd from '@/components/JsonLd';
+import type { Metadata } from 'next';
+
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  return getAllPosts().map(p => ({ slug: p.slug }));
+}
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const post = getPostBySlug(params.slug);
+  if (!post) return { title: 'Not found' };
+  return {
+    title: post.title,
+    description: post.excerpt,
+    keywords: post.keywords,
+    alternates: { canonical: `/journal/${post.slug}` },
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      url: `${SITE.url}/journal/${post.slug}`,
+      type: 'article',
+      publishedTime: post.date,
+      images: post.cover ? [{ url: `${SITE.url}${post.cover}` }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+    },
+  };
+}
+
+export default function JournalPost({ params }: { params: { slug: string } }) {
+  const post = getPostBySlug(params.slug);
+  if (!post) notFound();
+
+  return (
+    <>
+      <JsonLd data={[
+        articleSchema({ slug: post.slug, title: post.title, excerpt: post.excerpt, date: post.date, coverImage: post.cover }),
+        breadcrumbSchema([
+          { name: 'Home', url: '/' },
+          { name: 'Journal', url: '/journal' },
+          { name: post.title, url: `/journal/${post.slug}` },
+        ]),
+      ]} />
+
+      <article className="container-x py-10 md:py-16 max-w-3xl">
+        <nav className="text-xs uppercase tracking-widest text-espresso/60 mb-6">
+          <Link href="/">Home</Link> / <Link href="/journal">Journal</Link>
+        </nav>
+
+        <div className="text-xs uppercase tracking-widest text-espresso/60">
+          {new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} &middot; {post.readingTime}
+        </div>
+        <h1 className="font-display text-3xl md:text-5xl text-espresso mt-3 leading-tight">{post.title}</h1>
+        <p className="mt-4 text-lg text-espresso/70 leading-relaxed">{post.excerpt}</p>
+
+        {post.cover && (
+          <div className="mt-8 relative aspect-[16/9] bg-blush/20">
+            <Image
+              src={post.cover}
+              alt={post.title}
+              fill
+              priority
+              fetchPriority="high"
+              sizes="(max-width: 768px) 100vw, 800px"
+              className="object-cover"
+              quality={85}
+            />
+          </div>
+        )}
+
+        <div className="mt-10 max-w-none journal-content" dangerouslySetInnerHTML={{ __html: post.html }} />
+
+        <div className="mt-16 pt-8 border-t border-taupe/20">
+          <div className="p-6 bg-blush/30 border border-taupe/20">
+            <div className="text-xs uppercase tracking-[0.3em] text-wine">The product</div>
+            <h3 className="font-display text-2xl text-espresso mt-2">Amara Marble Swirl Co-ord Set</h3>
+            <p className="mt-2 text-sm text-espresso/70">
+              What this journal is really about. Hand-painted marble print on soft-drape satin. Rs 1,499. Ships from Delhi NCR in 24-48 hours.
+            </p>
+            <Link href="/product/amara-marble-swirl-coord-set" prefetch className="btn-primary mt-4">See the set &rarr;</Link>
+          </div>
+        </div>
+
+        <div className="mt-12">
+          <Link href="/journal" className="text-xs uppercase tracking-widest text-wine underline">&larr; Back to Journal</Link>
+        </div>
+      </article>
+    </>
+  );
+}
+
+
+----- FILE: src\app\journal\page.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+import { getAllPosts } from '@/lib/journal';
+import { breadcrumbSchema } from '@/lib/schemas';
+import { SITE } from '@/lib/constants';
+import JsonLd from '@/components/JsonLd';
+import type { Metadata } from 'next';
+
+export const revalidate = 3600; // 1 hour
+
+export const metadata: Metadata = {
+  title: 'Journal â€” guides on fabric, styling, and Indian D2C fashion',
+  description: 'Honest guides on satin fabric, styling co-ord sets, and how small-batch Indian brands make things. From Rose & Co, Gurugram.',
+  alternates: { canonical: '/journal' },
+  openGraph: {
+    title: 'Journal | Rose & Co',
+    description: 'Guides on satin, styling, and Indian D2C fashion.',
+    url: `${SITE.url}/journal`,
+    type: 'website',
+  },
+};
+
+export default function JournalIndex() {
+  const posts = getAllPosts();
+
+  return (
+    <>
+      <JsonLd data={breadcrumbSchema([
+        { name: 'Home', url: '/' },
+        { name: 'Journal', url: '/journal' },
+      ])} />
+
+      <section className="container-x py-12 md:py-16 max-w-4xl">
+        <div className="text-xs uppercase tracking-[0.3em] text-wine">The Journal</div>
+        <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">
+          Notes on fabric, fit, and Indian D2C fashion.
+        </h1>
+        <p className="mt-4 text-espresso/70 max-w-2xl leading-relaxed">
+          What we learned building a small-batch co-ord brand out of Gurugram &mdash; fabric details we obsess over, styling that actually works, honest comparisons of what else exists.
+        </p>
+
+        <div className="mt-12 space-y-8">
+          {posts.length === 0 ? (
+            <p className="text-espresso/60">No posts yet.</p>
+          ) : posts.map((post, idx) => (
+            <article key={post.slug} className="border-b border-taupe/20 pb-8">
+              <Link href={`/journal/${post.slug}`} prefetch={idx < 3} className="block group">
+                <div className="grid md:grid-cols-3 gap-6">
+                  {post.cover && (
+                    <div className="relative aspect-[4/3] bg-blush/20 md:col-span-1">
+                      <Image
+                        src={post.cover}
+                        alt={post.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        loading={idx < 2 ? 'eager' : 'lazy'}
+                        className="object-cover"
+                        quality={75}
+                      />
+                    </div>
+                  )}
+                  <div className={post.cover ? 'md:col-span-2' : 'md:col-span-3'}>
+                    <div className="text-xs uppercase tracking-widest text-espresso/60">
+                      {new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} &middot; {post.readingTime}
+                    </div>
+                    <h2 className="font-display text-2xl md:text-3xl text-espresso mt-2 group-hover:text-wine transition">
+                      {post.title}
+                    </h2>
+                    <p className="mt-3 text-espresso/70 leading-relaxed">{post.excerpt}</p>
+                    <div className="mt-4 text-xs uppercase tracking-widest text-wine">Read &rarr;</div>
+                  </div>
+                </div>
+              </Link>
+            </article>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+
+----- FILE: src\app\layout.tsx -----
+import type { Metadata } from 'next';
+import './globals.css';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import JsonLd from '@/components/JsonLd';
+import { CartProvider } from '@/components/CartContext';
+import { WishlistProvider } from '@/components/WishlistContext';
+import GreetingBanner from '@/components/GreetingBanner';
+import PersonalizedDiscount from '@/components/PersonalizedDiscount';
+import SocialProof from '@/components/SocialProof';
+import WhatsAppButton from '@/components/WhatsAppButton';
+import LeadCaptureChip from '@/components/LeadCaptureChip';
+import CartAbandonmentTracker from '@/components/CartAbandonmentTracker';
+import { localBusinessJsonLd, BRAND } from '@/lib/seo';
+
+export const metadata: Metadata = {
+  metadataBase: new URL(BRAND.domain),
+  title: {
+    default: 'RosÃ© & Co - Hand-painted Marble Swirl Co-ord Sets',
+    template: '%s | RosÃ© & Co',
+  },
+  description: 'Hand-painted marble swirl satin co-ord sets. Ships from Gurugram in 24-48 hours. Free shipping across India.',
+  openGraph: {
+    type: 'website',
+    locale: 'en_IN',
+    url: BRAND.domain,
+    siteName: BRAND.name,
+    title: 'RosÃ© & Co - Hand-painted Marble Swirl Co-ord Sets',
+    description: 'Two hundred sets. Then we begin again.',
+    images: [{ url: `${BRAND.domain}/og-cover.jpg`, width: 1200, height: 630, alt: BRAND.name }],
+  },
+  twitter: { card: 'summary_large_image' },
+  robots: {
+    index: true, follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+  },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en-IN">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://api.postalpincode.in" />
+      </head>
+      <body>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
+
+        <JsonLd data={localBusinessJsonLd()} />
+        <CartProvider>
+          <WishlistProvider>
+            <PersonalizedDiscount />
+            <GreetingBanner />
+            <Header />
+            <main id="main-content" role="main">
+              {children}
+            </main>
+            <Footer />
+            <SocialProof />
+            <WhatsAppButton />
+            <LeadCaptureChip />
+            <CartAbandonmentTracker />
+          </WishlistProvider>
+        </CartProvider>
+      </body>
+    </html>
+  );
+}
+
+
+----- FILE: src\app\not-found.tsx -----
+import Link from 'next/link';
+
+export default function NotFound() {
+  return (
+    <div className="container-x py-24 text-center max-w-lg mx-auto">
+      <h1 className="font-display text-6xl text-espresso">404</h1>
+      <p className="mt-4 text-espresso/70">We do not have a page at this URL.</p>
+      <Link href="/" className="btn-primary mt-8">Back to shop</Link>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\order-failure\page.tsx -----
+import Link from 'next/link';
+import { SITE } from '@/lib/constants';
+
+export default function OrderFailure() {
+  return (
+    <div className="container-x py-20 text-center max-w-2xl">
+      <div className="w-16 h-16 rounded-full bg-wine/20 text-wine mx-auto flex items-center justify-center text-3xl">!</div>
+      <h1 className="font-display text-4xl mt-6 text-espresso">Order did not go through.</h1>
+      <p className="mt-4 text-espresso/70 leading-relaxed">
+        No money has left your account permanently. If UPI did deduct it, email us at <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a> with your UPI transaction reference. We will create the order manually and confirm within an hour.
+      </p>
+      <div className="mt-8 flex justify-center gap-3">
+        <Link href="/checkout" className="btn-primary">Try again</Link>
+        <Link href="/contact" className="btn-secondary">Email us</Link>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\order-success\CopyReferral.tsx -----
+// Removed in v9.
+export default function CopyReferral(_: any) { return null; }
+
+
+----- FILE: src\app\order-success\page.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
+
+export default async function OrderSuccessPage({
+  searchParams,
+}: {
+  searchParams: { order?: string };
+}) {
+  const orderId = searchParams.order;
+
+  // Get another product to upsell
+  const otherProducts = await prisma.product.findMany({
+    where: { active: true },
+    orderBy: { createdAt: 'desc' },
+    take: 4,
+    select: { slug: true, name: true, price: true, compareAt: true, images: true },
+  });
+
+  return (
+    <main className="container-x py-12 md:py-16">
+      <div className="max-w-3xl mx-auto text-center">
+        <div className="text-6xl mb-4">ðŸŒ¹</div>
+        <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">Order confirmed</div>
+        <h1 className="font-display text-4xl md:text-5xl text-espresso mb-4">
+          Thank you.
+        </h1>
+        <p className="text-espresso/70 max-w-md mx-auto mb-2">
+          Your order is being prepared. We ship from Gurugram in twenty-four to forty-eight hours.
+        </p>
+        {orderId && (
+          <p className="text-xs text-espresso/60 font-mono">
+            Order ID: {orderId}
+          </p>
+        )}
+
+        {/* What happens next */}
+        <div className="mt-12 grid md:grid-cols-3 gap-6 text-left">
+          <div className="bg-blush/20 p-6">
+            <div className="text-xs uppercase tracking-widest text-wine mb-2">1 Â· Today</div>
+            <p className="text-sm text-espresso">
+              Confirmation on WhatsApp with order details.
+            </p>
+          </div>
+          <div className="bg-blush/20 p-6">
+            <div className="text-xs uppercase tracking-widest text-wine mb-2">2 Â· 24-48 hrs</div>
+            <p className="text-sm text-espresso">
+              Tracking link once we hand it to Delhivery.
+            </p>
+          </div>
+          <div className="bg-blush/20 p-6">
+            <div className="text-xs uppercase tracking-widest text-wine mb-2">3 Â· 3-7 days</div>
+            <p className="text-sm text-espresso">
+              At your door. Reply with a photo if you love it.
+            </p>
+          </div>
+        </div>
+
+        {/* Upsell â€” complete the look */}
+        <div className="mt-16 text-left">
+          <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2 text-center">
+            While you wait
+          </div>
+          <h2 className="font-display text-2xl md:text-3xl text-espresso mb-8 text-center">
+            Something else to love.
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {otherProducts.map((p) => {
+              const imgs = JSON.parse(p.images) as string[];
+              return (
+                <Link
+                  key={p.slug}
+                  href={`/product/${p.slug}`}
+                  prefetch
+                  className="group block"
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden bg-blush/20">
+                    <Image
+                      src={imgs[0]}
+                      alt={p.name}
+                      fill
+                      sizes="200px"
+                      className="object-cover object-top group-hover:scale-105 transition duration-500"
+                    />
+                  </div>
+                  <div className="mt-2">
+                    <h3 className="text-sm font-medium text-espresso group-hover:text-wine">
+                      {p.name.split(' ')[0]}
+                    </h3>
+                    <p className="text-xs text-wine mt-0.5">
+                      Rs {p.price.toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Referral prompt */}
+        <div className="mt-16 bg-espresso text-ivory p-8 md:p-12">
+          <div className="text-xs uppercase tracking-[0.3em] text-champagne mb-2">
+            Give Rs 200, get Rs 200
+          </div>
+          <h2 className="font-display text-2xl md:text-3xl mb-3">
+            A friend deserves this too.
+          </h2>
+          <p className="text-ivory/70 text-sm max-w-md mx-auto mb-6">
+            Share your code. When they buy, you both get Rs 200 off your next order.
+          </p>
+          <Link
+            href="/referral"
+            className="inline-block bg-ivory text-espresso px-6 py-3 uppercase tracking-widest text-xs hover:bg-champagne transition"
+          >
+            Get my code
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+
+----- FILE: src\app\order-success\ThankYouTracker.tsx -----
+'use client';
+// No-op. Purchase events fire server-side via CAPI when money is in the bank.
+export default function ThankYouTracker(_props: any) { return null; }
+
+
+----- FILE: src\app\page.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+import { prisma } from '@/lib/prisma';
+import { inr } from '@/lib/format';
+import { PAYMENT } from '@/lib/constants';
+import TrustBar from '@/components/TrustBar';
+import JsonLd from '@/components/JsonLd';
+import CustomerPhotos from '@/components/CustomerPhotos';
+import TestimonialsCarousel from '@/components/TestimonialsCarousel';
+import HeroSlideshow from '@/components/HeroSlideshow';
+import { organizationSchema, websiteSchema } from '@/lib/schemas';
+
+export const revalidate = 300;
+
+const EDITORIAL: Record<string, { tagline: string; title: string; sub: string }> = {
+  'amara-marble-swirl-coord-set': {
+    tagline: 'A new drop',
+    title: 'Poured in rosÃ©.\nWorn in fire.',
+    sub: 'Hand-painted marble swirl on satin that actually has weight. Two hundred sets, and then we begin again.',
+  },
+  'aarna-beige-marble-swirl-coord-set': {
+    tagline: 'A quieter drop',
+    title: 'Cast in caramel.\nKept in calm.',
+    sub: 'Warm marble on satin that actually has weight. Slow mornings, long lunches, the kind of day that does not rush.',
+  },
+};
+
+export default async function HomePage() {
+  const products = await prisma.product.findMany({
+    where: { active: true },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      slug: true,
+      name: true,
+      price: true,
+      compareAt: true,
+      images: true,
+    },
+  });
+
+  const slides = products.map((p) => {
+    const imgs = JSON.parse(p.images) as string[];
+    const editorial = EDITORIAL[p.slug] || {
+      tagline: 'A new drop',
+      title: p.name,
+      sub: 'One-of-a-kind. Handcrafted in Delhi NCR. Two hundred sets, then we begin again.',
+    };
+    return {
+      slug: p.slug,
+      name: p.name,
+      hero: imgs[0] || '/products/amara-front.png',
+      price: p.price || PAYMENT.fullPrice,
+      mrp: p.compareAt || PAYMENT.mrp,
+      tagline: editorial.tagline,
+      title: editorial.title,
+      sub: editorial.sub,
+    };
+  });
+
+  const faqs = [
+    ['When will it arrive?', 'Metros, three to five working days. Smaller cities, five to seven. Ships from Gurugram within forty-eight hours of your order.'],
+    ['Is cash on delivery available?', 'Partial. A small deposit at the door, the rest in cash when it arrives.'],
+    ['Tell me about the fabric.', 'Poly-satin, around a hundred grams per square metre. It has weight. It falls without clinging.'],
+    ['What if the size is wrong?', 'Seven days to return. Free pickup. Refund lands in a week.'],
+  ];
+
+  return (
+    <>
+      <JsonLd data={[organizationSchema(), websiteSchema()]} />
+
+      <HeroSlideshow slides={slides} />
+
+      <TrustBar />
+
+      <section className="container-x py-20" aria-labelledby="collection-heading">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="text-xs uppercase tracking-[0.3em] text-wine">The collection</div>
+          <h2 id="collection-heading" className="font-display text-3xl md:text-5xl mt-3 text-espresso">
+            Two sets. Two moods.
+          </h2>
+          <p className="mt-4 text-espresso/70">
+            Same fabric philosophy. Different quiet obsessions.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 mt-14 max-w-5xl mx-auto">
+          {products.map((p) => {
+            const imgs = JSON.parse(p.images) as string[];
+            const discount = p.compareAt
+              ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100)
+              : 0;
+            const firstName = p.name.split(' ')[0];
+
+            return (
+              <Link
+                key={p.slug}
+                href={`/product/${p.slug}`}
+                prefetch
+                aria-label={`View the ${p.name} product page, priced at ${inr(p.price)}`}
+                className="group block"
+              >
+                <div className="relative aspect-[3/4] overflow-hidden bg-blush/20">
+                  <Image
+                    src={imgs[0]}
+                    alt={`${p.name} â€” hand-painted marble swirl co-ord set`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover object-top group-hover:scale-105 transition duration-700"
+                  />
+                  {discount > 0 && (
+                    <span
+                      className="absolute top-4 right-4 bg-ivory text-wine text-xs font-semibold px-3 py-1 uppercase tracking-widest"
+                      aria-label={`${discount} percent off`}
+                    >
+                      {discount}% off
+                    </span>
+                  )}
+                </div>
+                <div className="mt-5 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-display text-2xl text-espresso">{p.name}</h3>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-lg font-semibold text-wine">{inr(p.price)}</span>
+                      {p.compareAt && (
+                        <span className="text-sm line-through text-espresso/40" aria-label={`Original price ${inr(p.compareAt)}`}>
+                          {inr(p.compareAt)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span
+                    className="text-sm underline text-espresso group-hover:text-wine transition"
+                    aria-hidden="true"
+                  >
+                    See the {firstName}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="container-x pb-20" aria-labelledby="details-heading">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="text-xs uppercase tracking-[0.3em] text-wine">The set</div>
+          <h2 id="details-heading" className="font-display text-3xl md:text-5xl mt-3 text-espresso">Three things worth knowing.</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8 mt-14 max-w-5xl mx-auto">
+          <div>
+            <div className="font-display text-xl text-wine">The print</div>
+            <p className="mt-3 text-[15px] text-espresso/75 leading-[1.8]">
+              Hand-painted, one panel at a time. Every set arranges itself differently. Yours will not be the one in the photo. That is the point.
+            </p>
+          </div>
+          <div>
+            <div className="font-display text-xl text-wine">The fabric</div>
+            <p className="mt-3 text-[15px] text-espresso/75 leading-[1.8]">
+              A poly-satin heavy enough to fall properly. It moves when you walk. It does not stick when you sit. Nothing like the thin, shiny kind you may have been disappointed by before.
+            </p>
+          </div>
+          <div>
+            <div className="font-display text-xl text-wine">The fit</div>
+            <p className="mt-3 text-[15px] text-espresso/75 leading-[1.8]">
+              True to the sizing you already know from Zara or H&amp;M. If you are between, we usually say go down for the top and up for the skirt. Satin does not stretch.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-espresso text-ivory py-24" aria-labelledby="how-heading">
+        <div className="container-x max-w-4xl text-center">
+          <div className="text-xs uppercase tracking-[0.3em] text-champagne">How we work</div>
+          <h2 id="how-heading" className="font-display text-3xl md:text-5xl mt-3">Two hundred sets, then we begin again.</h2>
+          <p className="mt-6 text-lg text-ivory/70 leading-relaxed max-w-2xl mx-auto">
+            A drop lasts as long as it lasts. Every piece is looked at before it leaves the studio. Ships from Gurugram, free anywhere in India, seven days to return if it isn&apos;t right.
+          </p>
+        </div>
+      </section>
+
+      <CustomerPhotos />
+
+      <section className="container-x py-20 bg-blush/10" aria-labelledby="reviews-heading">
+        <div className="text-center max-w-xl mx-auto">
+          <div className="text-xs uppercase tracking-[0.3em] text-wine">Notes from buyers</div>
+          <h2 id="reviews-heading" className="font-display text-3xl md:text-5xl mt-3 text-espresso">What they told us after.</h2>
+        </div>
+        <div className="mt-12"><TestimonialsCarousel /></div>
+      </section>
+
+      <section className="container-x py-20 max-w-2xl" aria-labelledby="faqs-heading">
+        <h2 id="faqs-heading" className="font-display text-3xl md:text-4xl text-espresso text-center">A few questions.</h2>
+        <div className="mt-10 space-y-3">
+          {faqs.map(([q, a]) => (
+            <details key={q} className="border-b border-taupe/20 pb-4 pt-4 group">
+              <summary className="cursor-pointer flex justify-between text-espresso font-medium text-[15px]">
+                {q}<span className="group-open:rotate-45 transition-transform text-wine" aria-hidden="true">+</span>
+              </summary>
+              <p className="mt-3 text-sm text-espresso/70 leading-[1.8]">{a}</p>
+            </details>
+          ))}
+        </div>
+        <div className="text-center mt-10">
+          <Link
+            href="/faq"
+            prefetch={false}
+            aria-label="Read all frequently asked questions"
+            className="text-sm underline text-wine"
+          >
+            All the questions
+          </Link>
+        </div>
+      </section>
+
+      <section className="container-x pb-24" aria-labelledby="journal-heading">
+        <div className="bg-blush/40 p-10 md:p-16 text-center max-w-3xl mx-auto">
+          <div className="text-xs uppercase tracking-[0.3em] text-wine">The journal</div>
+          <h2 id="journal-heading" className="font-display text-3xl md:text-4xl mt-3 text-espresso">On fabric, fit, and other quiet obsessions.</h2>
+          <div className="mt-6">
+            <Link
+              href="/journal"
+              prefetch={false}
+              aria-label="Read the RosÃ© and Co journal"
+              className="btn-secondary"
+            >
+              Read a while
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+
+----- FILE: src\app\press\page.tsx -----
+import { SITE } from '@/lib/constants';
+
+export const metadata = { title: 'Press', description: 'Media mentions and press coverage of Rose &amp; Co.' };
+
+export default function PressPage() {
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Press</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">Mentions and coverage</h1>
+      <p className="mt-4 text-espresso/70 leading-relaxed">
+        Rose &amp; Co launched in early 2026. We&apos;re a new brand &mdash; most coverage will come as we grow. This page will be updated.
+      </p>
+
+      <div className="mt-12 p-8 bg-blush/30 border border-taupe/20 text-center">
+        <h2 className="font-display text-2xl text-espresso mb-3">Press enquiries</h2>
+        <p className="text-sm text-espresso/70">Working on a piece about Indian D2C fashion? Reach us at:</p>
+        <a href={`mailto:${SITE.email}`} className="mt-2 inline-block underline text-wine">{SITE.email}</a>
+        <p className="mt-4 text-xs text-espresso/60">
+          Response usually within 4 hours (Gurugram working hours).
+        </p>
+      </div>
+
+      <div className="mt-12">
+        <h2 className="font-display text-2xl text-espresso mb-3">About Rose &amp; Co</h2>
+        <div className="text-espresso/80 leading-relaxed space-y-3 text-sm">
+          <p>
+            Small-batch fashion brand launched in early 2026. Currently one product line: the Amara Marble Swirl Co-ord Set.
+          </p>
+          <p>
+            Studio in Sector 47, Gurugram. Production unit near Karol Bagh, Delhi. Fabric supplier in Surat.
+          </p>
+          <p>
+            Founder: Aditi Sharma.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\privacy-policy\page.tsx -----
+import { SITE } from '@/lib/constants';
+
+export const metadata = { title: 'Privacy Policy' };
+
+export default function Page() {
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <h1 className="font-display text-4xl text-espresso mb-2">Privacy policy</h1>
+      <p className="text-sm text-espresso/60 mb-8">Last updated: 1 January 2026</p>
+
+      <div className="text-espresso/80 leading-relaxed space-y-6">
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">What we collect</h2>
+          <p>Your name, mobile, address, PIN, email (if you share it), and your UPI transaction reference. That is it.</p>
+        </div>
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">What we do not collect</h2>
+          <p>Card numbers, bank credentials, biometrics, browsing history outside our site &mdash; none of that.</p>
+        </div>
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Why we collect it</h2>
+          <p>To ship your order, verify your payment, and update you when the package moves. That is the entire reason.</p>
+        </div>
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Who we share it with</h2>
+          <p>Our courier partners get your name, address, and mobile so they can deliver. That is the only third party we share personal data with. We do not sell your data.</p>
+        </div>
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Marketing messages</h2>
+          <p>We do not spam you with WhatsApp or SMS blasts. If we message you, it is about your order.</p>
+        </div>
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Analytics and cookies</h2>
+          <p>We use Meta Pixel to measure ad performance. It drops standard cookies in your browser. You can block these in browser settings &mdash; the site will still work.</p>
+        </div>
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Your rights</h2>
+          <p>Email <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a> to see your data, correct it, or delete it. We will do it within 7 working days.</p>
+        </div>
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Data storage</h2>
+          <p>Data lives in an encrypted Postgres database. Access is limited to two people on our team. Payment credentials are never stored.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\product\[slug]\page.tsx -----
+import { notFound } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+import ProductClient from './ProductClient';
+import JsonLd from '@/components/JsonLd';
+import { productSchema, breadcrumbSchema, faqSchema } from '@/lib/schemas';
+import type { Metadata } from 'next';
+import { SITE } from '@/lib/constants';
+
+export const revalidate = 300;
+
+
+export async function generateStaticParams() {
+  try {
+    const products = await prisma.product.findMany({
+      where: { active: true },
+      select: { slug: true },
+    });
+    return products.map((p) => ({ slug: p.slug }));
+  } catch (err) {
+    console.warn('DB not reachable at build time, using empty params', err);
+    return []; // fallback Ã¢â‚¬â€ pages will still be generated on-demand
+  }
+}
+
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const p = await prisma.product.findUnique({
+    where: { slug: params.slug },
+    select: { name: true, description: true, price: true, compareAt: true, images: true, slug: true },
+  });
+  if (!p) return { title: 'Product' };
+  return {
+    title: `${p.name} - Rs ${p.price} (MRP Rs ${p.compareAt || 3499}) - Hand-painted marble swirl satin`,
+    description: `${p.description} MRP Rs ${p.compareAt || 3499}, selling at Rs ${p.price}. Free shipping across India, ships from Delhi NCR in 24-48 hours. UPI prepaid Rs 1,900 (save Rs 100). COD available (Rs 299 online + rest on delivery).`,
+    keywords: ['satin co-ord set', 'marble print co-ord set', 'poly-satin midi', 'indian D2C fashion', 'satin shirt and pants set', 'engagement outfit', 'party wear india', p.name.toLowerCase()],
+    openGraph: {
+      title: p.name, description: p.description,
+      images: JSON.parse(p.images).slice(0, 1).map((i: string) => ({ url: `${SITE.url}${i}` })),
+      type: 'website',
+    },
+    twitter: { card: 'summary_large_image', title: p.name, description: p.description },
+    alternates: { canonical: `/product/${p.slug}` },
+  };
+}
+
+export default async function ProductPage({ params }: { params: { slug: string } }) {
+  const p = await prisma.product.findUnique({ where: { slug: params.slug } });
+  if (!p) notFound();
+
+  const images: string[] = JSON.parse(p.images);
+  const sizes = JSON.parse(p.sizes);
+
+  const productFaqs = [
+    { q: 'What is the fabric?', a: 'Poly-satin blend, around 90 to 100 GSM. Has weight, falls with drape. Not the thin shiny kind you see in Rs 500 satin.' },
+    { q: 'Is the print really hand-painted?', a: 'Yes. Each panel is hand-painted before the fabric is cut. Your swirl pattern will look slightly different from the one in the photos.' },
+    { q: 'How does the sizing run?', a: 'True to size for most women. Between sizes, size down for the top and up for the skirt.' },
+    { q: 'How long does delivery take?', a: 'Ships from Delhi NCR within 24 to 48 hours of payment confirmation. Delivered in 3 to 5 business days to metros, 5 to 7 to smaller cities.' },
+    { q: 'Can I wear the top separately?', a: 'Yes. Works with jeans, tailored trousers, or a plain skirt.' },
+    { q: 'What is the difference between prepaid and COD?', a: 'Prepaid via UPI is Rs 1,900 (save Rs 100). Partial COD is Rs 2,000 total, split as Rs 299 online plus Rs 1,701 cash on delivery.' },
+    { q: 'What is the MRP?', a: 'MRP is Rs 3,499. We sell at Rs 2,000 - Rs 1,499 off - because we go direct to buyer and skip the retail markup.' },
+  ];
+
+  return (
+    <>
+      <JsonLd data={[
+        productSchema({ id: p.id, slug: p.slug, name: p.name, description: p.description, price: p.price, images, sizes }),
+        breadcrumbSchema([
+          { name: 'Home', url: '/' }, { name: 'Shop', url: '/' },
+          { name: p.name, url: `/product/${p.slug}` },
+        ]),
+        faqSchema(productFaqs),
+      ]} />
+      <ProductClient product={{
+        id: p.id, slug: p.slug, name: p.name, description: p.description,
+        price: p.price, compareAt: p.compareAt, images, sizes,
+      }} />
+    </>
+  );
+}
+
+
+----- FILE: src\app\product\[slug]\ProductClient.tsx -----
+'use client';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import ProductGallery from '@/components/ProductGallery';
+import SizeSelector, { SizeOption } from '@/components/SizeSelector';
+import StickyBuyBar from '@/components/StickyBuyBar';
+import PincodeCheck from '@/components/PincodeCheck';
+import ShipsInCounter from '@/components/ShipsInCounter';
+import TrustBadges from '@/components/TrustBadges';
+import ShareButton from '@/components/ShareButton';
+import WishlistButton from '@/components/WishlistButton';
+import InteractiveSizeChart from '@/components/InteractiveSizeChart';
+import ComparisonTable from '@/components/ComparisonTable';
+import RecentlyViewed from '@/components/RecentlyViewed';
+import RatingLine from '@/components/RatingLine';
+import { addRecentlyViewed } from '@/lib/recentlyViewed';
+import { useCart } from '@/components/CartContext';
+import { inr } from '@/lib/format';
+import { PAYMENT, SITE } from '@/lib/constants';
+import ReviewsSection from '@/components/ReviewsSection';
+import InventoryCountdown from '@/components/InventoryCountdown';
+import SizeGuideModal from '@/components/SizeGuideModal';
+
+type Product = {
+  id: string; slug: string; name: string; description: string;
+  price: number; compareAt: number | null;
+  images: string[]; sizes: SizeOption[];
+};
+
+export default function ProductClient({ product }: { product: Product }) {
+  const router = useRouter();
+  const { add } = useCart();
+  const [size, setSize] = useState<string | null>(null);
+  const [qty, setQty] = useState(1);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [bumpCart, setBumpCart] = useState(false);
+
+  const displayPrice = PAYMENT.fullPrice;
+  const prepaidPrice = PAYMENT.prepaidPrice;
+
+  const totalStock = useMemo(() => product.sizes.reduce((s, x) => s + x.stock, 0), [product.sizes]);
+
+  useEffect(() => {
+    addRecentlyViewed({ id: product.id, slug: product.slug, name: product.name, price: displayPrice, image: product.images[0] });
+  }, [product.id, product.slug, product.name, displayPrice, product.images]);
+
+  const doAdd = () => {
+    if (!size) { setMsg('Pick a size first.'); return; }
+    add({ productId: product.id, slug: product.slug, name: product.name, image: product.images[0], size, quantity: qty, price: displayPrice });
+    setMsg('Added.');
+    setBumpCart(true);
+    setTimeout(() => setBumpCart(false), 600);
+    setTimeout(() => setMsg(null), 2000);
+  };
+
+  const doBuyNow = () => {
+    if (!size) { setMsg('Pick a size first.'); return; }
+    add({ productId: product.id, slug: product.slug, name: product.name, image: product.images[0], size, quantity: qty, price: displayPrice });
+    router.push('/checkout');
+  };
+
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : `${SITE.url}/product/${product.slug}`;
+
+  return (
+    <>
+      <div className="container-x py-6 md:py-10">
+        <nav className="text-xs uppercase tracking-widest text-espresso/60 mb-6" aria-label="Breadcrumb">
+          <a href="/">Home</a> / <span className="text-espresso">{product.name}</span>
+        </nav>
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+          <ProductGallery images={product.images} name={product.name} />
+          <div className="space-y-6">
+            <div>
+              <div className="text-xs uppercase tracking-[0.3em] text-wine">Rose &amp; Co</div>
+              <h1 className="font-display text-3xl md:text-4xl text-espresso mt-2">{product.name}</h1>
+              <RatingLine />
+            </div>
+
+            {/* One clean pricing block. That's it. */}
+            <div>
+              <div className="flex items-baseline gap-3">
+                <div className="text-3xl font-semibold text-espresso">{inr(displayPrice)}</div>
+                {product.compareAt && product.compareAt > displayPrice && (
+                  <div className="text-base line-through text-espresso/40">{inr(product.compareAt)}</div>
+                )}
+              </div>
+              <div className="text-xs text-espresso/60 mt-2">
+                Free shipping. Prepaid via UPI is {inr(prepaidPrice)}. Cash on delivery available.
+              </div>
+            </div>
+
+            {/* v34: Inventory countdown Ã¢â‚¬â€ replaces old "Only X left" line */}
+            <InventoryCountdown productSlug={product.slug} totalStock={totalStock} />
+
+            <ShipsInCounter />
+
+            {totalStock === 0 && (
+              <div className="text-sm text-wine">This drop is sold out. Next drop in four to six weeks.</div>
+            )}
+
+            {/* v34: Size selector with modal size guide button */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="label">Size</div>
+                <SizeGuideModal />
+              </div>
+              <SizeSelector sizes={product.sizes} value={size} onChange={setSize} />
+            </div>
+
+            <div>
+              <div className="label">Quantity</div>
+              <div className="inline-flex items-center border border-taupe/40">
+                <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 py-2 text-lg" aria-label="Decrease quantity">-</button>
+                <span className="px-4 py-2 border-x border-taupe/40 min-w-[3rem] text-center">{qty}</span>
+                <button onClick={() => setQty(q => Math.min(5, q + 1))} className="px-4 py-2 text-lg" aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button onClick={doBuyNow} className="btn-primary flex-1">Buy Now</button>
+              <button onClick={doAdd} className={`btn-secondary flex-1 transition-transform ${bumpCart ? 'scale-95' : ''}`}>Add to Bag</button>
+              <WishlistButton productId={product.id} />
+              <ShareButton title={product.name} url={shareUrl} />
+            </div>
+            {msg && <div className="text-sm text-wine">{msg}</div>}
+
+            <TrustBadges />
+            <PincodeCheck />
+
+            <details open className="border-t border-taupe/20 pt-4">
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">The set</summary>
+              <div className="mt-3 text-espresso/80 leading-[1.8] space-y-3 text-sm">
+                <p>A relaxed satin button-down shirt and high-waisted wide-leg pants. Hand-painted marble swirl in warm tones Ã¢â‚¬â€ beige, caramel and soft brown &mdash; deep rose, wine, warm ivory.</p>
+                <p>Every set is painted before the cloth is cut, so no two look the same. If that isn&apos;t what you want, this may not be the piece.</p>
+              </div>
+            </details>
+
+            <details className="border-t border-taupe/20 pt-4">
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">Fabric &amp; fit</summary>
+              <ul className="mt-3 space-y-2 text-espresso/80 text-sm leading-[1.8] list-disc pl-5">
+                <

@@ -46,7 +46,7 @@ export default function Page() {
 
         <div>
           <h2 className="font-display text-xl text-espresso mb-2">Partial COD</h2>
-          <p>₹299 collected online at checkout. ₹2,000 collected in cash when the courier hands over the package.</p>
+          <p>₹300 collected online at checkout. ₹1,199 collected in cash when the courier hands over the package.</p>
         </div>
 
         <div>

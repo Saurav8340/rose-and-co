@@ -53,7 +53,7 @@ export default function Page() {
 
         <div>
           <h2 className="font-display text-xl text-espresso mb-2">Partial COD orders</h2>
-          <p>If you paid ₹299 online + ₹2,000 on delivery, the refund covers both amounts. The ₹299 lands back in your UPI. The ₹2,000 is refunded to a bank account you share via email.</p>
+          <p>If you paid ₹300 online + ₹1,199 on delivery, the refund covers both amounts. The ₹300 lands back in your UPI. The ₹1,199 is refunded to a bank account you share via email.</p>
         </div>
       </div>
     </div>

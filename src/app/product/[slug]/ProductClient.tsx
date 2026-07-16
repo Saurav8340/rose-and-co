@@ -35,8 +35,8 @@ export default function ProductClient({ product }: { product: Product }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [bumpCart, setBumpCart] = useState(false);
 
-  const displayPrice = PAYMENT.fullPrice;
-  const prepaidPrice = PAYMENT.prepaidPrice;
+  const displayPrice = product.price;
+  const prepaidPrice = product.price - PAYMENT.prepaidSavings;
 
   const totalStock = useMemo(() => product.sizes.reduce((s, x) => s + x.stock, 0), [product.sizes]);
 

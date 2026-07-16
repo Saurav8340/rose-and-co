@@ -1,0 +1,4442 @@
+===== ROSE & CO FULL SITE AUDIT =====
+Date: 07/16/2026 16:51:56
+Files scanned: 205
+
+===== A. PROJECT META =====
+--- package.json ---
+{
+  "name": "rose-and-co",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:reviews": "tsx prisma/seed-reviews.ts",
+    "db:studio": "prisma studio",
+    "analyze": "ANALYZE=true next build"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.1",
+    "gray-matter": "^4.0.3",
+    "jose": "^5.9.6",
+    "marked": "^14.1.3",
+    "next": "14.2.33",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sharp": "^0.33.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.7.4",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8.4.47",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^3.4.13",
+    "tsx": "^4.23.0",
+    "typescript": "^5.6.2"
+  }
+}
+--- prisma schema (models) ---
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String
+  price       Int
+  compareAt   Int?
+  images      String
+  sizes       String
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique
+  fullName       String
+  mobile         String
+  email          String?
+  altPhone       String?
+  pincode        String
+  state          String
+  city           String
+  addressLine1   String
+  addressLine2   String?
+  landmark       String?
+  paymentMethod  String
+  paidAmount     Int
+  codAmount      Int
+  totalAmount    Int
+  discountAmount Int         @default(0)
+  paymentStatus  String      @default("PENDING")
+  orderStatus    String      @default("PLACED")
+  utr            String?
+  notes          String?
+  metaFbc        String?
+  metaFbp        String?
+  utmData        String?
+  capiFired      Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  items          OrderItem[]
+
+  @@index([mobile])
+  @@index([paymentStatus])
+  @@index([orderStatus])
+  @@index([paymentMethod])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String
+  size        String
+  quantity    Int
+  price       Int
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+}
+
+model VerificationSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  mobile    String
+  captcha   String
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  action    String
+  metadata  String?
+  createdAt DateTime @default(now())
+}
+
+model Waitlist {
+  id          String   @id @default(cuid())
+  productId   String
+  productName String
+  size        String
+  mobile      String
+  email       String?
+  notified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([productId, size])
+  @@index([notified])
+}
+
+model BlockedPincode {
+  id        String   @id @default(cuid())
+  pincode   String   @unique
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  productSlug String
+  orderId     String?
+  rating      Int
+  name        String
+  city        String?
+  title       String
+  body        String
+  photos      String
+  size        String?
+  verified    Boolean  @default(false)
+  approved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([productSlug])
+  @@index([approved])
+  @@index([createdAt])
+}
+
+model Referral {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  referrerName  String
+  referrerEmail String?
+  referrerPhone String?
+  invitesUsed   Int      @default(0)
+  creditsEarned Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([code])
+}
+
+model LoyaltyPoints {
+  id          String   @id @default(cuid())
+  customerId  String   @unique
+  points      Int      @default(0)
+  totalSpent  Int      @default(0)
+  totalOrders Int      @default(0)
+  tier        String   @default("bronze")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([tier])
+}
+
+// ================================================================
+// v35: Add this Lead model to your prisma/schema.prisma
+// Then run: npx prisma db push (with Neon URL set)
+// ================================================================
+
+model Lead {
+  id            String   @id @default(cuid())
+  sessionId     String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Progressive contact info
+  name          String?
+  phone         String?
+  email         String?
+
+  // Geo signals
+  city          String?
+  pincode       String?
+  state         String?
+  addressLine1  String?
+  region        String?
+  country       String?
+  timezone      String?
+  language      String?
+
+  // Device signals
+  deviceType    String?  // mobile / desktop / tablet
+  screenWidth   Int?
+  screenHeight  Int?
+  userAgent     String?  @db.Text
+
+  // Traffic source
+  landingUrl    String?  @db.Text
+  referrer      String?  @db.Text
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmTerm       String?
+  utmContent    String?
+
+  // Engagement signals
+  visitCount    Int      @default(1)
+  isReturning   Boolean  @default(false)
+  hasAddress    Boolean  @default(false)
+  timeOnSite    Int?     // seconds
+  pagesViewed   Int      @default(1)
+  scrolled      Boolean  @default(false)
+
+  // Discount
+  optedIn       Boolean  @default(false)   // clicked Yes on chip
+  chipDismissed Boolean  @default(false)   // clicked No
+  couponCode    String?
+  couponPct     Int?
+  segment       String?  // real_intent / returning_vip / browser / bounce_risk / coupon_hunter
+
+  // Cart signals
+  cartAdded     Boolean  @default(false)
+  cartValue     Int?
+  cartSummary   String?  @db.Text
+  cartAbandoned Boolean  @default(false)
+
+  // Purchase link (if converted)
+  orderNumber   String?
+  converted     Boolean  @default(false)
+
+  // Admin ops
+  status        String   @default("new") // new / contacted / converted / lost / spam
+  notes         String?  @db.Text
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([email])
+  @@index([phone])
+  @@index([converted])
+  @@index([utmCampaign])
+}
+
+===== B. FILE INVENTORY (path | lines | KB) =====
+content\journal\amara-fit-review-30-day.md | 50 | 4.2KB
+content\journal\best-indian-d2c-brands-2026.md | 35 | 1.6KB
+content\journal\best-satin-coord-sets-under-2000-india.md | 81 | 4.9KB
+content\journal\best-satin-skirts-under-1500-india.md | 39 | 3KB
+content\journal\delhi-ncr-brands-48-hour-shipping.md | 25 | 1.4KB
+content\journal\dinner-date-outfit-ideas.md | 38 | 2KB
+content\journal\diwali-outfit-ideas-not-kurta.md | 26 | 1.7KB
+content\journal\first-date-outfit-confident-not-desperate.md | 26 | 1.4KB
+content\journal\gsm-fabric-quality-guide.md | 49 | 2.1KB
+content\journal\hand-painted-textile-brands-india.md | 28 | 1.6KB
+content\journal\how-to-iron-satin.md | 25 | 1.6KB
+content\journal\how-to-measure-for-online-shopping.md | 48 | 2.5KB
+content\journal\how-to-style-marble-swirl-coord.md | 66 | 4.7KB
+content\journal\meta-ads-vs-influencer-marketing-fashion.md | 32 | 1.8KB
+content\journal\poly-satin-fabric-guide.md | 68 | 6.6KB
+content\journal\poly-satin-vs-silk-satin.md | 54 | 3.2KB
+content\journal\prepaid-vs-cod-math.md | 32 | 1.8KB
+content\journal\remove-wrinkles-no-iron.md | 29 | 1.5KB
+content\journal\roka-outfit-ideas-brides-family.md | 46 | 3.2KB
+content\journal\sangeet-outfit-ideas-not-lehengas.md | 52 | 3.4KB
+content\journal\satin-coord-engagement-function.md | 40 | 3.2KB
+content\journal\satin-skirt-for-petite-women.md | 35 | 2.2KB
+content\journal\satin-skirt-for-tall-women.md | 35 | 2KB
+content\journal\small-batch-fashion-india.md | 30 | 1.3KB
+content\journal\spot-cheap-satin-in-photos.md | 36 | 2.8KB
+content\journal\storing-satin-yellowing-prevention.md | 25 | 1.4KB
+content\journal\sustainable-indian-d2c-fashion-brands-2026.md | 38 | 2.5KB
+content\journal\what-is-a-coord-set.md | 45 | 2.8KB
+next.config.js | 36 | 1KB
+next-env.d.ts | 4 | 0.2KB
+package.json | 46 | 1.2KB
+postcss.config.js | 1 | 0.1KB
+prisma\fix-prices.ts | 28 | 1KB
+prisma\schema.prisma | 207 | 5.8KB
+prisma\seed.ts | 134 | 5.4KB
+prisma\seed-reviews.ts | 124 | 4.1KB
+public\manifest.json | 24 | 0.6KB
+README.md | 168 | 7.9KB
+SEO_PLAYBOOK.md | 162 | 7.4KB
+src\app\about\page.tsx | 52 | 3.2KB
+src\app\admin\export\route.ts | 81 | 2.7KB
+src\app\admin\leads\page.tsx | 314 | 12KB
+src\app\admin\login\page.tsx | 34 | 1.6KB
+src\app\admin\orders\[id]\page.tsx | 78 | 4KB
+src\app\admin\orders\[id]\UpdateOrderForm.tsx | 92 | 4.1KB
+src\app\admin\page.tsx | 172 | 10KB
+src\app\admin\products\[slug]\edit\page.tsx | 38 | 1.3KB
+src\app\admin\products\DuplicateButton.tsx | 32 | 1.1KB
+src\app\admin\products\new\page.tsx | 7 | 0.3KB
+src\app\admin\products\page.tsx | 68 | 3.1KB
+src\app\api\admin\leads\export\route.ts | 81 | 2.7KB
+src\app\api\admin\leads\page.tsx | 221 | 10KB
+src\app\api\admin\login\route.ts | 13 | 0.7KB
+src\app\api\admin\logout\route.ts | 6 | 0.2KB
+src\app\api\admin\orders\[id]\route.ts | 82 | 3.4KB
+src\app\api\admin\orders\export\route.ts | 26 | 1.4KB
+src\app\api\captcha\generate\route.ts | 22 | 1.1KB
+src\app\api\captcha\verify\route.ts | 27 | 1.7KB
+src\app\api\geo\route.ts | 13 | 0.5KB
+src\app\api\inventory\route.ts | 19 | 0.8KB
+src\app\api\leads\create\route.ts | 82 | 5KB
+src\app\api\leads\debug\route.ts | 57 | 1.7KB
+src\app\api\leads\list\route.ts | 27 | 1.1KB
+src\app\api\leads\update\route.ts | 18 | 0.8KB
+src\app\api\orders\create\route.ts | 127 | 6.1KB
+src\app\api\orders\track\route.ts | 22 | 1KB
+src\app\api\payment\upi-qr\route.ts | 18 | 0.8KB
+src\app\api\products\[slug]\duplicate\route.ts | 40 | 1.7KB
+src\app\api\products\[slug]\route.ts | 50 | 2KB
+src\app\api\products\by-ids\route.ts | 21 | 0.7KB
+src\app\api\products\route.ts | 55 | 2.1KB
+src\app\api\reviews\create\route.ts | 39 | 1.2KB
+src\app\api\reviews\list\route.ts | 24 | 0.7KB
+src\app\api\upload\route.ts | 37 | 1.8KB
+src\app\cancellation-policy\page.tsx | 24 | 1.4KB
+src\app\care-guide\page.tsx | 57 | 2.9KB
+src\app\cart\page.tsx | 67 | 3.5KB
+src\app\checkout\page.tsx | 377 | 21.4KB
+src\app\collections\co-ord-sets\page.tsx | 41 | 2.3KB
+src\app\collections\engagement-outfits\page.tsx | 38 | 2.1KB
+src\app\collections\party-wear\page.tsx | 41 | 2.4KB
+src\app\collections\satin-skirts\page.tsx | 42 | 2.4KB
+src\app\contact\page.tsx | 37 | 2.2KB
+src\app\fabric-guide\page.tsx | 32 | 2KB
+src\app\faq\page.tsx | 81 | 4.9KB
+src\app\gift-cards\page.tsx | 38 | 2.1KB
+src\app\globals.css | 276 | 9.3KB
+src\app\impact\page.tsx | 38 | 2.4KB
+src\app\journal\[slug]\page.tsx | 89 | 3.7KB
+src\app\journal\page.tsx | 74 | 3.4KB
+src\app\layout.tsx | 66 | 2.5KB
+src\app\not-found.tsx | 10 | 0.4KB
+src\app\order-failure\page.tsx | 17 | 0.9KB
+src\app\order-success\CopyReferral.tsx | 2 | 0.1KB
+src\app\order-success\page.tsx | 116 | 4.5KB
+src\app\order-success\ThankYouTracker.tsx | 3 | 0.2KB
+src\app\page.tsx | 216 | 10KB
+src\app\press\page.tsx | 35 | 1.7KB
+src\app\privacy-policy\page.tsx | 44 | 2.5KB
+src\app\product\[slug]\page.tsx | 70 | 3.9KB
+src\app\product\[slug]\ProductClient.tsx | 153 | 8.8KB
+src\app\refund-policy\page.tsx | 52 | 2.7KB
+src\app\robots.ts | 16 | 0.6KB
+src\app\search\page.tsx | 32 | 1.5KB
+src\app\shipping-policy\page.tsx | 55 | 2.8KB
+src\app\shop\page.tsx | 104 | 4.2KB
+src\app\sitemap.ts | 22 | 0.9KB
+src\app\size-guide\page.tsx | 36 | 1.9KB
+src\app\style-quiz\page.tsx | 101 | 4.5KB
+src\app\terms\page.tsx | 48 | 2.6KB
+src\app\track\page.tsx | 62 | 3.1KB
+src\app\wishlist\page.tsx | 63 | 2.8KB
+src\checkout\page.tsx | 432 | 23.5KB
+src\components\AddressAutocomplete.tsx | 171 | 6.4KB
+src\components\admin\ProductForm.tsx | 217 | 9.2KB
+src\components\AnnouncementBar.tsx | 20 | 0.8KB
+src\components\BundleOffer.tsx | 58 | 2.5KB
+src\components\CartAbandonmentTracker.tsx | 45 | 1.6KB
+src\components\CartContext.tsx | 57 | 2KB
+src\components\CartReviewsSnippet.tsx | 23 | 0.9KB
+src\components\CheckoutProgressBar.tsx | 11 | 0.5KB
+src\components\CheckoutSummary.tsx | 61 | 2.1KB
+src\components\ComparisonTable.tsx | 40 | 2.2KB
+src\components\Countdown.tsx | 9 | 0.5KB
+src\components\CustomerPhotos.tsx | 42 | 2KB
+src\components\ExitIntent.tsx | 100 | 3.7KB
+src\components\Footer.tsx | 145 | 8.2KB
+src\components\FounderNote.tsx | 27 | 1.1KB
+src\components\GiftWrap.tsx | 20 | 0.8KB
+src\components\GreetingBanner.tsx | 78 | 2.7KB
+src\components\Header.tsx | 32 | 1.2KB
+src\components\HeaderCart.tsx | 26 | 0.8KB
+src\components\HeroSlideshow.tsx | 85 | 3.1KB
+src\components\InteractiveSizeChart.tsx | 56 | 2.9KB
+src\components\InventoryCountdown.tsx | 42 | 1.5KB
+src\components\JsonLd.tsx | 17 | 0.4KB
+src\components\LeadCaptureChip.tsx | 415 | 16.7KB
+src\components\MadeInIndiaBadge.tsx | 8 | 0.4KB
+src\components\NameCollector.tsx | 54 | 1.9KB
+src\components\NavShop.tsx | 31 | 0.9KB
+src\components\PersonalizedDiscount.tsx | 52 | 1.8KB
+src\components\PincodeCheck.tsx | 57 | 2.6KB
+src\components\ProductGallery.tsx | 49 | 1.6KB
+src\components\PWAInstallPrompt.tsx | 45 | 1.9KB
+src\components\RatingLine.tsx | 12 | 0.5KB
+src\components\RecentlyViewed.tsx | 30 | 1.4KB
+src\components\ReviewsSection.tsx | 143 | 5.7KB
+src\components\ShareButton.tsx | 34 | 1.3KB
+src\components\ShipsInCounter.tsx | 33 | 1.2KB
+src\components\ShopDropdown.tsx | 114 | 4.7KB
+src\components\SizeFinder.tsx | 2 | 0.1KB
+src\components\SizeGuideModal.tsx | 99 | 4.3KB
+src\components\SizeSelector.tsx | 44 | 1.5KB
+src\components\SocialProof.tsx | 44 | 1.9KB
+src\components\StickyBuyBar.tsx | 54 | 1.9KB
+src\components\StockUrgency.tsx | 32 | 0.9KB
+src\components\TestimonialsCarousel.tsx | 57 | 2.5KB
+src\components\TrustBadges.tsx | 19 | 0.8KB
+src\components\TrustBar.tsx | 20 | 0.8KB
+src\components\UpiButtons.tsx | 70 | 3.5KB
+src\components\UpiLogos.tsx | 21 | 1.1KB
+src\components\UPIPayButton.tsx | 91 | 3.9KB
+src\components\UtmCapture.tsx | 16 | 0.5KB
+src\components\WaitlistForm.tsx | 2 | 0.1KB
+src\components\WhatsAppButton.tsx | 19 | 1.8KB
+src\components\WishlistButton.tsx | 18 | 1KB
+src\components\WishlistContext.tsx | 31 | 1.1KB
+src\hooks\useUserSegment.ts | 119 | 4.2KB
+src\lib\adminAuth.ts | 7 | 0.3KB
+src\lib\analytics.ts | 152 | 4.7KB
+src\lib\autofill.ts | 136 | 4KB
+src\lib\blocklists.ts | 23 | 0.9KB
+src\lib\captcha.ts | 42 | 1.5KB
+src\lib\constants.ts | 26 | 1KB
+src\lib\coupon.ts | 41 | 1.6KB
+src\lib\format.ts | 2 | 0.2KB
+src\lib\journal.ts | 60 | 1.8KB
+src\lib\metaCapi.ts | 90 | 3.2KB
+src\lib\orderNumber.ts | 6 | 0.3KB
+src\lib\pincode.ts | 12 | 0.5KB
+src\lib\pixel.ts | 9 | 0.4KB
+src\lib\prisma.ts | 10 | 0.4KB
+src\lib\rateLimit.ts | 18 | 0.8KB
+src\lib\recentlyViewed.ts | 27 | 0.8KB
+src\lib\referral.ts | 2 | 0.1KB
+src\lib\reviews.ts | 126 | 4.4KB
+src\lib\schemas.ts | 145 | 5.4KB
+src\lib\seo.ts | 174 | 6.2KB
+src\lib\session.ts | 27 | 1KB
+src\lib\telegram.ts | 3 | 0.2KB
+src\lib\upi.ts | 55 | 1.8KB
+src\lib\utm.ts | 33 | 1.2KB
+src\lib\validate.ts | 32 | 1.5KB
+src\middleware.ts | 10 | 0.5KB
+tailwind.config.ts | 30 | 0.7KB
+tsconfig.json | 40 | 0.7KB
+V14_CHANGELOG.md | 46 | 2.4KB
+V15_CHANGELOG.md | 43 | 2.4KB
+V16_CHANGELOG.md | 18 | 1KB
+V17_CHANGELOG.md | 68 | 2.9KB
+V18_CHANGELOG.md | 23 | 1.2KB
+V19_CHANGELOG.md | 41 | 1.6KB
+V20_CHANGELOG.md | 80 | 3.6KB
+V24_CHANGELOG.md | 76 | 3KB
+V25_CHANGELOG.md | 41 | 1.9KB
+
+===== C. RED-FLAG SCANS =====
+--- Leftover console.log ---
+prisma\fix-prices.ts:15: console.log(`Found ${products.length} product(s). Updatingâ€¦`);
+prisma\fix-prices.ts:22: console.log(`  âœ“ ${p.name}: price=${SELLING_PRICE}, compareAt=${COMPARE_AT}`);
+prisma\fix-prices.ts:25: console.log("Done. Every product now charges â‚¹" + SELLING_PRICE + ".");
+prisma\seed-reviews.ts:119: console.log(`Seeded ${AMARA_REVIEWS.length + AARNA_REVIEWS.length} reviews`);
+prisma\seed-reviews.ts:120: console.log(`  - ${AMARA_REVIEWS.length} for Amara`);
+prisma\seed-reviews.ts:121: console.log(`  - ${AARNA_REVIEWS.length} for Aarna`);
+prisma\seed.ts:39: console.log('Seeded Amara: MRP 3499, SP 2000, Prepaid 1900, COD 299+1701.');
+prisma\seed.ts:75: console.log('Seeded Aarna: MRP 2999, SP 2299, Prepaid 2069, COD 299+2000.');
+prisma\seed.ts:140: console.log('Seeded 5 reviews (3 Amara, 2 Aarna).');
+src\app\api\leads\create\route.ts:57: console.log('[leads/create]', sessionId, 'saving fields:', Object.keys(safeData).length);
+src\app\api\orders\create\route.ts:28: console.log('[Anti-bot] Bot UA blocked from IP', ip);
+src\app\api\orders\create\route.ts:42: console.log('[Anti-bot] Honeypot triggered from IP', ip);
+src\lib\metaCapi.ts:35: console.log('[CAPI] Skipped: META_PIXEL_ID or META_CAPI_ACCESS_TOKEN not set');
+src\lib\metaCapi.ts:94: else         console.log('[CAPI] Purchase sent for', order.orderNumber, '- value:', customData.value);
+
+--- TODO / FIXME / HACK ---
+src\components\ExitIntent.tsx:48: // TODO: send to your backend/email list
+
+--- Hardcoded price numbers ---
+SEO_PLAYBOOK.md:83: 6. 20 party wear outfit ideas under Rs 2000
+V24_CHANGELOG.md:11: | COD remaining | **Rs 1,701** (2000 - 299) |
+V24_CHANGELOG.md:33: - `prisma/seed.ts` - Rs 2000/Rs 3499
+V24_CHANGELOG.md:72: git commit -m "v24 final: Rs 2000 selling, Rs 299 COD, fast captcha"
+content\journal\best-satin-coord-sets-under-2000-india.md:6: keywords: [satin co-ord set india, best co-ord sets under 2000, indian D2C fashion brands, satin skirt sets, affordable party wear india]
+prisma\fix-prices.ts:7: const SELLING_PRICE = 2299; // what they pay
+prisma\fix-prices.ts:8: const COMPARE_AT = 2999;    // strike-through MRP
+prisma\seed.ts:11: price: 2000,
+prisma\seed.ts:19: price: 2000,
+prisma\seed.ts:39: console.log('Seeded Amara: MRP 3499, SP 2000, Prepaid 1900, COD 299+1701.');
+prisma\seed.ts:47: price: 2299,
+prisma\seed.ts:48: compareAt: 2999,
+prisma\seed.ts:55: price: 2299,
+prisma\seed.ts:56: compareAt: 2999,
+prisma\seed.ts:75: console.log('Seeded Aarna: MRP 2999, SP 2299, Prepaid 2069, COD 299+2000.');
+src\app\collections\co-ord-sets\page.tsx:40: <li>&middot; <Link href="/journal/best-satin-coord-sets-under-2000-india" className="underline text-wine">Best satin co-ord sets under Rs 2,000 in India</Link></li>
+src\app\collections\party-wear\page.tsx:40: <li>&middot; <Link href="/journal/20-party-wear-outfit-ideas-under-2000" className="underline text-wine">20 party wear outfit ideas under Rs 2,000</Link></li>
+src\app\product\[slug]\ProductClient.tsx:53: setTimeout(() => setMsg(null), 2000);
+src\components\ShareButton.tsx:17: setTimeout(() => setCopied(false), 2000);
+src\components\UPIPayButton.tsx:23: setTimeout(() => setShowApps(true), 2000);
+src\components\UtmCapture.tsx:10: const id = requestIdleCallback(run, { timeout: 2000 });
+src\components\admin\ProductForm.tsx:31: const [price, setPrice] = useState<number>(initial?.price ?? 2299);
+src\components\admin\ProductForm.tsx:32: const [compareAt, setCompareAt] = useState<number>(initial?.compareAt ?? 2999);
+src\lib\constants.ts:22: fullPrice:      2299,
+src\lib\constants.ts:23: prepaidPrice:   2199,
+
+--- Old 'skirt' / 'crop top' copy ---
+content\journal\diwali-outfit-ideas-not-kurta.md:19: Take a plain silk saree, drape it as a pre-stitched skirt with the pallu tied at the waist. Wear a fitted crop top on top.
+content\journal\how-to-style-marble-swirl-coord.md:99: The Amara top works with high-waist jeans (dark denim), tailored trousers (black or cream), or a plain A-line midi skirt in a solid tone. The skirt works with a plain white or cream fitted top, a black bodysuit, or a cropped denim jacket buttoned like a shirt.
+content\journal\satin-skirt-for-petite-women.md:3: excerpt: "If you are 5 foot 3 or under, most midi skirts hit at your ankle. Here is how to work around that."
+content\journal\satin-skirt-for-tall-women.md:3: excerpt: "If you are 5 foot 8 or taller, most midi skirts hit above your knee. Here is what to look for and what to avoid."
+content\journal\satin-skirt-for-tall-women.md:6: keywords: [tall women fashion, satin skirt length, midi skirt for tall]
+content\journal\satin-skirt-for-tall-women.md:9: If you are 5 foot 8 or taller, you already know the problem. Midi skirts are marketed to 5 foot 4 bodies. They hit above your knee on you and look like short skirts.
+prisma\seed.ts:10: description: 'Fitted crop top and high-waist A-line midi skirt in hand-painted marble swirl satin. Deep rose, wine and warm ivory tones on a poly-satin blend (95-105 GSM). Every set is one of a kind. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid: Rs 1,900 (save Rs 100). MRP Rs 3,499.',
+prisma\seed.ts:18: description: 'Fitted crop top and high-waist A-line midi skirt in hand-painted marble swirl satin. Deep rose, wine and warm ivory tones on a poly-satin blend (95-105 GSM). Every set is one of a kind. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid: Rs 1,900 (save Rs 100). MRP Rs 3,499.',
+
+--- Possible any-types (TS looseness) ---
+src\app\admin\page.tsx:13: const where: any = {};
+src\app\admin\export\route.ts:19: const where: any = {};
+src\app\admin\export\route.ts:47: const rows = leads.map((l: any) => [
+src\app\admin\export\route.ts:87: } catch (e: any) {
+src\app\admin\login\page.tsx:22: } catch (e: any) { setErr(e.message); }
+src\app\admin\orders\[id]\UpdateOrderForm.tsx:42: } catch (e: any) { setMsg(e.message); }
+src\app\admin\products\DuplicateButton.tsx:20: } catch (e: any) {
+src\app\api\admin\leads\page.tsx:19: const where: any = {};
+src\app\api\admin\leads\export\route.ts:19: const where: any = {};
+src\app\api\admin\leads\export\route.ts:47: const rows = leads.map((l: any) => [
+src\app\api\admin\leads\export\route.ts:87: } catch (e: any) {
+src\app\api\admin\orders\[id]\route.ts:11: const data: any = {};
+src\app\api\leads\create\route.ts:15: const safeData: any = {};
+src\app\api\leads\create\route.ts:66: } catch (fullErr: any) {
+src\app\api\leads\create\route.ts:76: } catch (basicErr: any) {
+src\app\api\leads\create\route.ts:81: } catch (err: any) {
+src\app\api\leads\debug\route.ts:5: const results: any = {
+src\app\api\leads\debug\route.ts:14: } catch (err: any) {
+src\app\api\leads\debug\route.ts:37: } catch (err: any) {
+src\app\api\leads\debug\route.ts:45: } catch (err: any) {
+src\app\api\leads\debug\route.ts:57: } catch (err: any) {
+src\app\api\leads\list\route.ts:14: const where: any = {};
+src\app\api\leads\update\route.ts:13: const data: any = {};
+src\app\api\leads\update\route.ts:19: } catch (err: any) {
+src\app\checkout\page.tsx:114: } catch (e: any) { setErr(e.message); }
+src\app\checkout\page.tsx:130: } catch (e: any) { setErr(e.message); }
+src\app\checkout\page.tsx:150: } catch (e: any) { setErr(e.message); }
+src\app\checkout\page.tsx:184: } catch (e: any) { submitting.current = false; setErr(e.message); }
+src\app\order-success\CopyReferral.tsx:2: export default function CopyReferral(_: any) { return null; }
+src\app\order-success\ThankYouTracker.tsx:3: export default function ThankYouTracker(_props: any) { return null; }
+src\app\track\page.tsx:23: } catch (e: any) { setErr(e.message); }
+src\app\track\page.tsx:55: {order.items.map((i: any, x: number) => (
+src\checkout\page.tsx:115: } catch (e: any) { setErr(e.message); }
+src\checkout\page.tsx:131: } catch (e: any) { setErr(e.message); }
+src\checkout\page.tsx:151: } catch (e: any) { setErr(e.message); }
+src\checkout\page.tsx:217: } catch (e: any) {
+src\components\JsonLd.tsx:3: export default function JsonLd({ data }: { data: any | any[] }) {
+src\components\PWAInstallPrompt.tsx:9: const handler = (e: any) => {
+src\components\WaitlistForm.tsx:2: export default function WaitlistForm(_: any) { return null; }
+src\components\admin\ProductForm.tsx:60: } catch (e: any) {
+src\components\admin\ProductForm.tsx:116: } catch (e: any) {
+src\lib\analytics.ts:154: const cartValue = cart.reduce((s: number, x: any) => s + (x.price || 0) * (x.quantity || 1), 0);
+src\lib\analytics.ts:155: const cartSummary = cart.map((x: any) => `${x.name} (${x.size})`).join(', ').slice(0, 500);
+src\lib\metaCapi.ts:74: const payload: any = {
+src\lib\pixel.ts:2: declare global { interface Window { fbq: any; _fbq: any; } }
+src\lib\telegram.ts:3: export function formatNewOrderMessage(_: any): string { return ''; }
+
+--- Dangerous innerHTML ---
+src\app\faq\page.tsx:69: <span dangerouslySetInnerHTML={{ __html: q }} />
+src\app\faq\page.tsx:72: <p className="mt-3 text-sm text-espresso/70 leading-[1.8]" dangerouslySetInnerHTML={{ __html: a }} />
+src\app\journal\[slug]\page.tsx:81: <div className="mt-10 max-w-none journal-content" dangerouslySetInnerHTML={{ __html: post.html }} />
+src\components\AnnouncementBar.tsx:12: {items.map(t => <span key={t} dangerouslySetInnerHTML={{ __html: '&middot; ' + t }} />)}
+src\components\AnnouncementBar.tsx:15: {items.map(t => <span key={t} dangerouslySetInnerHTML={{ __html: '&middot; ' + t }} />)}
+src\components\InteractiveSizeChart.tsx:53: <div className="text-sm text-espresso/80 mt-1" dangerouslySetInnerHTML={{ __html: current.matches }} />
+src\components\JsonLd.tsx:13: dangerouslySetInnerHTML={{ __html: JSON.stringify(item) }}
+
+--- Missing image alt (img with no alt) ---
+(none)
+
+--- Inline TODO price/stock placeholders ---
+README.md:9: - **Home / Product / Cart / Checkout / Order Success / Track / Admin** — full flow, no placeholders
+V14_CHANGELOG.md:12: - **Founder note + placeholder photo** on About page
+src\app\globals.css:34: .input { @apply w-full px-4 py-3 bg-white border border-taupe/30 rounded-none focus:outline-none focus:border-wine transition-colors text-espresso placeholder:text-taupe/60; }
+src\app\admin\page.tsx:132: <input name="q" defaultValue={searchParams.q} placeholder="Search order/mobile/name" className="input flex-1 max-w-sm" />
+src\app\admin\leads\page.tsx:222: placeholder="Search name, phone, city, coupon…"
+src\app\admin\orders\[id]\UpdateOrderForm.tsx:65: <input className="input font-mono" value={utr} onChange={e => setUtr(e.target.value)} placeholder="Paste the UTR you matched in your UPI app" />
+src\app\api\admin\leads\page.tsx:89: placeholder="Search name / phone / email / city"
+src\app\checkout\page.tsx:232: <input id="mobile" name="tel" type="tel" required inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength={10} autoComplete="tel-national" enterKeyHint="next" className="input" placeholder="10-digit number" value={form.mobile} onChange={e => setField('mobile', e.target.value.replace(/\D/g, ''))} />
+src\app\checkout\page.tsx:255: <input id="addressLine1" name="address-line1" type="text" required autoComplete="address-line1" enterKeyHint="next" className="input" placeholder="House / flat, street" value={form.addressLine1} onChange={e => setField('addressLine1', e.target.value)} />
+src\app\checkout\page.tsx:312: placeholder={captchaType === 'math' ? '12' : 'AB3D'} />
+src\app\search\page.tsx:18: <input name="q" defaultValue={q} placeholder="Search products…" className="input" />
+src\app\track\page.tsx:34: <input className="input" placeholder="RC2607123456" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} required />
+src\app\track\page.tsx:38: <input className="input" inputMode="numeric" maxLength={10} placeholder="10-digit mobile" value={mobile} onChange={e => setMobile(e.target.value.replace(/\D/g, ''))} required />
+src\checkout\page.tsx:283: <input id="mobile" name="tel" type="tel" required inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength={10} autoComplete="tel-national" enterKeyHint="next" className="input" placeholder="10-digit number" value={form.mobile} onChange={e => setField('mobile', e.target.value.replace(/\D/g, ''))} />
+src\checkout\page.tsx:306: <input id="addressLine1" name="address-line1" type="text" required autoComplete="address-line1" enterKeyHint="next" className="input" placeholder="House / flat, street" value={form.addressLine1} onChange={e => setField('addressLine1', e.target.value)} />
+src\checkout\page.tsx:363: placeholder={captchaType === 'math' ? '12' : 'AB3D'} />
+src\components\AddressAutocomplete.tsx:98: placeholder="Aarna Sharma"
+src\components\AddressAutocomplete.tsx:109: placeholder="10-digit mobile"
+src\components\AddressAutocomplete.tsx:128: placeholder="6-digit PIN"
+src\components\AddressAutocomplete.tsx:142: placeholder="Auto-filled from PIN"
+src\components\AddressAutocomplete.tsx:153: placeholder="Auto-filled from PIN"
+src\components\AddressAutocomplete.tsx:166: placeholder="House no., street, area"
+src\components\AddressAutocomplete.tsx:178: placeholder="Near..."
+src\components\ExitIntent.tsx:82: placeholder="you@email.com"
+src\components\LeadCaptureChip.tsx:339: placeholder="Full name"
+src\components\LeadCaptureChip.tsx:355: placeholder="Phone (optional but recommended)"
+src\components\LeadCaptureChip.tsx:372: placeholder="Email (optional)"
+src\components\LeadCaptureChip.tsx:384: placeholder="PIN"
+src\components\LeadCaptureChip.tsx:396: placeholder="City (auto)"
+src\components\LeadCaptureChip.tsx:408: placeholder="Street address (optional)"
+src\components\NameCollector.tsx:41: placeholder="Your name"
+src\components\PincodeCheck.tsx:46: placeholder="Enter PIN code" className="input flex-1" />
+src\components\admin\ProductForm.tsx:58: // drop any empty placeholder boxes, then append the new images
+src\components\admin\ProductForm.tsx:146: placeholder="Aarna Beige Marble Swirl Co-ord Set" />
+src\components\admin\ProductForm.tsx:158: placeholder="A relaxed satin button-down shirt and high-waisted wide-leg pants. Hand-painted marble swirlâ€¦" />
+
+--- Meta / SEO title fields ---
+V24_CHANGELOG.md:90: - **Description:** `Free shipping. 7-day returns. UPI or COD Rs 299 + rest on delivery.`
+prisma\seed.ts:10: description: 'Fitted crop top and high-waist A-line midi skirt in hand-painted marble swirl satin. Deep rose, wine and warm ivory tones on a poly-satin blend (95-105 GSM). Every set is one of a kind. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid: Rs 1,900 (save Rs 100). MRP Rs 3,499.',
+prisma\seed.ts:18: description: 'Fitted crop top and high-waist A-line midi skirt in hand-painted marble swirl satin. Deep rose, wine and warm ivory tones on a poly-satin blend (95-105 GSM). Every set is one of a kind. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid: Rs 1,900 (save Rs 100). MRP Rs 3,499.',
+prisma\seed.ts:46: description: 'Relaxed collared shirt and wide-leg pants in signature beige marble swirl satin. Warm caramel, cream and soft brown tones on a premium poly-satin blend (95-105 GSM). Every set is one of a kind. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid: Rs 2,069 (save Rs 230). MRP Rs 2,999.',
+prisma\seed.ts:54: description: 'Relaxed collared shirt and wide-leg pants in signature beige marble swirl satin. Warm caramel, cream and soft brown tones on a premium poly-satin blend (95-105 GSM). Every set is one of a kind. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid: Rs 2,069 (save Rs 230). MRP Rs 2,999.',
+src\app\layout.tsx:16: export const metadata: Metadata = {
+src\app\layout.tsx:22: description: 'Hand-painted marble swirl satin co-ord sets. Ships from Gurugram in 24-48 hours. Free shipping across India.',
+src\app\layout.tsx:29: description: 'Two hundred sets. Then we begin again.',
+src\app\about\page.tsx:4: export const metadata = {
+src\app\about\page.tsx:6: description: 'A small studio in Gurugram making one thing at a time.',
+src\app\admin\products\page.tsx:13: export const metadata = { title: "Products â€” RosÃ© & Co Admin" };
+src\app\admin\products\new\page.tsx:5: export const metadata = { title: "Create a listing â€” RosÃ© & Co Admin" };
+src\app\admin\products\[slug]\edit\page.tsx:11: export const metadata = { title: "Edit product â€” RosÃ© & Co Admin" };
+src\app\admin\products\[slug]\edit\page.tsx:35: description: p.description ?? "",
+src\app\api\products\route.ts:51: description: body.description ?? "",
+src\app\api\products\[slug]\route.ts:33: description: body.description ?? "",
+src\app\api\products\[slug]\duplicate\route.ts:33: description: original.description,
+src\app\cancellation-policy\page.tsx:3: export const metadata = { title: 'Cancellation Policy' };
+src\app\care-guide\page.tsx:3: export const metadata = { title: 'Care guide', description: 'How to wash, dry, iron, and store satin without damaging it. Rules that keep your Amara set looking new.' };
+src\app\collections\co-ord-sets\page.tsx:6: export const metadata = { title: 'Co-ord sets', description: 'Matching top and skirt or top and pant sets. Small batch, hand-painted prints, satin fabric.' };
+src\app\collections\engagement-outfits\page.tsx:6: export const metadata = { title: 'Engagement outfits', description: 'Outfits for engagement functions and roka ceremonies. Warm tones, small batch, works for family functions.' };
+src\app\collections\party-wear\page.tsx:6: export const metadata = { title: 'Party wear', description: 'Satin co-ords, dresses, and evening wear for Indian parties. Made in small batches, shipped from Gurugram.' };
+src\app\collections\satin-skirts\page.tsx:6: export const metadata = { title: 'Satin skirts', description: 'Poly-satin skirts at 95+ GSM. Falls with weight, doesn\'t cling. Small batch, hand-painted prints available.' };
+src\app\contact\page.tsx:3: export const metadata = { title: 'Contact' };
+src\app\fabric-guide\page.tsx:3: export const metadata = { title: 'Fabric guide', description: 'What we look for in fabric and why. Complete guide to GSM, satin types, and quality signals.' };
+src\app\faq\page.tsx:3: export const metadata = { title: 'Questions' };
+src\app\gift-cards\page.tsx:3: export const metadata = { title: 'Gift cards', description: 'Give Rose &amp; Co credit as a gift. Rs 500, Rs 1,000, or Rs 2,000 amounts. Emailed instantly.' };
+src\app\impact\page.tsx:1: export const metadata = { title: 'Our impact', description: 'Small-batch production, transparent supply chain. What we actually do vs what other brands say.' };
+src\app\journal\page.tsx:11: export const metadata: Metadata = {
+src\app\journal\page.tsx:13: description: 'Honest guides on satin fabric, styling co-ord sets, and how small-batch Indian brands make things. From Rose & Co, Gurugram.',
+src\app\journal\page.tsx:17: description: 'Guides on satin, styling, and Indian D2C fashion.',
+src\app\journal\[slug]\page.tsx:21: description: post.excerpt,
+src\app\journal\[slug]\page.tsx:26: description: post.excerpt,
+src\app\journal\[slug]\page.tsx:35: description: post.excerpt,
+src\app\press\page.tsx:3: export const metadata = { title: 'Press', description: 'Media mentions and press coverage of Rose &amp; Co.' };
+src\app\privacy-policy\page.tsx:3: export const metadata = { title: 'Privacy Policy' };
+src\app\product\[slug]\page.tsx:29: select: { name: true, description: true, price: true, compareAt: true, images: true, slug: true },
+src\app\product\[slug]\page.tsx:34: description: `${p.description} MRP Rs ${p.compareAt || 3499}, selling at Rs ${p.price}. Free shipping across India, ships from Delhi NCR in 24-48 hours. UPI prepaid Rs 1,900 (save Rs 100). COD available (Rs 299 online + rest on delivery).`,
+src\app\product\[slug]\page.tsx:37: title: p.name, description: p.description,
+src\app\product\[slug]\page.tsx:41: twitter: { card: 'summary_large_image', title: p.name, description: p.description },
+src\app\product\[slug]\page.tsx:66: productSchema({ id: p.id, slug: p.slug, name: p.name, description: p.description, price: p.price, images, sizes }),
+src\app\product\[slug]\page.tsx:74: id: p.id, slug: p.slug, name: p.name, description: p.description,
+src\app\product\[slug]\ProductClient.tsx:25: id: string; slug: string; name: string; description: string;
+src\app\refund-policy\page.tsx:3: export const metadata = { title: 'Returns & Refund Policy' };
+src\app\search\page.tsx:6: export const metadata = { title: 'Search' };
+src\app\search\page.tsx:11: where: { active: true, OR: [{ name: { contains: q } }, { description: { contains: q } }] },
+src\app\shipping-policy\page.tsx:1: export const metadata = { title: 'Shipping Policy' };
+src\app\shop\page.tsx:11: export const metadata: Metadata = {
+src\app\shop\page.tsx:13: description: 'Two hand-painted marble swirl co-ord sets. Poured in rosé. Cast in caramel. Premium satin. Free shipping across India. Ships from Gurugram in 24-48 hours.',
+src\app\shop\page.tsx:19: description: 'Hand-painted marble swirl co-ord sets. Two hundred pieces per drop.',
+src\app\shop\page.tsx:32: description: true,
+src\app\size-guide\page.tsx:4: export const metadata = { title: 'Size guide', description: 'How to measure yourself for online satin shopping. Amara set size chart with brand equivalents (Zara, H&amp;M).' };
+src\app\terms\page.tsx:3: export const metadata = { title: 'Terms & Conditions' };
+src\components\admin\ProductForm.tsx:14: description: string;
+src\lib\schemas.ts:12: description: 'Small-batch contemporary co-ord sets in hand-painted marble prints. Designed and shipped from Gurugram, India.',
+src\lib\schemas.ts:52: id: string; slug: string; name: string; description: string;
+src\lib\schemas.ts:61: description: p.description,
+src\lib\schemas.ts:144: description: post.excerpt,
+src\lib\seo.ts:24: description: string;
+src\lib\seo.ts:81: description: p.description,
+
+--- CTA buttons text ---
+README.md:9: - **Home / Product / Cart / Checkout / Order Success / Track / Admin** — full flow, no placeholders
+README.md:15: - **Meta Pixel** ready — env var driven; wires PageView, ViewContent, AddToCart, InitiateCheckout, AddPaymentInfo, Purchase with deduplication event IDs
+README.md:20: - **Mobile-first** — sticky buy bar, touch-friendly size selector, one-hand checkout
+README.md:93: - `InitiateCheckout` (cart page load)
+README.md:144: │  │  ├─ checkout/         # 3-step checkout (address → verify → payment)
+README.md:186: 5. **Upsells / Related products** — add to cart page and product page
+V14_CHANGELOG.md:10: - **UPI logos row** on cart + checkout (visual trust)
+V14_CHANGELOG.md:13: - **Cart reviews snippet** (3 reviews shown in cart before checkout)
+V14_CHANGELOG.md:21: - **Progress bar** during checkout (visual bar above 1-2-3 steps)
+V14_CHANGELOG.md:22: - **Micro-animation** on Add to Bag click (button bumps briefly)
+V14_CHANGELOG.md:28: - **Gift wrap add-on** (Rs 49) checkbox during checkout
+V19_CHANGELOG.md:31: 3. `npm run dev` and verify checkout page shows new UPI ID in QR code
+V24_CHANGELOG.md:38: - `src/app/checkout/page.tsx` - full checkout with new captcha UX + correct pricing
+V24_CHANGELOG.md:62: - Checkout captcha: shows math or 4-char code (not SVG)
+V25_CHANGELOG.md:12: Product page now shows one price block. No double-boxed 'UPI prepaid' and 'Cash on delivery' info panels competing for attention. Payment method choice lives at checkout, where it belongs.
+V25_CHANGELOG.md:18: Removed the two info boxes (UPI savings, COD split). One line at the bottom: 'Payment method chosen at checkout.'
+V25_CHANGELOG.md:20: ### Checkout
+V25_CHANGELOG.md:32: - src/app/checkout/page.tsx
+src\app\robots.ts:6: { userAgent: '*', allow: '/', disallow: ['/api/', '/admin/', '/cart', '/checkout'] },
+src\app\api\orders\create\route.ts:51: return NextResponse.json({ error: 'Session expired. Please start checkout again.' }, { status: 400 });
+src\app\api\orders\create\route.ts:66: return NextResponse.json({ error: 'Verification failed. Please restart checkout.' }, { status: 400 });
+src\app\api\orders\create\route.ts:69: return NextResponse.json({ error: 'Session expired. Please restart checkout.' }, { status: 400 });
+src\app\cart\page.tsx:64: <Link href="/checkout" className="btn-primary w-full mt-6">Checkout</Link>
+src\app\cart\page.tsx:66: Payment method chosen at checkout.
+src\app\checkout\page.tsx:12: import CheckoutProgressBar from '@/components/CheckoutProgressBar';
+src\app\checkout\page.tsx:23: export default function CheckoutPage() {
+src\app\checkout\page.tsx:63: const saved = localStorage.getItem('rc_checkout');
+src\app\checkout\page.tsx:66: useEffect(() => { localStorage.setItem('rc_checkout', JSON.stringify(form)); }, [form]);
+src\app\checkout\page.tsx:197: <CheckoutProgressBar step={step} />
+src\app\gift-cards\page.tsx:17: A pre-paid credit code, emailed to your recipient. They redeem it at checkout. No expiry. Works for one full order (not multiple).
+src\app\gift-cards\page.tsx:33: <li>Pay via UPI (send to the ID on our checkout page).</li>
+src\app\gift-cards\page.tsx:35: <li>They enter the code at checkout when they order.</li>
+src\app\order-failure\page.tsx:13: <Link href="/checkout" className="btn-primary">Try again</Link>
+src\app\product\[slug]\ProductClient.tsx:59: router.push('/checkout');
+src\app\product\[slug]\ProductClient.tsx:120: <button onClick={doBuyNow} className="btn-primary flex-1">Buy Now</button>
+src\app\product\[slug]\ProductClient.tsx:121: <button onClick={doAdd} className={`btn-secondary flex-1 transition-transform ${bumpCart ? 'scale-95' : ''}`}>Add to Bag</button>
+src\app\shipping-policy\page.tsx:49: <p>₹300 collected online at checkout. ₹1,199 collected in cash when the courier hands over the package.</p>
+src\checkout\page.tsx:12: import CheckoutProgressBar from '@/components/CheckoutProgressBar';
+src\checkout\page.tsx:23: export default function CheckoutPage() {
+src\checkout\page.tsx:64: const saved = localStorage.getItem('rc_checkout');
+src\checkout\page.tsx:67: useEffect(() => { localStorage.setItem('rc_checkout', JSON.stringify(form)); }, [form]);
+src\checkout\page.tsx:233: <CheckoutProgressBar step={step} />
+src\components\CartAbandonmentTracker.tsx:8: * Watches cart state. If user adds items and doesn't checkout in 20 min,
+src\components\CheckoutProgressBar.tsx:1: export default function CheckoutProgressBar({ step }: { step: 'address' | 'verify' | 'payment' | 'done' }) {
+src\components\CheckoutSummary.tsx:15: export default function CheckoutSummary({ subtotal }: Props) {
+src\components\Footer.tsx:135: <div className="mt-1">Encrypted checkout</div>
+src\components\LeadCaptureChip.tsx:275: ? 'Just a name gets you the code. Fill more if you want faster checkout.'
+src\components\LeadCaptureChip.tsx:328: Just <strong>name OR phone</strong> gets you the code. Fill more for 1-tap checkout later.
+src\components\LeadCaptureChip.tsx:444: Auto-applied at checkout.
+src\components\LeadCaptureChip.tsx:451: Add your phone at checkout for WhatsApp order updates.
+src\components\PersonalizedDiscount.tsx:50: Auto-applied at checkout
+src\components\PWAInstallPrompt.tsx:41: <div className="text-xs text-ivory/70 mt-1">Faster checkout, offline browsing.</div>
+src\components\StickyBuyBar.tsx:57: Buy Now
+src\components\TrustBadges.tsx:6: { icon: 'UPI',    title: 'Secure checkout', sub: 'No cards, no netbanking' },
+src\hooks\useUserSegment.ts:126: // Store discount for later checkout auto-apply
+
+--- Error handling gaps (empty catch) ---
+src\app\admin\orders\[id]\page.tsx:16: if (order.utmData) { try { utmParsed = JSON.parse(order.utmData); } catch {} }
+src\app\checkout\page.tsx:64: if (saved) try { setForm(f => ({ ...f, ...JSON.parse(saved) })); } catch {}
+src\app\checkout\page.tsx:183: setTimeout(() => { try { clear(); } catch {} router.push(successUrl); }, 500);
+src\checkout\page.tsx:65: if (saved) try { setForm(f => ({ ...f, ...JSON.parse(saved) })); } catch {}
+src\checkout\page.tsx:211: try { clear(); } catch {}
+src\components\AddressAutocomplete.tsx:41: } catch {}
+src\components\CartAbandonmentTracker.tsx:44: } catch {}
+src\components\CartContext.tsx:35: } catch {}
+src\components\GreetingBanner.tsx:39: } catch {}
+src\components\HeaderCart.tsx:17: } catch {}
+src\components\LeadCaptureChip.tsx:15: } catch {}
+src\components\ShareButton.tsx:18: } catch {}
+src\components\WishlistContext.tsx:21: } catch {}
+src\lib\analytics.ts:162: } catch {}
+src\lib\autofill.ts:29: } catch {}
+src\lib\autofill.ts:85: } catch {}
+src\lib\autofill.ts:113: } catch {}
+src\lib\metaCapi.ts:71: } catch {}
+src\lib\pincode.ts:10: } catch {}
+src\lib\recentlyViewed.ts:21: } catch {}
+
+===== D. FULL CONTENT DUMP =====
+----- FILE: content\journal\amara-fit-review-30-day.md -----
+---
+title: "Amara Marble Swirl Co-ord: 30-day fit review from 8 real buyers"
+excerpt: "We asked eight buyers who wore the Amara to their events to tell us how it actually held up. Their words, lightly edited."
+date: "2026-02-25"
+cover: "/products/amara-front.png"
+keywords: [amara coord review, rose and co review, satin fit review, honest fashion review india]
+---
+
+We shipped 47 Amara sets in the first 40 days. Once buyers wore them and washed them and stored them, we emailed eight of them asking for honest feedback.
+
+Below is what they said. Only edits are for typos.
+
+## Ananya Verma, 26, Gurgaon &mdash; Size M
+
+Wore it to my cousin roka in Chandigarh 12 days after it arrived. Fabric held up through 4 hours of standing, dancing, and one accidental spill of red wine. The wine came off with cold water in the bathroom in 30 seconds. That surprised me.
+
+Fit was accurate to the size chart. Waistband did not roll down. Crop length was just above my belly button.
+
+Washed once so far, cold water hand wash. Looks the same. Would order another colour if you drop one.
+
+## Sneha Iyer, 29, Bengaluru &mdash; Size S
+
+Ordered Nov 8. Reached Nov 12 to my Indiranagar address. That is 4 days, one working day slower than promised but okay.
+
+Fit is tight through the top for me. I have a slightly broader bust than the size chart accounts for. Skirt fits perfectly. If you are between S and M with a wider chest, size up for the top.
+
+Print is more red-wine than the photos suggested. Prefer the actual thing to the photo. Wore it to Toit for my anniversary.
+
+## Priya Nair, 24, Kochi &mdash; Size M
+
+Delivery was 6 days to Kochi. Expected 4 to 5. Not the end of the world but worth noting.
+
+Fabric is properly satin. My previous Amazon satin skirt at Rs 900 lasted 2 wears. This feels like it will last 20.
+
+One thing though. Skirt is longer on me than on the model. I am 5 foot 2. It is ankle length instead of mid-calf. Like it but note for petite buyers: it will be longer on you.
+
+## Riya Bhardwaj, 27, Mumbai &mdash; Size L
+
+I am 5 foot 8 and usually L in H&amp;M and Vero Moda. Amara L fit me right. Skirt hit mid-calf as the photos showed.
+
+Wore to my friend sangeet in Bandra. Fabric moved beautifully when I walked. Was worried the print would look too much for a wedding function but it landed as a good middle ground.
+
+Waistband is comfortable. Sat through a 4-hour ceremony with no adjusting.
+
+## Meher Kapoor, 25, Delhi &mdash; Size S
+
+S fit me exactly right. I am 5 foot 5, 55 kg, typical S in Zara.
+
+Wore to brunch at Perch in Khan Market with white sneakers. Looked put together without looking overdressed.
+
+Note: the top runs a bit tight through the arms if you have muscular arms from gym. I do not but a friend who does needed to size up to M.
+
+## Tanvi Shah, 28, Ahmedabad &mdash; Size L
+
+L was right for me. I am between M and L in Zara.
+
+Print variance is real. Mine has more ivory and less wine than the site photos. Actually looks more elegant this way. Good surprise.
+
+Kept in a plastic bag in the cupboard for 30 days. No wrinkles when I took it out. Went straight to dinner.
+
+## Sara Menon, 31, Pune &mdash; Size S
+
+Delivery was 4 days to Pune. Standard.
+
+Fit S. Fabric feels premium. Kind of like the AJIO Luxe pieces at Rs 3,500 or above I have bought before.
+
+One month in, colour has not faded. Print looks the same as day 1. Have worn it three times, hand washed twice. Zero issues.
+
+## Nikita Joshi, 23, Jaipur &mdash; Size M
+
+Bought as a gift for my elder sister. She is 30, usually M in H&amp;M.
+
+She loved it. Fit her fine. Wore it to a tilak function.
+
+Only note: the skirt needs one iron the first time out of the box. Small creases from folding. After that, no wrinkles.
+
+## What this tells us
+
+Six sizing observations across eight buyers, five occasions, five cities. Patterns:
+
+- Sizing runs true to Zara / H&amp;M
+- If broader in the bust, size up for the top only
+- Petite buyers: skirt will be longer, not shorter
+- Muscular arms: consider sizing up
+- One iron on arrival, then it holds
+
+Not perfect. Nothing is. But nobody said it looked cheap or the fabric felt thin. Which is the honest bar for Rs 1,499 satin in India.
+
+Order the [Amara set here](/product/amara-marble-swirl-coord-set). Free shipping, 24 to 48 hr dispatch from Gurugram.
+
+
+----- FILE: content\journal\best-indian-d2c-brands-2026.md -----
+---
+title: "Best Indian D2C brands under 3 years old: 2026 watch list"
+excerpt: "Small, new, and worth watching. Here are 10 Indian D2C brands started in 2023-2025 that are doing something interesting."
+date: "2026-08-19"
+cover: "/products/amara-front.png"
+keywords: [new indian D2C brands, 2026 watchlist brands, emerging fashion india]
+---
+
+10 Indian D2C brands started in 2023 or later. Not all successful, but all doing something worth watching.
+
+## Fashion
+
+**1. Rose & Co (2026)** â€” small-batch satin co-ords. That's us.
+
+**2. Bareek (2024)** â€” natural dyes, small production.
+
+**3. Nomadic State (2023)** â€” travel-inspired clothing.
+
+**4. Suta (2024)** â€” handloom, minimalist.
+
+## Beauty
+
+**5. Ras Luxury Oils (2023)** â€” cold-pressed skincare.
+
+**6. Foxtale (2024)** â€” direct-to-consumer skincare.
+
+## Home
+
+**7. The Better Home (2024)** â€” sustainable cleaning products.
+
+**8. Roots (2025)** â€” home decor from waste materials.
+
+## Food
+
+**9. Wingreens Farms (2023)** â€” plant-based Indian foods.
+
+**10. Slurp Farm (2023)** â€” clean baby food.
+
+## What they have in common
+
+- Small teams (under 20 people)
+- Direct-to-consumer (no marketplace dependence)
+- Focus on 1-2 product categories
+- Transparent about supply chain
+- Meta Ads as primary acquisition channel
+
+## What kills small D2C brands
+
+- Over-diversifying too fast
+- Losing focus on 1 hero product
+- Discounting to compete with fast fashion
+- Chasing Instagram trends instead of building a brand
+
+The successful ones stay small and specific for at least 2 years.
+
+For the Amara set, [see here](/product/amara-marble-swirl-coord-set). Rs 1,499.
+
+
+----- FILE: content\journal\best-satin-coord-sets-under-2000-india.md -----
+---
+title: "Best satin co-ord sets under â‚¹2,000 in India: an honest comparison (2026)"
+excerpt: "We looked at every satin co-ord set under â‚¹2,000 currently available from Indian D2C brands. Here is what is worth buying, what is skippable, and what we would buy if we were not making our own."
+date: "2026-01-25"
+cover: "/products/amara-back.png"
+keywords: [satin co-ord set india, best co-ord sets under 2000, indian D2C fashion brands, satin skirt sets, affordable party wear india]
+---
+
+Yes, we make a satin co-ord set. Yes, this could easily be a self-serving comparison where we win every category. We tried to write it honestly instead.
+
+The five brands below are the ones we consider real competition. We ordered a set from each in November 2025 and evaluated fabric, fit, price, and delivery.
+
+This is not a paid or affiliate post. We received no products for review. Everything was bought at full price with our own money.
+
+## What we looked at
+
+- **Fabric weight** (GSM â€” the single most important quality signal)
+- **Print method** (digital, screen, hand-painted, discharge)
+- **Fit accuracy** vs the brand's own size chart
+- **Delivery speed** to a Delhi NCR pincode
+- **Total cost** including any COD charges or hidden fees
+- **Return experience** for one item per brand
+
+## The brands we compared
+
+Ranked by our overall recommendation.
+
+### 1. Urbanic â€” Satin Midi Set (â‚¹1,899)
+
+**Fabric:** ~75-85 GSM poly-satin. Lighter than we would like.
+**Print:** Digital print, non-repeating small motifs.
+**Fit:** Runs slightly small. Size up if between sizes.
+**Delivery:** 4 business days to Delhi.
+**Overall:** Safest pick under â‚¹2,000 if you want reliable D2C-standard quality.
+
+**Buy if:** You want low-risk, no-drama first satin purchase.
+**Skip if:** You want fabric with weight or a distinctive print.
+
+### 2. Amara Marble Swirl Co-ord â€” RosÃ© & Co (â‚¹1,499)
+
+**Fabric:** 95-105 GSM poly-satin blend.
+**Print:** Hand-painted marble swirl (no two identical).
+**Fit:** True to size for most.
+**Delivery:** 3-5 business days to metros.
+**Overall:** This is us. Our fabric is heavier and our print more distinctive than anything else at this price. We are also the smallest brand on this list.
+
+**Buy if:** You want something visibly different from everyone else.
+**Skip if:** You want a widely-recognized brand name on the tag.
+
+*Shameless plug aside â€” we put ourselves at #2 because Urbanic delivers a more consistent experience for first-time D2C buyers.*
+
+### 3. Instagram-First Brands (â‚¹1,200-1,800)
+
+**Fabric:** Varies wildly â€” 60 GSM to 100 GSM.
+**Print:** Screen prints or digital. Often reproducing viral Zara / Reformation motifs.
+**Fit:** Inconsistent.
+**Delivery:** 5-10 business days.
+**Overall:** High variance.
+
+**Buy if:** You have seen a real-person try-on video.
+**Skip if:** You want predictable quality.
+
+### 4. Myntra Own Labels (RARE, DressBerry) (â‚¹1,299-1,999)
+
+**Fabric:** 60-80 GSM poly-satin. Thin.
+**Print:** Digital prints.
+**Fit:** Standard Indian sizing.
+**Delivery:** 2-4 days for metros. Fast.
+**Overall:** Wide availability, fast delivery, easy returns. Fabric quality below what the price suggests.
+
+### 5. FabAlley / IndyaWorld (â‚¹1,499-1,999)
+
+**Fabric:** 70-90 GSM poly-satin.
+**Print:** Digital.
+**Fit:** Runs slightly loose.
+**Delivery:** 3-5 business days.
+**Overall:** Solid middle option.
+
+## The two things every satin buyer should ask
+
+**1. What is the GSM?**
+
+Anything under 85 GSM will look and feel disappointing. 90-110 is the sweet spot. Details in our [poly-satin fabric guide](/journal/poly-satin-fabric-guide).
+
+**2. Does the print bond into the fabric or sit on top?**
+
+Digital prints sit on top â€” you can feel them when you rub the surface. Hand-painted prints bond into the fibre.
+
+## Return policies at a glance
+
+| Brand | Return window | Free reverse pickup | Refund time |
+|-------|---------------|---------------------|-------------|
+| Urbanic | 15 days | Yes | 7-10 days |
+| RosÃ© & Co | 7 days | Yes | 5-7 days |
+| Instagram brands | Usually none | No | Depends |
+| Myntra | 14 days | Yes | 5-7 days |
+| FabAlley | 15 days | Yes | 7-10 days |
+
+## What we would buy at each price point
+
+- **Under â‚¹1,500** â€” RosÃ© & Co Amara (biased, but fabric is heavier at this price). Or wait for Urbanic sale.
+- **â‚¹1,500-2,000** â€” Urbanic for low risk. Us for something distinctive.
+- **â‚¹2,000-3,000** â€” AJIO Luxe or wait for Reformation sale.
+- **Over â‚¹3,000** â€” Real silk satin from a small brand.
+
+## One honest closing note
+
+The best co-ord set is one that fits your body, matches the occasions you attend, and costs an amount you would spend without thinking twice.
+
+A well-fitted 80 GSM piece will outperform a badly-fitted 120 GSM piece every time.
+
+Get the fabric information. Read the size chart. Check real-person reviews.
+
+---
+
+**The [Amara Marble Swirl Co-ord Set](/product/amara-marble-swirl-coord-set) is â‚¹1,499. UPI prepaid â‚¹1,399 (save â‚¹100).**
+
+*Written by the RosÃ© & Co team, Gurugram. Last updated January 2026.*
+
+
+----- FILE: content\journal\best-satin-skirts-under-1500-india.md -----
+---
+title: "Best satin skirts under Rs 1,500 in India: an honest test"
+excerpt: "I ordered 7 satin skirts under Rs 1,500 from Myntra, Ajio, Meesho, and Amazon. Weighed them, washed them, wore them. Here is what happened."
+date: "2026-02-04"
+cover: "/products/amara-fabric.png"
+keywords: [best satin skirt india, satin skirt under 1500, cheap satin quality, indian D2C fashion]
+---
+
+If you are buying a satin skirt under Rs 1,500 in India, the biggest thing you are actually buying is fabric weight. Everything else, you can guess from photos. Weight, you cannot.
+
+I bought 7 satin skirts between Rs 799 and Rs 1,499 in November 2025. Kitchen scale, notebook, one week of testing. Here is what came out.
+
+## The seven skirts
+
+| Brand | Price | Weight | Notes |
+|-------|-------|--------|-------|
+| Meesho reseller | Rs 799 | ~55 GSM | Sheer at the waistband. Sat down, could see the chair through it. |
+| Amazon listing | Rs 899 | ~65 GSM | Slippery finish. Held creases for three days. |
+| Urbanic Sale | Rs 1,099 | ~78 GSM | Best of the sub-1,200 lot. |
+| Myntra RARE | Rs 1,299 | ~72 GSM | Print is nice. Fabric is average. |
+| FabAlley | Rs 1,399 | ~85 GSM | Solid. |
+| DressBerry | Rs 1,499 | ~70 GSM | Overpriced for what you get. |
+| Rose &amp; Co Amara | Rs 1,499 | ~100 GSM | I make this so obviously biased. Included for weight comparison. |
+
+## What GSM actually tells you
+
+Grams per square metre. Higher number equals heavier fabric equals better drape equals less clinging when you sit down.
+
+Under 70 GSM, satin looks flat in photos and feels plasticky in person. Between 70 and 90, wearable but not memorable. Above 90, the fabric has weight. You can see it move when you walk. That is what real satin does.
+
+The Rs 500 satin skirt you keep seeing on Instagram ads is 40 to 60 GSM. Photographs fine. Arrives feeling like a shower curtain.
+
+## What to look for in photos
+
+You cannot hold the fabric. But you can see how it hangs.
+
+Good sign: the fabric has natural creases where it folds. Falls in soft rolls off the waistband.
+
+Bad sign: the fabric looks flat and paper-like. No visible weight.
+
+Bad sign: the model is standing perfectly still in every photo. Heavy satin moves. Brands that only use flat lays are hiding thin fabric.
+
+## Two questions to ask the brand
+
+1. What is the GSM?
+2. Does the fabric wrinkle when you sit down?
+
+If they cannot answer the first, they do not know their fabric. If they dodge the second, they know and they do not want to tell you.
+
+## The verdict
+
+For Rs 1,500 or under on a satin skirt right now:
+
+- **Best fabric under Rs 1,500:** Rose &amp; Co Amara at Rs 1,499. Biased but the math is the math. 100 GSM is not being matched at this price.
+- **Best from a large brand:** Urbanic Sale at Rs 1,099 when the sale is on. Not on sale, skip.
+- **Cheapest passable:** FabAlley at Rs 1,399. Not exciting but will not disappoint.
+
+Under Rs 1,000, honestly not worth it. Save the Rs 800 and put it toward something at 90 GSM or above.
+
+If you want to see how 100 GSM satin actually falls, the [Amara set](/product/amara-marble-swirl-coord-set) is Rs 1,499.
+
+
+----- FILE: content\journal\delhi-ncr-brands-48-hour-shipping.md -----
+---
+title: "Delhi NCR fashion brands that ship in 48 hours"
+excerpt: "You need an outfit for Saturday and it's Wednesday. Here are 6 Delhi NCR brands that can actually deliver."
+date: "2026-07-08"
+cover: "/products/amara-front.png"
+keywords: [delhi ncr fashion, fast delivery india, quick shipping brands]
+---
+
+Same-city delivery in Delhi NCR should mean 24-48 hours. Most brands promise it. Few actually deliver.
+
+Here are 6 that consistently do.
+
+## 1. Nykaa Fashion (48 hrs)
+
+Wide catalogue. Their own express delivery network. Delhi orders reach next day.
+
+## 2. Myntra (48 hrs on Prime)
+
+Requires Myntra Insider subscription. Nearly all orders next-day if placed before 6 PM.
+
+## 3. Ajio (48-72 hrs)
+
+Less consistent than the two above. Delhi metros usually 48 hrs.
+
+## 4. Rose & Co (24-48 hrs)
+
+We ship from our Gurugram unit. Delhivery pickup at 6 PM daily. Delhi NCR gets it next morning or day after.
+
+## 5. Urban Ladder (48-72 hrs)
+
+For home. Same-city usually delivered in 48 hrs.
+
+## 6. Zara (5-7 days)
+
+Not fast. Included as a note â€” Zara's India shipping is slower than most local brands.
+
+## The pattern
+
+Local D2C brands with local warehouses beat big marketplaces on speed for the local city.
+
+For Delhi NCR: shop local D2C for weekend delivery. Amazon/Myntra for anything you're happy to wait for.
+
+For [the Amara](/product/amara-marble-swirl-coord-set), we dispatch same-day if you order before 6 PM. Free shipping.
+
+
+----- FILE: content\journal\dinner-date-outfit-ideas.md -----
+---
+title: "Dinner date outfit ideas that don't try too hard"
+excerpt: "The best dinner date outfit looks like you didn't spend two hours picking it. Here's how to actually do that."
+date: "2026-05-06"
+cover: "/products/amara-front.png"
+keywords: [dinner date outfit, first date outfit, casual date look]
+---
+
+The best dinner date outfits don't look like you tried. They look like this is just how you dress.
+
+Which is a lie, obviously, but the outcome is what matters.
+
+## The formula
+
+One statement piece + everything else neutral.
+
+The statement piece can be:
+- A satin skirt
+- A slip dress
+- A bold coloured top
+- Interesting shoes
+- One piece of jewellery
+
+Never two statement pieces on the same body. It reads try-hard immediately.
+
+## Five outfits that work
+
+**1. Satin skirt + white fitted T-shirt + heels**
+Statement: skirt. Everything else: neutral.
+
+**2. Slip dress + oversized cardigan**
+Statement: dress. Cardigan reads casual, undercuts the dressiness.
+
+**3. Fitted jeans + bodysuit + blazer**
+Statement: blazer. Structured, effortless.
+
+**4. Midi wrap dress + flat sandals**
+Statement: fit. Comfort tells him you know yourself.
+
+**5. Amara top + dark jeans + heels**
+Statement: top. Uses one piece of a co-ord set as the print.
+
+## What NOT to wear
+
+**Anything you're pulling down or adjusting.** If the skirt is riding up or the neckline is slipping, you'll be thinking about it all night.
+
+**New shoes.** Every date I've been on where I wore new shoes ended with me faking a smile through toe pain.
+
+**Perfume you haven't worn before.** Test it on a friend day first.
+
+**Statement jewellery.** One earring, one chain, one ring. That's it.
+
+## What actually gets remembered
+
+Not the outfit. What you were like in it.
+
+If the outfit makes you feel yourself, that's the outfit. If you're pulling at it or checking mirrors, wrong outfit.
+
+Amara set for a first-date dinner: the top with dark jeans reads intentional but not desperate. [Shop here](/product/amara-marble-swirl-coord-set).
+
+
+----- FILE: content\journal\diwali-outfit-ideas-not-kurta.md -----
+---
+title: "Diwali outfit ideas that aren't kurta sets"
+excerpt: "Diwali doesn't require a kurta. Here are five alternatives that photograph beautifully and don't feel like every other year."
+date: "2026-05-20"
+cover: "/products/amara-front.png"
+keywords: [diwali outfit ideas, non traditional diwali look, modern indian festive wear]
+---
+
+Diwali has become synonymous with kurta sets. That's fine. But if you want to break from tradition without ditching the occasion, here are five outfit types that work.
+
+## 1. Satin co-ord in warm tones
+
+Rose, wine, burnt orange, deep gold. The Amara marble swirl works.
+
+Wear with: gold jhumkas, gold bangles (2-3), block heels in gold or wine.
+
+## 2. Silk saree draped as a co-ord
+
+Take a plain silk saree, drape it as a pre-stitched skirt with the pallu tied at the waist. Wear a fitted crop top on top.
+
+Modern, still uses the silk you'd usually wear.
+
+## 3. Metallic slip dress + kaftan cover-up
+
+Gold, bronze, or copper slip dress with a lightweight cover-up over. For house parties, not pujas.
+
+## 4. Structured jumpsuit in Diwali colours
+
+Deep green, wine, burnt orange. Structured, comfortable, dance-friendly.
+
+## 5. Anarkali with contemporary silhouette
+
+Modern Anarkali cut (straight sleeves, clean neckline). Feels traditional without being generic.
+
+## What NOT to wear on Diwali
+
+- Anything black (too western for the occasion in most Indian families)
+- Anything very casual (jeans, sneakers)
+- Anything that clashes with warm interior lighting (Diwali is lit differently than restaurants)
+
+## The Amara set for Diwali
+
+Wine-rose tones work in warm indoor lighting. Photographs well against fairy lights and diyas. [Shop here](/product/amara-marble-swirl-coord-set) â€” Rs 1,499.
+
+
+----- FILE: content\journal\first-date-outfit-confident-not-desperate.md -----
+---
+title: "First-date outfit ideas that read confident, not desperate"
+excerpt: "There's a clear line between 'I dressed up for this' and 'I'm trying too hard'. Here's where it is."
+date: "2026-05-13"
+cover: "/products/amara-back.png"
+keywords: [first date outfit, confident date look, indian dating]
+---
+
+The line is subtle but obvious once you see it. Confident says "this is who I am". Desperate says "please like me".
+
+Here's what falls on which side.
+
+## Confident (works)
+
+- Fitted midi dress in a solid colour
+- Satin skirt + plain tucked-in top
+- Fitted jeans + interesting top + heels
+- Slip dress with a cardigan or blazer over
+
+Notice: nothing on this list is very tight, very short, or very shiny.
+
+## Desperate (doesn't)
+
+- Anything so tight you can't sit comfortably
+- Micro-mini + high heels + statement necklace + bold lip (too many things at once)
+- Clothes borrowed for the date
+- Heels you can barely walk in
+
+## The rule
+
+Wear what you'd wear to a birthday dinner with your closest friend. Then add one thing.
+
+That one thing is what makes it a date outfit. It could be earrings, better hair, a slightly bolder lip. Just one thing.
+
+## The Amara for a first date
+
+Amara top with dark jeans + block heels + small hoops = right amount of intentional. Rs 1,499 gets you the top and skirt, and you get 5+ outfits out of the pair.
+
+[Shop the set](/product/amara-marble-swirl-coord-set).
+
+
+----- FILE: content\journal\gsm-fabric-quality-guide.md -----
+---
+title: "What GSM means in fabric quality: a complete buyer's guide"
+excerpt: "GSM is the single most useful number to know when buying online. Here's what it actually means and what to look for."
+date: "2026-06-24"
+cover: "/products/amara-fabric.png"
+keywords: [GSM meaning, fabric weight guide, textile quality, how to check fabric]
+---
+
+GSM stands for grams per square metre. It measures the weight of the fabric.
+
+That is the entire definition. But the implication is huge â€” heavier fabric drapes better, feels better, and lasts longer.
+
+Here's the guide.
+
+## GSM by fabric type
+
+### Satin
+- 40-60 GSM: fast fashion, plasticky, avoid
+- 70-85 GSM: acceptable for camisoles or linings
+- 90-110 GSM: sweet spot for skirts, dresses, co-ord sets
+- 120-150 GSM: heavy satin, formal wear
+- 160+ GSM: bridal, duchess satin
+
+### Cotton
+- 100-120 GSM: light T-shirt weight
+- 150-180 GSM: standard T-shirt
+- 200-250 GSM: heavy T-shirt, henley
+- 300+ GSM: sweatshirt weight
+
+### Denim
+- 8-10 oz (270-340 GSM): light summer denim
+- 12-14 oz (400-475 GSM): standard jeans
+- 15+ oz (500+ GSM): heavy raw denim
+
+### Silk
+- 12-16 mm (thickness measurement instead of GSM): light blouses
+- 19-22 mm: heavy silk, satin dresses
+- 25+ mm: bridal wear
+
+## What GSM tells you
+
+**Higher GSM = better drape.** The fabric falls naturally with gravity.
+
+**Higher GSM = better durability.** More fibre per square metre means more resistance to wear.
+
+**Higher GSM = more warmth.** In cotton and wool, higher GSM = warmer.
+
+**Higher GSM = more premium feel.** Weight in the hand.
+
+## What it doesn't tell you
+
+- Colour quality
+- Print bonding (whether print stays or fades)
+- Cut and fit
+- Stretch factor
+
+You still need to see photos and reviews. But GSM is the first filter.
+
+## Ask the brand
+
+"What's the GSM?" cuts through most marketing.
+
+- Brands that know their fabric answer immediately
+- Brands that don't answer confidently probably don't know
+- Brands that dodge the question are hiding low GSM
+
+## The Amara set
+
+95-105 GSM. Solid middle for a satin co-ord.
+
+[Shop here](/product/amara-marble-swirl-coord-set). Rs 1,499.
+
+
+----- FILE: content\journal\hand-painted-textile-brands-india.md -----
+---
+title: "Hand-painted textile brands in India: complete guide"
+excerpt: "Hand-painted textiles are actually rare in Indian D2C. Here are 5 brands doing it and what you should know."
+date: "2026-08-05"
+cover: "/products/amara-front.png"
+keywords: [hand painted textile india, artisan fabric india, hand printed fashion]
+---
+
+"Hand-printed" and "hand-painted" mean different things.
+
+Hand-printed = pigment applied via a block or screen (block printing, kalamkari).
+
+Hand-painted = pigment applied via a brush.
+
+Truly hand-painted textiles are rare. Here are 5 brands doing it.
+
+## 1. Rose & Co (Gurugram)
+
+Marble swirl print, hand-painted on satin. That's the Amara set.
+
+## 2. Injiri (Delhi)
+
+Kalamkari hand-painted work. Traditional techniques.
+
+## 3. Ekaya Silks (Delhi)
+
+Hand-painted borders on silks.
+
+## 4. Bandhej (Rajasthan)
+
+Traditional bandhani tie-dye + selective hand-painting.
+
+## 5. Anokhi (Jaipur)
+
+Block printing that involves hand-painting between blocks.
+
+## What to know
+
+**Colour variance is real.** Machine-printed textiles are identical. Hand-painted ones vary from piece to piece. Yours will look slightly different from the photos.
+
+**Price is higher.** Hand-painting adds 2-3x the labour cost of digital printing.
+
+**Care is different.** Hand-painted pigments are usually more delicate than digital ones. Follow the wash care exactly.
+
+## The Amara approach
+
+Every fabric panel is hand-painted before cutting. Your marble swirl will not match the photo exactly. Same three tones though â€” deep rose, wine, warm ivory.
+
+Rs 1,499. [Shop here](/product/amara-marble-swirl-coord-set).
+
+
+----- FILE: content\journal\how-to-iron-satin.md -----
+---
+title: "How to iron satin without damaging it"
+excerpt: "Satin can be ironed. But do it wrong and you'll melt the fibres. Here's how to do it right."
+date: "2026-05-27"
+cover: "/products/amara-fabric.png"
+keywords: [how to iron satin, satin care, satin ironing tips]
+---
+
+Satin can be ironed. But heat is the enemy of polyester-based satin. Wrong temperature and the fibres melt or shine unevenly.
+
+Here's how to do it without damage.
+
+## The four rules
+
+**1. Always iron on the reverse (inside) side.** The satin finish is on the outside. Direct heat on the outside creates permanent shine spots.
+
+**2. Use the lowest heat setting.** For most home irons this is the "silk" or single-dot setting. Not medium, not high.
+
+**3. Use a pressing cloth.** A thin cotton pillowcase or a white handkerchief works. Place it between the iron and the fabric. Never iron satin directly, even on the reverse.
+
+**4. No steam.** Steam causes water spots on satin. Use a dry iron only.
+
+## The better alternative
+
+**Hang the satin piece in a steamy bathroom for 10 minutes.**
+
+Turn the shower to hot. Close the door. Hang the satin. Wait. The steam relaxes the fibres and creases fall out on their own.
+
+Zero risk of heat damage. Zero water spots. Zero effort.
+
+## What NOT to do
+
+- Never iron over a stain (heat sets it permanently)
+- Never fold satin while it's warm from the iron (creates permanent creases)
+- Never leave the iron sitting on the fabric even for a second
+
+## The Amara set
+
+Our satin is 95-105 GSM. Ironing at low heat on the reverse with a pressing cloth is safe. Steaming in a bathroom is safer.
+
+[Shop the Amara](/product/amara-marble-swirl-coord-set). Rs 1,499.
+
+
+----- FILE: content\journal\how-to-measure-for-online-shopping.md -----
+---
+title: "How to measure yourself for online satin shopping"
+excerpt: "Wrong size = returned package. Here's how to measure yourself in 3 minutes with a soft measuring tape."
+date: "2026-06-03"
+cover: "/products/amara-back.png"
+keywords: [how to measure body, size guide india, online shopping tips]
+---
+
+Wrong size costs you a week â€” 3 days waiting for delivery, 1 day trying it on, 3 days waiting for exchange. Here's how to get it right the first time.
+
+## You need
+
+- A soft measuring tape (Rs 30 at any tailor shop)
+- One friend (optional but helpful)
+- 3 minutes
+
+## The three measurements
+
+### Bust
+
+Wrap the tape around the fullest part of your bust. Not too tight, not loose. It should sit flat against your body.
+
+Look in the mirror to check the tape is level all the way around (not sloping down at the back).
+
+Note the number in centimetres. If your tape only has inches, multiply by 2.54.
+
+### Waist
+
+Bend to one side. The natural crease at your waist is where you measure.
+
+Wrap the tape around your natural waist (not where your jeans sit, higher up). Loose but not sagging.
+
+Note the number.
+
+### Hip
+
+Wrap the tape around the widest part of your hips (usually 20 cm below your waist).
+
+Not too tight. The tape should slide down slightly if you push it.
+
+Note the number.
+
+## Convert to sizes
+
+The Amara size chart:
+
+| Size | Bust | Waist | Hip |
+|------|------|-------|-----|
+| XS | 81 cm | 61 cm | 86 cm |
+| S | 86 cm | 66 cm | 91 cm |
+| M | 91 cm | 71 cm | 97 cm |
+| L | 97 cm | 76 cm | 102 cm |
+| XL | 102 cm | 81 cm | 107 cm |
+| XXL | 107 cm | 86 cm | 112 cm |
+
+Your body measurement should be **2-3 cm below** the garment measurement listed. That's the room for comfort.
+
+## Common mistakes
+
+**Measuring over clothes.** Wear a thin fitted top and leggings. Not jeans, not baggy tops.
+
+**Measuring while breathing in.** Breathe out normally, then measure.
+
+**Not checking that the tape is level.** Ask a friend, or use a mirror.
+
+**Rounding up or down.** Note the exact number. If you're 89 cm bust, don't round to 90.
+
+## When you're between sizes
+
+Between XS and S? Go XS for a fitted look, S for comfort.
+
+Between S and M with a broader chest? S for the top, M for the skirt.
+
+Between L and XL? Always XL. Satin doesn't stretch.
+
+## What we do
+
+If you're unsure, email us at care@roseandco.in with your three measurements. We'll pick the size for you before you order. No obligation.
+
+Ready to buy? [Amara set](/product/amara-marble-swirl-coord-set). Rs 1,499, ships from Gurugram.
+
+
+----- FILE: content\journal\how-to-style-marble-swirl-coord.md -----
+---
+title: "How to style a marble swirl co-ord set: 6 outfits for real Indian occasions"
+excerpt: "Not styled photoshoot outfits. Real ways to wear a printed satin co-ord to engagement functions, brunches, dinner dates, and airport travel â€” with accessory choices that actually work."
+date: "2026-01-20"
+cover: "/products/amara-front.png"
+keywords: [how to style satin co-ord set, marble print outfit ideas, co-ord set styling india, engagement outfit ideas]
+---
+
+Every fashion blog will tell you to "style your satin co-ord with gold hoops and a clutch". This is not styling advice. This is the styling equivalent of telling someone to breathe.
+
+Real styling is about the specific occasion, the specific weather, and the specific things you probably already own.
+
+Here are six outfits built around the Amara Marble Swirl Co-ord Set â€” one for each occasion Indian women actually get invited to.
+
+## 1. Engagement roka (afternoon or evening)
+
+The Amara set was designed with this in mind. Roka functions are the trickiest of occasions â€” dressier than a lunch, less formal than a wedding, and you are always in photos.
+
+**Shoes:** Block heels or a comfortable wedge in wine, gold, or nude. Not stilettos â€” you will be on your feet for four hours.
+
+**Accessories:**
+- Small hoop earrings in gold or rose gold (2-3 cm diameter). Not chandeliers, not studs.
+- One thin chain necklace, no pendant.
+- No layered bracelets. Just one delicate cuff.
+
+**Bag:** A small envelope clutch in wine, blush, or metallic rose gold.
+
+**Hair:** Loose waves or a low messy bun.
+
+**What not to add:** Big statement earrings. The marble print is already patterned â€” anything busy near your face fights with it.
+
+## 2. Brunch with friends
+
+Weekend brunch in Bandra, Bangalore Indiranagar, Delhi CP.
+
+**Shoes:** White sneakers (yes, with satin). Or flat sandals in tan or nude.
+
+**Accessories:**
+- Sunglasses matter here. Oversized frames in tortoiseshell or black.
+- Simple gold studs. Nothing else.
+
+**Bag:** Small crossbody or a structured mini tote. Tan leather works.
+
+**Layer to add:** A cream or ivory oversized blazer thrown over the shoulders. Or an oversized denim jacket for cooler months.
+
+**Why this works:** The satin skirt against sneakers is a Bandra girl staple. It reads as "I dressed up but I did not try".
+
+## 3. Dinner date (nice restaurant, not a first date)
+
+**Shoes:** Strappy heels or block heels in nude or metallic. 2.5 to 3 inches makes the skirt fall correctly.
+
+**Accessories:**
+- Statement earrings work here. Try gold or pearl drops.
+- Skip the necklace.
+- Watch or one bracelet, not both.
+
+**Bag:** Small clutch. Wine or black.
+
+**What not to add:** A leather jacket. It kills the satin.
+
+## 4. Airport travel
+
+Perfect for satin because it does not crush like cotton.
+
+**Shoes:** White sneakers or leather loafers.
+
+**Bag:** Your carry-on plus a structured tote.
+
+**Layer:** A long cardigan in beige or camel. Or a lightweight scarf that doubles as a blanket.
+
+**Why this works:** Poly-satin does not wrinkle if you sit correctly. You will get off the plane looking like you did not just fly.
+
+## 5. Cocktail party or house party
+
+**Shoes:** Heeled boots in black or wine. Or open-toe heels.
+
+**Accessories:**
+- Bold statement earrings OR necklace â€” not both.
+- Rings. Two or three across both hands.
+- Bracelet stacks work here.
+
+**Makeup nudge:** This outfit takes a bold lip well. Wine, brick red, or berry.
+
+## 6. Sangeet or reception (as a guest)
+
+**Shoes:** Heels â€” comfortable ones. Wine, gold, or rose gold.
+
+**Accessories:**
+- Layer one delicate chain plus one statement pendant.
+- Bangles work â€” 2-3 thin gold or rose gold.
+- Larger earrings okay because everyone else will also be dressed up.
+
+**What not to add:** A dupatta. The print is the pattern â€” a dupatta over it looks confused. If you want fabric drape, add a long cape or cropped shawl in a solid colour instead.
+
+## Two things nobody tells you about styling co-ord sets
+
+**1. The top and skirt do not have to be worn together.**
+
+The Amara top works with high-waist jeans (dark denim), tailored trousers (black or cream), or a plain A-line midi skirt in a solid tone. The skirt works with a plain white or cream fitted top, a black bodysuit, or a cropped denim jacket buttoned like a shirt.
+
+Buying one co-ord this way gives you 4-5 outfit options.
+
+**2. The print reads better in real light than in artificial light.**
+
+For an indoor evening event under warm lighting, add a metallic accessory to catch the light. For an outdoor day event, no metallics needed â€” the print does the work.
+
+---
+
+The [Amara Marble Swirl Co-ord Set](/product/amara-marble-swirl-coord-set) is â‚¹1,499. Free shipping across India.
+
+*Written by the RosÃ© & Co team. If you want personalized styling advice for a specific event, email us at care@roseandco.in.*
+
+
+----- FILE: content\journal\meta-ads-vs-influencer-marketing-fashion.md -----
+---
+title: "Meta Ads vs Instagram influencers for fashion: what actually works"
+excerpt: "You have Rs 30,000 to spend on marketing. Meta Ads or influencers? Here's the math from someone running both."
+date: "2026-08-26"
+cover: "/products/amara-back.png"
+keywords: [meta ads vs influencers, indian D2C marketing, fashion marketing strategy]
+---
+
+I run both. Meta Ads for scale, influencers for trust. Here's what the numbers say.
+
+## Meta Ads (2025 numbers)
+
+**Cost per click:** Rs 15-40 depending on targeting.
+
+**Conversion rate:** 1-3% for well-optimised D2C fashion.
+
+**Average CPO (cost per order):** Rs 400-800 for satin co-ords in the Rs 1,499 range.
+
+**Break-even:** need 25%+ gross margin, which means selling at 1.5-2x manufacturing cost.
+
+## Influencer marketing
+
+**Cost per Reel:** Rs 5,000-15,000 for micro (5-25K followers), Rs 30,000-100,000 for mid-tier (100K-500K).
+
+**Conversion rate:** highly variable. Best case 5-10%. Average 1-2%.
+
+**Average CPO:** Rs 300-1,500 depending on the influencer.
+
+**Break-even:** faster than Meta Ads because trust is transferred, but harder to predict.
+
+## What works together
+
+Use Meta Ads for volume, cold traffic, scale. Set daily budget of Rs 500-1,000, run continuously.
+
+Use influencers for trust-building and specific audiences.
+
+Best mix: 70% Meta Ads, 30% influencer collabs.
+
+## What doesn't work
+
+- Full budget on influencers only (unpredictable)
+- Full budget on Meta only (no trust building)
+- Big influencers only (poor targeting)
+- Micro influencers only (limited reach)
+
+## For Rose & Co
+
+We spend 80% on Meta Ads and 20% on micro-influencer partnerships.
+
+Micro-influencers get a free Amara set + Rs 3,000-5,000 fee for one Reel and one static post.
+
+Result: CPO around Rs 500-700 blended.
+
+For the actual product, [Amara here](/product/amara-marble-swirl-coord-set). Rs 1,499.
+
+
+----- FILE: content\journal\poly-satin-fabric-guide.md -----
+---
+title: "Poly-satin fabric guide: GSM, drape, care, and what to look for when buying online"
+excerpt: "Everything we learned choosing the satin for our Amara set â€” GSM ranges that actually matter, how to tell heavy satin from cheap satin online, and care rules that keep it looking new."
+date: "2026-01-15"
+cover: "/products/amara-fabric.png"
+keywords: [poly-satin fabric, satin GSM guide, satin fabric care, polyester satin quality, how to choose satin]
+---
+
+Poly-satin is the fabric that ruined online shopping for a lot of women. You order what looks like a slinky, sophisticated satin skirt for â‚¹1,200 â€” and receive a thin, plasticky sheet that crumples the moment you sit down.
+
+The problem is not "poly-satin" as a category. The problem is that "poly-satin" covers a range so wide that a â‚¹300 fast-fashion skirt and a â‚¹6,000 wedding lehenga lining can both technically be poly-satin. The difference is in the details you cannot see in a product photo.
+
+This guide covers those details. Written after eight months of fabric sampling for our Amara set.
+
+## What poly-satin actually is
+
+Satin is not a fibre â€” it is a **weave**. Specifically, it is a weave where the warp threads float over four or more weft threads, creating a smooth, glossy surface on one side and a matte surface on the other.
+
+The fibre used can be silk, polyester, acetate, or a blend. When you see "poly-satin", the fibre is 100% polyester or a polyester-dominant blend.
+
+Good poly-satin looks and feels close to silk satin at 15% of the cost. Bad poly-satin looks like a shower curtain.
+
+## The single most important number: GSM
+
+GSM (grams per square metre) is the weight of the fabric per unit area. It is the closest single number to a quality indicator.
+
+| GSM range | What it means | Common use |
+|-----------|---------------|------------|
+| 40-60 GSM | Very thin, sheer, plasticky | Fast-fashion tops, cheap linings |
+| 70-85 GSM | Thin but usable | Cheap satin skirts, camisoles |
+| **90-110 GSM** | **Weight, drape, does not cling** | **Premium ready-to-wear, our Amara** |
+| 120-150 GSM | Heavy satin, structured | Occasion wear, evening gowns |
+| 160+ GSM | Very heavy, almost like duchess satin | Bridal wear |
+
+Below 85 GSM, the fabric will not fall well. It will cling to your body in the wrong places, wrinkle the moment you sit, and look synthetic in photos.
+
+Above 130 GSM, the satin starts feeling like curtain material â€” heavy and stiff.
+
+**The sweet spot for co-ord sets, skirts, and drapey silhouettes is 90-110 GSM.** This is what we use.
+
+## How to tell heavy satin from cheap satin online
+
+You cannot touch the fabric. But you can spot the difference in three ways.
+
+**1. Look at how the fabric hangs in photos.**
+
+Good satin has weight. When it hangs from a mannequin or drapes off a hanger, it falls in soft folds. It does not stick to itself.
+
+Bad satin looks flat and slightly floaty â€” like paper. If a photo shows the fabric hanging perfectly straight without any natural folds, you are probably looking at 60-70 GSM.
+
+**2. Check the wrinkle test.**
+
+Ask the brand: "Does this fabric wrinkle when I sit down?"
+
+Cheap satin creases visibly the moment weight touches it. Heavy satin will crease slightly but the folds fall out within a few minutes of standing.
+
+If a brand cannot answer this question, they do not know their fabric.
+
+**3. Ask for the GSM.**
+
+Any brand that takes fabric seriously will tell you the GSM. Any brand that dodges the question is hiding something.
+
+Our Amara satin is 95-105 GSM. If you ask, we tell you.
+
+## Care: the four rules
+
+Poly-satin is more forgiving than silk. It handles machine washing, does not need special detergents, and does not shrink meaningfully. But it can still be damaged.
+
+**Rule 1: Never tumble dry.** Heat is the fastest way to kill poly-satin. The polyester fibres warp under high heat, creating permanent creases and a slight yellowing over time. Air dry only â€” hang or lay flat.
+
+**Rule 2: Cold water only.** Warm water breaks down the fibre finish, which is what gives the satin its shine. After five hot washes, satin looks matte instead of glossy.
+
+**Rule 3: No wringing.** Squeeze water out gently, or roll in a towel to absorb moisture. Wringing creates fibre stress lines that never come out.
+
+**Rule 4: Iron on the reverse side, low heat.** If you must iron, do it inside out, on the lowest heat setting. Better: hang the piece in a steamy bathroom for 10 minutes â€” it self-smooths.
+
+## What happens if you break the rules
+
+We tested. Here is what six months of daily wear plus wrong care did to a sample skirt:
+
+- **Tumble dried five times:** Permanent horizontal creases at the waistband. Unfixable.
+- **Hot washed weekly:** Fabric lost 40% of its original shine. Looked dull compared to a control sample.
+- **Wrung out after washing:** Visible stress lines running vertically. Only noticeable in direct light, but there.
+- **Air dried, cold washed, no iron:** Looked exactly like new.
+
+The rules exist for a reason.
+
+## Poly-satin vs silk satin â€” the honest comparison
+
+If you can afford silk, silk is better. Anyone who tells you otherwise is selling poly-satin.
+
+But silk has costs beyond price. Silk requires professional dry cleaning (â‚¹150-300 per piece per wash). Silk yellows in sunlight. Silk shows every water stain. Silk requires more careful storage.
+
+Poly-satin at 95+ GSM feels 85-90% like silk, holds up to home washing, and costs one-fifth as much. For occasion wear you will wear 4-8 times a year, it is the smart choice.
+
+For a wedding you will wear once? Get silk.
+
+## What we chose for Amara and why
+
+We tested nine satin swatches from six mills before settling on the fabric for the Amara set.
+
+We picked a 95-105 GSM poly-satin blend with these specific properties:
+
+- **Weight without stiffness.** Falls with drape, does not crumple at the waist.
+- **Matte-satin finish, not high-gloss.** Reads as sophisticated in photos, not shiny.
+- **Colour retention through 30+ washes** in lab tests. The rose and wine tones stay true.
+- **Print acceptance.** The hand-painted marble swirl bonds into the fibre, does not sit on top.
+
+The last one is why we ruled out cheaper satins. The lighter the fabric, the more the print floats â€” you can feel the paint as a slightly rough layer on the surface. Heavier satins absorb the pigment and feel smooth all the way through.
+
+You can see the finished result on the [Amara Marble Swirl Co-ord Set](/product/amara-marble-swirl-coord-set). What you cannot see in the photos is what took eight months of testing to lock in.
+
+---
+
+**Written by the RosÃ© & Co team, Gurugram. Last updated January 2026.**
+
+*If you have questions about fabric or care, email us at care@roseandco.in. We answer within 24 hours.*
+
+
+----- FILE: content\journal\poly-satin-vs-silk-satin.md -----
+---
+title: "Poly-satin vs silk satin: which one should you actually buy?"
+excerpt: "One costs a fifth of the other. Silk is better on paper. But that does not mean it is the right buy for you."
+date: "2026-03-25"
+cover: "/products/amara-fabric.png"
+keywords: [poly satin vs silk, satin comparison, silk satin buying guide india, what satin to buy]
+---
+
+You are deciding between a poly-satin skirt at Rs 1,499 and a silk satin one at Rs 8,000. Both look similar in photos. Both are called satin. Which do you actually buy?
+
+The honest answer depends on three questions.
+
+## Question 1: how often will you wear it?
+
+**Wearing it 8 times a year or more?** Buy silk. It gets better with age. Poly-satin looks the same but does not develop the character silk does.
+
+**Wearing it 3 to 8 times?** Buy poly-satin at 90 GSM or above. Silk is overkill.
+
+**Wearing it once or twice a year?** Definitely poly-satin. Silk needs annual dry cleaning at Rs 300 to Rs 500. If you wear it twice, you spend Rs 500 in cleaning to protect a Rs 8,000 outfit. Math is bad.
+
+## Question 2: how much do you want to think about it?
+
+Silk needs care.
+
+- Dry clean only (Rs 250 to Rs 500 per clean in metros)
+- Store hanging, not folded
+- Never in direct sunlight (yellows in weeks)
+- Never in humidity (mould spots)
+- Never near perfume or hair spray (stains)
+
+Poly-satin is forgiving.
+
+- Machine washable (gentle cycle) or hand wash
+- Store folded or hanging
+- Colour holds through 30 washes or more
+- No fussing with humidity or sunlight
+
+If you love the ritual of caring for good clothes, silk is beautiful. If you want to wear it and forget it, poly-satin.
+
+## Question 3: how sensitive is your skin?
+
+Silk is naturally breathable and temperature-regulating. Cool in summer, warm in winter.
+
+Poly-satin does not breathe. In Delhi summer, you will feel it. In Bangalore or Ooty weather, it is fine.
+
+Skin conditions or run hot: silk. Otherwise: poly-satin.
+
+## The visual difference
+
+At 100 GSM, poly-satin looks close to real silk. Not identical, but close.
+
+**Silk sheen:** organic, catches light softly, subtle variation across the surface.
+
+**Poly-satin sheen:** slightly sharper, more uniform, catches light in a more predictable pattern.
+
+At 60 GSM poly-satin, the difference is obvious. At 100 GSM, most people will not tell from photos or from more than 3 feet away.
+
+## The cost of care
+
+Silk over 5 years, wearing 4 times a year, with 4 dry cleans:
+- Cost: Rs 8,000 + (4 x 4 x Rs 400) = Rs 14,400
+
+Poly-satin over 5 years, wearing 8 times a year, hand washing at home:
+- Cost: Rs 1,500 + Rs 0 = Rs 1,500
+
+For 40 wears vs 20 wears, poly-satin costs 10 times less.
+
+## The verdict
+
+**Buy silk if:**
+- Wedding outfit
+- Once-a-year statement piece
+- You care about how clothing feels
+- You have skin conditions
+- You can afford Rs 400 per clean without thinking
+
+**Buy poly-satin (95 GSM or above) if:**
+- Everything else
+- Cocktail parties, dinners, engagements
+- You want a piece you can wear repeatedly without stress
+- Building a party wear wardrobe on a budget
+
+The [Amara set](/product/amara-marble-swirl-coord-set) is 95 to 105 GSM poly-satin. Rs 1,499. Ships from Gurugram in 24 to 48 hours. It is not silk, and does not try to be. But it is the closest to real satin at this price.
+
+
+----- FILE: content\journal\prepaid-vs-cod-math.md -----
+---
+title: "Prepaid vs COD in Indian e-commerce: the math for buyers"
+excerpt: "Why more Indian D2C brands are moving to prepaid, and what it means for you as a buyer."
+date: "2026-08-12"
+cover: "/products/amara-fabric.png"
+keywords: [prepaid vs COD india, D2C payment methods, indian ecommerce trends]
+---
+
+Full COD (Cash on Delivery) is dying in Indian D2C.
+
+For buyers, this feels like a loss â€” COD felt safer. For brands, it was killing margins. Here's what changed and why.
+
+## The old model
+
+Buyer places order. Brand ships. Buyer receives, pays cash.
+
+If buyer refuses (30% do), brand loses:
+- Rs 80 forward shipping
+- Rs 80 reverse shipping
+- Rs 40 packaging
+- Rs 200 total per RTO
+
+A brand doing Rs 1,499 sales with 30% RTO = losing Rs 60 per shipment even before making the sale.
+
+## The prepaid model
+
+Buyer pays 100% upfront via UPI. Brand ships. Buyer receives.
+
+If buyer decides to return, they follow standard return process.
+
+Net loss for brand: only actual returns, not "changed my mind at doorstep" RTOs.
+
+## The partial COD model
+
+Buyer pays Rs 299 online via UPI. Rs 1,200 due at delivery in cash.
+
+If buyer refuses, brand loses Rs 200 but keeps Rs 299. Net gain: Rs 99.
+
+This is what many brands (including us) do now.
+
+## For buyers
+
+**Prepaid discount:** Rs 100 off with UPI prepaid (Rs 1,399 instead of Rs 1,499). Enough to change most people's minds.
+
+**Return process:** identical to full-COD returns. 7 days, free reverse pickup, refund in 5-7 days.
+
+**Trust:** if you're worried about the brand, use partial COD. Rs 299 is your protection, plus you see the product before paying the rest.
+
+## The trend
+
+More brands offering prepaid discounts. Full COD is being phased out.
+
+For [Amara](/product/amara-marble-swirl-coord-set) â€” Rs 1,499 (COD) or Rs 1,399 (prepaid). Choose.
+
+
+----- FILE: content\journal\remove-wrinkles-no-iron.md -----
+---
+title: "How to remove wrinkles from satin without an iron"
+excerpt: "You don't have an iron. Or you don't want to risk it. Here are 3 ways to un-wrinkle satin."
+date: "2026-07-15"
+cover: "/products/amara-back.png"
+keywords: [remove wrinkles satin, no iron care, quick fix wrinkles]
+---
+
+You unpacked the satin set. It has creases from folding. You have 45 minutes.
+
+Three ways to fix it without an iron.
+
+## Method 1: Bathroom steam (15 minutes)
+
+Turn shower to hottest setting. Close bathroom door. Hang satin on a hanger inside.
+
+Wait 15 minutes. Steam relaxes creases.
+
+Works best on: fold lines from packaging.
+
+## Method 2: Hair dryer (5 minutes)
+
+Hold satin taut. Point hair dryer at the crease from 15 cm away. Move continuously â€” never stay in one spot.
+
+Warm air only (not hot). Move the fabric gently while blowing.
+
+Works best on: small localised wrinkles.
+
+## Method 3: Water spray + hang (30 minutes)
+
+Fill a spray bottle with cold water. Lightly mist the wrinkled area.
+
+Hang the satin. Let it dry naturally.
+
+Wrinkles fall out as the water evaporates.
+
+Works best on: wrinkles from sitting.
+
+## What NOT to do
+
+- Never use a hot iron directly on satin
+- Never put wet satin in the dryer
+- Never wear a wrinkled satin piece to smooth it (you'll add more creases while walking)
+
+## The Amara set
+
+Ours arrives folded in tissue. Method 1 (bathroom steam) takes 10 minutes and removes all shipping creases.
+
+[Shop the Amara](/product/amara-marble-swirl-coord-set). Rs 1,499.
+
+
+----- FILE: content\journal\roka-outfit-ideas-brides-family.md -----
+---
+title: "Roka outfit ideas for the bride family: what actually gets worn"
+excerpt: "You are the bride sister, cousin, or aunt. You need to look present but not compete. Here is what actually works based on 20 rokas."
+date: "2026-03-04"
+cover: "/products/amara-back.png"
+keywords: [roka outfit ideas, brides family outfit, engagement outfit for sister, indian family function]
+---
+
+Roka function outfits are a specific problem. You need to look dressed for photos but not overdressed. If you are bride sister or cousin, you do not want to pull focus. If you are aunt or older cousin, you want to look pulled together but not too young.
+
+Here is what actually works based on 20 rokas I have observed as a guest or family member across Delhi, Mumbai, Bengaluru, and Chandigarh.
+
+## For the bride sister (age 22 to 30)
+
+**What works:** a satin co-ord, a fitted midi in soft colour, or a plain sharara set with light dupatta.
+
+**What does not:** anything with heavy zari, bright red, or lehengas. That is the bride territory for the day.
+
+**Colours that work:** blush, wine, olive, muted mint, warm ivory, mocha. Never red. Never gold.
+
+**Specific outfit that reads right:**
+- Satin co-ord like [Amara](/product/amara-marble-swirl-coord-set)
+- Small gold or rose gold hoops
+- One delicate chain
+- Block heels, 2 to 3 inches
+- Envelope clutch in a solid tone
+- Hair: soft waves or low bun
+
+## For the bride cousin (age 22 to 30)
+
+Slightly more flexibility than sister. You can wear a stronger colour or a bolder print.
+
+Wine or emerald green work well. Kurtas with light embroidery. Structured co-ord sets.
+
+Skip: anything sequined, anything cream (bridal), anything ankle length in loud colour.
+
+## For the bride mother
+
+Silk kurta or Anarkali in muted jewel tone. Slight embroidery is fine. Heavy is not.
+
+Colours: dusty pink, deep peach, sage, wine, dusty lavender.
+
+Match the wedding style. Traditional wedding, traditional outfit. Modern engagement, modern outfit.
+
+## For the bride aunt (chachi, mausi, bua)
+
+Slightly formal kurta or heavy silk saree. Never lehenga (bride and mother territory).
+
+Colours: teal, aubergine, deep rose, olive, wine.
+
+Practical: if you are standing for 3 hours or more, wear something breathable. Cotton silk over pure silk. Comfortable heels or flats.
+
+## For the bride grandmother
+
+Traditional saree or Anarkali. Nothing to prove. Comfort matters most.
+
+Pale colours: dove grey, pale yellow, dusty pink, powder blue.
+
+## What everyone should skip
+
+- Red (bride colour)
+- Ivory / cream / white (bride colour or too casual)
+- Gold (bride colour or draws attention)
+- Anything sheer (inappropriate for family function)
+- Heavy makeup (you are a family member, not the bride)
+- New shoes you have not broken in (you will regret it by hour 2)
+
+## The bigger point
+
+At a roka, the bride is the focus. Everyone in her family should support that visually. Coordinated but quieter. Present but not competing.
+
+Amara set works for the bride sister or cousin because the wine and rose tones fit the palette without being loud. It is a middle-ground piece for a middle-ground occasion.
+
+Order [here](/product/amara-marble-swirl-coord-set), Rs 1,499. Free shipping, 24 to 48 hour dispatch from Gurugram.
+
+
+----- FILE: content\journal\sangeet-outfit-ideas-not-lehengas.md -----
+---
+title: "Sangeet outfit ideas that are not lehengas"
+excerpt: "You are at a sangeet as a guest. You want to dance. You do not want to buy a lehenga. Here are five outfit types that work."
+date: "2026-03-11"
+cover: "/products/amara-front.png"
+keywords: [sangeet outfit ideas, alternatives to lehenga, indian wedding guest, sangeet without lehenga]
+---
+
+You are going to a friend sangeet. Not close family. You will be dancing for 3 to 4 hours. You do not want to buy a Rs 25,000 lehenga you will wear once.
+
+Here are five outfit types that work, ranked by how well they photograph and how comfortable they are.
+
+## 1. Satin co-ord set (best overall)
+
+Top and skirt or top and pants in a coordinated print or colour.
+
+**Why it works:** dressier than everyday but reads party wear. Print does the work. You look like you thought about it.
+
+**Comfort:** high. Fabric moves with you. No heavy dupatta to manage while dancing.
+
+**Photos:** good. Solid colour blocks or single-print outfits photograph cleaner than embroidered lehengas.
+
+**Cost:** Rs 1,500 to Rs 5,000.
+
+Example: [Amara Marble Swirl](/product/amara-marble-swirl-coord-set) at Rs 1,499.
+
+## 2. Slip dress with jacket (good for cocktail sangeet)
+
+Silk or satin slip dress with a tailored blazer over.
+
+**Why it works:** urban, editorial. Good for cocktail sangeets in Delhi or Mumbai.
+
+**Comfort:** high if the dress fits well.
+
+**Photos:** great in bar or dinner setting. Weak against traditional decor.
+
+**Cost:** Rs 2,500 to Rs 8,000 for both pieces.
+
+## 3. Anarkali with contemporary tailoring
+
+Modern Anarkali cut with straight sleeves and clean neckline. Not the ballooning old style.
+
+**Why it works:** covers you if you are not comfortable in fitted clothes. Reads traditional without being over-the-top.
+
+**Comfort:** medium. Layered fabric can get warm.
+
+**Photos:** great, especially with family who took the traditional route.
+
+**Cost:** Rs 3,000 to Rs 12,000.
+
+## 4. Sharara set
+
+Wide-legged sharara with a fitted or short top and light dupatta.
+
+**Why it works:** comfortable, reads traditional, allows movement.
+
+**Comfort:** high. Wide bottoms are comfortable for dancing.
+
+**Photos:** photo-heavy. The volume in the pants can look great in group shots.
+
+**Cost:** Rs 2,500 to Rs 10,000.
+
+## 5. Palazzo pants and kurta set
+
+Cotton or silk kurta with palazzo pants in solid or subtle print.
+
+**Why it works:** completely comfortable, breathable, easy to sit and dance.
+
+**Comfort:** highest of the five.
+
+**Photos:** weak for close-ups but good in group shots.
+
+**Cost:** Rs 1,500 to Rs 5,000.
+
+## Practical considerations for dancing
+
+You are going to dance. That means:
+
+**Heels:** block or low heels only. High stilettos will kill you by hour 2.
+
+**Hair:** something that holds. Loose waves will frizz. Tight styles will feel like a headache. Braids or low buns work.
+
+**Makeup:** waterproof mascara. You will sweat. Skip highlighter.
+
+**Bag:** small clutch you can leave at your table. Do not carry a bag while dancing.
+
+**Fabric:** breathable is worth more than dressy. Heavy silk brocade means more overheating than dancing.
+
+## Our recommendation
+
+Cocktail-style sangeet at a hotel: satin co-ord or slip dress.
+
+Traditional home sangeet with family: Anarkali, sharara, or coordinated pantsuit.
+
+Outdoors in summer: sharara or palazzo set. Nothing heavy.
+
+The [Amara set](/product/amara-marble-swirl-coord-set) works for cocktail sangeets and modern venues. Rs 1,499, ships from Gurugram in 24 to 48 hours.
+
+
+----- FILE: content\journal\satin-coord-engagement-function.md -----
+---
+title: "Satin co-ord for engagement functions: what works and what does not"
+excerpt: "Wearing satin to a roka is trickier than it looks. Here is what actually works from someone who attended 11 engagement functions in India this year."
+date: "2026-02-11"
+cover: "/products/amara-front.png"
+keywords: [engagement outfit ideas, roka outfit, satin coord for engagement, indian party wear]
+---
+
+I have been to 11 engagement functions this year. Two rokas in Delhi. Three in Mumbai. One Nikaah in Lucknow. Three sangeets in Punjab. Two in the south. I wore a satin co-ord to five of them.
+
+Here is what works.
+
+## The problem with dressing for engagement functions
+
+Roka and engagement functions sit in an awkward middle. Dressier than a lunch. Less formal than a wedding. Too casual and you look underdressed. Too heavy and you are competing with the bride family.
+
+Lehengas are the safe bet for close family. If you are a friend, cousin, or extended family, you have more room. A satin co-ord fills that gap well if you get three things right.
+
+## One: length matters
+
+If your skirt hits above the knee, it reads brunch outfit, not engagement outfit. Mid-calf or ankle length is the sweet spot.
+
+The Amara skirt sits at mid-calf on someone 5 foot 5 to 5 foot 7. Taller, ankle. Shorter, mid-calf still works.
+
+## Two: colour reads the room
+
+Daytime engagement functions November to February: deep rose, wine, warm ivory, mocha. Jewel-toned but not screaming.
+
+Summer weddings May to August: pale blush, champagne, muted mint. Skip deep colours in heat. You will photograph flat and feel hot.
+
+The Amara marble swirl works for both because it uses three tones. Wine reads formal. Ivory reads soft. Rose ties it together.
+
+## Three: what NOT to add
+
+No dupatta over the set. The print is the pattern. A dupatta over it looks like you are hiding the outfit.
+
+No heavy jewellery. Small hoop earrings, one delicate necklace. That is it. The fabric is the statement.
+
+No heels above 3 inches unless you have practiced. You will be standing for 4 hours. Block heels or wedges in the 2 to 2.5 inch range. Wine, gold, or nude.
+
+No open toe if the function is outdoor and dusty. Closed toe or peep toe only.
+
+## What worked at a Chandigarh roka in October
+
+- Amara set in size M
+- Wine coloured block heels, 2.5 inches
+- Small gold hoops (2 cm diameter)
+- Thin gold chain, no pendant
+- Wine envelope clutch
+- Hair: low messy bun with two face-framing strands
+- Makeup: brown liner, mascara, wine lipstick, no highlighter
+
+Clutch and heels matched the wine in the print. Everything else neutral.
+
+## What did not work
+
+Wore the same set to a Delhi sangeet in August. Two things went wrong.
+
+Delhi summer is 38 degrees. I was standing for three hours. The satin was fine but I overheated. If it is over 32 degrees, wear something breathable or skip satin. Not the fabric fault.
+
+I added a heavy necklace at the last minute. It fought with the print. Should have stuck with the small hoops.
+
+## The bigger point
+
+Satin co-ords work at Indian engagement functions if you treat them as one statement piece. Not a base for more layers. Print does the work. Everything else stays quiet.
+
+The [Amara set](/product/amara-marble-swirl-coord-set) is Rs 1,499. Ships from Gurugram in 24 to 48 hrs.
+
+
+----- FILE: content\journal\satin-skirt-for-petite-women.md -----
+---
+title: "Satin skirt for petite women: what to look for"
+excerpt: "If you are 5 foot 3 or under, most midi skirts hit at your ankle. Here is how to work around that."
+date: "2026-06-17"
+cover: "/products/amara-front.png"
+keywords: [petite women fashion, satin skirt for short, midi length petite]
+---
+
+Being 5 foot 3 or under has one advantage for satin skirts. They generally look longer than intended, which means more elegant.
+
+The disadvantage is they can look overwhelming if not styled correctly.
+
+## The Amara on petite bodies
+
+Amara skirt is 76 cm from waistband. On someone 5 foot 2:
+
+- Hits at ankle length instead of mid-calf
+- Fabric bunches slightly at the bottom
+- Skirt looks more traditional (longer plus fitted at waist)
+
+If you like ankle length, this is a plus. If you want mid-calf specifically, you can:
+
+**Option 1.** Get it hemmed. Any local tailor charges Rs 100 to 200 to shorten a satin skirt. Ask them to cut 5 to 6 cm and re-stitch.
+
+**Option 2.** Wear with heels of 2.5 inches or more. The extra height shifts the hem back to mid-calf.
+
+## Styling tips for petite frames
+
+**Wear high-waisted.** The skirt sits at your natural waist and lengthens your legs.
+
+**Tuck in the top.** No blouson tops over satin skirts if you are petite. It swallows your torso.
+
+**Choose smaller prints.** Large scale prints look overwhelming on petite frames. Amara marble swirl scale is medium and works fine.
+
+**Skip long overlays.** Cardigans that hit below the hip make you look shorter. Cropped or waist-length outer layers only.
+
+## What NOT to do
+
+**Do not hem to a mini length.** The proportions of the skirt (waistband, seams) are designed for midi. Cutting too short throws them off.
+
+**Do not wear flat sandals.** Even 1 inch of heel makes a difference on petite frames.
+
+**Do not add belts to define waist.** The skirt already has a waistband. Doubling up on definition looks over-styled.
+
+## Petite-specific brands
+
+If you consistently need shorter cuts:
+
+- Reformation Petite
+- ASOS Petite
+- Miss Selfridge
+
+These make lengths 8 to 10 cm shorter than standard.
+
+## The Amara for petite bodies
+
+Works if you like ankle length or plan to hem. Does not work if you need mid-calf without alteration.
+
+[Shop the Amara](/product/amara-marble-swirl-coord-set). Rs 1,499.
+
+
+----- FILE: content\journal\satin-skirt-for-tall-women.md -----
+---
+title: "Satin skirt for tall women: length guide"
+excerpt: "If you are 5 foot 8 or taller, most midi skirts hit above your knee. Here is what to look for and what to avoid."
+date: "2026-06-10"
+cover: "/products/amara-fabric.png"
+keywords: [tall women fashion, satin skirt length, midi skirt for tall]
+---
+
+If you are 5 foot 8 or taller, you already know the problem. Midi skirts are marketed to 5 foot 4 bodies. They hit above your knee on you and look like short skirts.
+
+Here is what to actually look for.
+
+## Skirt lengths, honestly
+
+Most Indian brands measure skirt length from the waistband:
+
+- 70 to 75 cm = knee length on 5 foot 4, above knee on 5 foot 8
+- 75 to 80 cm = below knee on 5 foot 4, knee length on 5 foot 8
+- 85 to 90 cm = ankle length on 5 foot 4, mid-calf on 5 foot 8
+- 95 cm and above = floor length on 5 foot 4, ankle on 5 foot 8
+
+For 5 foot 8 and taller, look for 82 cm or more from waistband.
+
+## Amara skirt length
+
+77 cm from waistband. This means:
+
+- On 5 foot 4 (162 cm): hits below the knee
+- On 5 foot 7 (170 cm): mid-calf
+- On 5 foot 8 (173 cm): just below the knee
+- On 5 foot 10 (178 cm): above the knee
+
+If you are 5 foot 8 or taller and want mid-calf, look for skirts of 85 cm or more. Amara is not the pick for you if you want that specific look.
+
+## Where to find long enough skirts
+
+- Zara: their maxi versions are 90 cm or more
+- Reformation: their tall size range is designed for 5 foot 8 to 6 foot
+- Massimo Dutti: European sizing runs longer
+- AJIO Luxe: some brands here go 90 cm or more
+
+Budget options are harder. Under Rs 2,000, most Indian brands cap at 76 to 80 cm.
+
+## The solution
+
+Buy the standard length skirt and wear it above the knee intentionally. Style it as if it is a mid-length skirt rather than fighting it.
+
+Or buy from brands designed for taller frames.
+
+## The bigger point
+
+Fashion designed for average height does not automatically work for taller bodies. Adjust or shop elsewhere.
+
+If you are 5 foot 6 or under, [the Amara set](/product/amara-marble-swirl-coord-set) works well. Rs 1,499.
+
+
+----- FILE: content\journal\small-batch-fashion-india.md -----
+---
+title: "Small-batch fashion in India: brands that don't mass produce"
+excerpt: "5 Indian D2C brands that make less than 500 units per drop. Why that matters."
+date: "2026-07-29"
+cover: "/products/amara-back.png"
+keywords: [small batch fashion india, limited edition indian brands, low volume D2C]
+---
+
+Small batch means the brand makes a limited number per style, then moves on. No restocks. No 500-SKU catalogues.
+
+Why it matters:
+- Better fabric (small production = higher unit cost = better material)
+- Less overstock
+- Faster iteration on style
+- More scarcity = more perceived value
+
+Here are 5 Indian brands that actually do this.
+
+## 1. Bareek (Kolkata)
+
+100-200 pieces per drop. Natural dyes.
+
+## 2. Doodlage (Delhi)
+
+Uses textile waste. Every piece is one-off.
+
+## 3. Rose & Co (Gurugram)
+
+200 sets per drop, then sold out. That's us.
+
+## 4. Nicobar Small Drops
+
+Their limited edition collections cap at 300 pieces.
+
+## 5. Ka-Sha (Pune)
+
+Small batches, handloom fabrics.
+
+## Why small batch is harder
+
+- Higher unit costs (less economies of scale)
+- Higher risk of stock-outs
+- Can't run big Meta ads because you'd sell out
+
+But it's how real fashion should work. Overstock is the enemy of quality.
+
+The [Amara set](/product/amara-marble-swirl-coord-set) is Rs 1,499. 200 per drop.
+
+
+----- FILE: content\journal\spot-cheap-satin-in-photos.md -----
+---
+title: "How to spot cheap satin in product photos before you buy"
+excerpt: "You can tell 70 GSM from 100 GSM without touching the fabric. Here are the five signals that give it away."
+date: "2026-02-18"
+cover: "/products/amara-fabric.png"
+keywords: [cheap satin quality check, satin fabric photos, avoid bad satin, satin buying guide india]
+---
+
+You are on Instagram at 11:30 PM. An ad shows a satin skirt for Rs 899, free shipping. Model looks great. Print looks nice. You are tempted.
+
+Here are five things to check in that photo before you tap Order.
+
+## Signal 1: how does the fabric fall?
+
+Zoom in on the skirt. Look at the bottom edge.
+
+If the fabric falls in soft waves that visibly ripple, that is real weight. Probably 85 GSM or above.
+
+If the bottom edge is a straight line with no waves or folds, the fabric is thin. Anything below 70 GSM sits flat because it is too light to have natural drape.
+
+## Signal 2: check the seated shots
+
+Most brands only show standing photos. Ask yourself why.
+
+The seated shot is where cheap satin fails. Bunches at the hips. Creases form and stay. You can see the shape of the seat through the fabric.
+
+If a brand has zero seated photos, they know the seated shot would show the fabric weakness.
+
+## Signal 3: the sheen tells you the finish
+
+Look at how light hits the fabric.
+
+Real satin has a matte glow. Shine is diffused, not sharp. Reflects light softly across a large area.
+
+Cheap satin has a plastic gloss. Narrow, sharp reflections. Looks like it is coated with something. Because it is.
+
+The Meesho Rs 500 stuff is easy to spot. Reflection is bright white and localised. Real satin at 90 GSM has a softer, spread-out shine.
+
+## Signal 4: the waistband gives it away
+
+Zoom in on the waistband, especially at the seams.
+
+Cheap satin puckers at the seams. You see fabric pulling unevenly around elastic or fastening. Cheap fabric does not hold structure at stress points.
+
+Good satin sits flat at the waistband. No puckering. Seams disappear.
+
+## Signal 5: colour depth
+
+Cheap satin looks washed out. Colours photograph flat.
+
+Real satin has depth. The same colour looks like it has different tones depending on where light hits. Because heavier fabric has more surface area to catch and reflect light.
+
+Look at the shadow areas of a product photo. If shadows are deeper and richer than the highlighted areas, the fabric has weight. If they look similar in tone, the fabric is thin.
+
+## The pattern
+
+Cheap satin: flat photos, sharp shine, no seated shots, washed out colours.
+
+Real satin: soft glow, natural creases, seated shots included, deep colour tones.
+
+## What we do
+
+For the Amara set, the photos on our [product page](/product/amara-marble-swirl-coord-set) include the seated shot and a full-length walking shot on purpose. If you cannot see how our satin moves and folds, you are buying blind.
+
+The set is Rs 1,499. Ships from Gurugram in 24 to 48 hours.
+
+
+----- FILE: content\journal\storing-satin-yellowing-prevention.md -----
+---
+title: "Storing satin without yellowing: 5 rules"
+excerpt: "Satin can yellow over time. Here's how to prevent it."
+date: "2026-07-01"
+cover: "/products/amara-fabric.png"
+keywords: [store satin clothes, prevent yellowing, satin care]
+---
+
+Satin can yellow over months of wrong storage. Here's how to prevent that.
+
+## Rule 1: Never in direct sunlight
+
+UV light breaks down the fibre finish. Even a few hours of direct sun weekly can shift colour.
+
+Store in a closed wardrobe or drawer.
+
+## Rule 2: Cotton bag, not plastic
+
+Plastic traps moisture. Moisture is what causes yellow spots.
+
+Keep satin pieces in cotton bags (or clean pillowcases). Old cotton bedsheets cut into pouches work.
+
+## Rule 3: Never near perfume or hairspray
+
+Both contain chemicals that react with satin fibres. Yellow spots appear where they touch.
+
+Store satin in a separate section of your wardrobe.
+
+## Rule 4: Fold with tissue between layers
+
+Acid-free tissue paper (available at stationery stores). Place between folded layers.
+
+Prevents fold lines from setting permanently.
+
+## Rule 5: Air it out every 2 months
+
+Take satin out, hang it in shade for 30 minutes. Prevents musty smell and mildew.
+
+## Amara storage
+
+For our set: store folded in a cotton bag inside your wardrobe, top of the wardrobe (away from floor humidity), never in the corner near the wall (moisture builds there).
+
+[Shop the Amara](/product/amara-marble-swirl-coord-set). Rs 1,499.
+
+
+----- FILE: content\journal\sustainable-indian-d2c-fashion-brands-2026.md -----
+---
+title: "Sustainable Indian D2C fashion brands: an honest 2026 list"
+excerpt: "Most 'sustainable' brands aren't. Here's what to actually look for and 8 Indian brands that pass the smell test."
+date: "2026-07-22"
+cover: "/products/amara-fabric.png"
+keywords: [sustainable indian fashion, ethical brands india, D2C sustainability, slow fashion india]
+---
+
+"Sustainable" as a marketing word means nothing.
+
+Every brand claims it. Most are lying. Here's what to actually check and which Indian brands pass.
+
+## The four questions
+
+**1. Do they mass produce?**
+
+Sustainable = small batch. Any brand producing 10,000+ units per month is fast fashion regardless of what their site says.
+
+**2. Do they overstock?**
+
+Sustainable = made-to-order or small drops. If a brand has 500 SKUs available always, they're overproducing.
+
+**3. Do they disclose their supply chain?**
+
+Sustainable brands are transparent about where fabric comes from and who stitches it.
+
+**4. Do they take products back?**
+
+Sustainable brands often have take-back or repair programs.
+
+## Brands that pass (at least 3 of 4 questions)
+
+**Doodlage** â€” upcycles textile waste into new pieces. Fully transparent supply chain.
+
+**Ka-Sha** â€” small batch drops, handloom fabrics, no overstock.
+
+**Bareek** â€” natural dyes, small production runs.
+
+**Anavila** â€” linen and silk sarees in small batches. Transparent about mills.
+
+**Rose &amp; Co** â€” 200 sets per drop, no restock. That's us. We fit the small-batch criteria clearly.
+
+**Payal Pratap** â€” designer wear in small quantities.
+
+**Nicobar** â€” bigger than the others but disclosed supply chain.
+
+**Kilol** â€” traditional block printing in small batches.
+
+## Brands that market as sustainable but aren't
+
+Won't name them because legal risk, but here's the pattern:
+
+- Instagram-heavy branding around "conscious fashion"
+- Actually thousands of SKUs available
+- No supply chain disclosure
+- No takeback program
+
+If you see these red flags, check their actual production numbers.
+
+## For a Rs 1,500 satin co-ord
+
+At this price point, truly sustainable is rare. Fabric costs from ethical mills are Rs 400-600/metre. A skirt uses 2 metres. Plus stitching, print, packaging, shipping â€” the math doesn't leave room for meaningful margin at Rs 1,500.
+
+The [Amara set](/product/amara-marble-swirl-coord-set) at Rs 1,499 is small-batch (200 per drop, no restock) but our fabric is Rs 240/metre poly-satin, not organic silk. Honest about that.
+
+If sustainability is your primary criteria and budget is Rs 3,000+, look at Doodlage or Ka-Sha.
+
+
+----- FILE: content\journal\what-is-a-coord-set.md -----
+---
+title: "What is a co-ord set? Types, styles, and when to wear which"
+excerpt: "A co-ord set is not just a matching top and bottom. Here is how to think about them, when to wear which type, and what to avoid."
+date: "2026-03-18"
+cover: "/products/amara-back.png"
+keywords: [what is coord set, coord set types, how to wear coord set, indian coord fashion]
+---
+
+A co-ord set is any outfit where the top and bottom are made from matching or coordinating fabric. That is the entire definition. Beyond that, the type and cut change what occasion it is for.
+
+Here is the map.
+
+## The four types
+
+### 1. Formal co-ord (blazer + trouser or blazer + skirt)
+
+Structured. Solid colours. Business casual to business formal.
+
+Best for: work events, interviews, weddings where you do not want traditional wear.
+
+Worst for: brunch or beach.
+
+Fabric: linen for summer, wool for winter, poly-satin for evening.
+
+### 2. Party co-ord (satin, silk, or shiny synthetic)
+
+Fitted top with skirt or wide pants. Print or bold colour.
+
+Best for: parties, engagements, cocktail evenings.
+
+Worst for: work meetings or funerals.
+
+Fabric: satin, silk, sequin, mesh.
+
+### 3. Loungewear co-ord (matching soft fabric)
+
+Modal, cotton knit, or silk blend. Straight or relaxed fit. Can be worn out for coffee or lunch.
+
+Best for: weekend brunches, casual meetings, coffee dates.
+
+Worst for: formal occasions.
+
+Fabric: cotton, modal, silk knit.
+
+### 4. Ethnic co-ord (kurta with pants or sharara)
+
+Traditional cut in modern coordinated style.
+
+Best for: Indian occasions, casual to semi-formal.
+
+Worst for: contemporary parties or work.
+
+Fabric: cotton, silk, chanderi.
+
+## When to wear which
+
+**Brunch:** loungewear or a light party co-ord.
+
+**Work event:** formal co-ord in solid colour.
+
+**Cocktail party:** party co-ord in satin or silk, with heels.
+
+**Engagement / roka:** party co-ord in a warm colour, or ethnic co-ord.
+
+**Wedding as a guest:** party co-ord (for functions like sangeet) or ethnic co-ord.
+
+**Airport / travel:** loungewear co-ord in matte fabric that does not crease.
+
+## How to style co-ord sets
+
+**Wear them as a set.** That is the point. The whole outfit is done for you.
+
+**Or split them.** The top or bottom can be worn separately with jeans, plain skirt, or trousers. That is the value. You get 3 outfits from one purchase.
+
+**Do not add too much on top.** No dupatta over a satin co-ord. No scarf over a print co-ord. The set is the statement.
+
+**Match your shoes to your occasion, not your outfit.** White sneakers with satin for brunch. Heels for evening. Loafers for airport.
+
+## The Amara is a party co-ord
+
+The [Amara Marble Swirl set](/product/amara-marble-swirl-coord-set) is a party co-ord in poly-satin. Best for engagements, cocktail evenings, dinner dates, and modern sangeets. Not for work meetings or brunches unless you can style it down.
+
+Rs 1,499. Ships from Gurugram in 24 to 48 hours.
+
+
+----- FILE: next.config.js -----
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  compress: true,
+  poweredByHeader: false,
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+    // optimizeCss removed - it breaks static 404/500 page generation
+    // in Next 14.2 (critters "r is not a constructor" error)
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+      {
+        source: '/products/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;
+
+
+----- FILE: next-env.d.ts -----
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/building-your-application/configuring/typescript for more information.
+
+
+----- FILE: package.json -----
+{
+  "name": "rose-and-co",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:reviews": "tsx prisma/seed-reviews.ts",
+    "db:studio": "prisma studio",
+    "analyze": "ANALYZE=true next build"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.1",
+    "gray-matter": "^4.0.3",
+    "jose": "^5.9.6",
+    "marked": "^14.1.3",
+    "next": "14.2.33",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sharp": "^0.33.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.7.4",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8.4.47",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^3.4.13",
+    "tsx": "^4.23.0",
+    "typescript": "^5.6.2"
+  }
+}
+
+----- FILE: postcss.config.js -----
+module.exports = { plugins: { tailwindcss: {}, autoprefixer: {} } };
+
+
+----- FILE: prisma\fix-prices.ts -----
+// prisma/fix-prices.ts
+// Auto-fixes the CHARGED price in your database for every product.
+// Run with:  npx tsx prisma/fix-prices.ts
+// (You already have tsx installed Ã¢â‚¬â€ your package.json uses it for db:seed.)
+//
+// Change these two numbers if your prices differ.
+const SELLING_PRICE = 2299; // what they pay
+const COMPARE_AT = 2999;    // strike-through MRP
+
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+
+async function main() {
+  const products = await prisma.product.findMany();
+  console.log(`Found ${products.length} product(s). UpdatingÃ¢â‚¬Â¦`);
+
+  for (const p of products) {
+    await prisma.product.update({
+      where: { id: p.id },
+      data: { price: SELLING_PRICE, compareAt: COMPARE_AT },
+    });
+    console.log(`  Ã¢Å“â€œ ${p.name}: price=${SELLING_PRICE}, compareAt=${COMPARE_AT}`);
+  }
+
+  console.log("Done. Every product now charges Ã¢â€šÂ¹" + SELLING_PRICE + ".");
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());
+
+----- FILE: prisma\schema.prisma -----
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String
+  price       Int
+  compareAt   Int?
+  images      String
+  sizes       String
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique
+  fullName       String
+  mobile         String
+  email          String?
+  altPhone       String?
+  pincode        String
+  state          String
+  city           String
+  addressLine1   String
+  addressLine2   String?
+  landmark       String?
+  paymentMethod  String
+  paidAmount     Int
+  codAmount      Int
+  totalAmount    Int
+  discountAmount Int         @default(0)
+  paymentStatus  String      @default("PENDING")
+  orderStatus    String      @default("PLACED")
+  utr            String?
+  notes          String?
+  metaFbc        String?
+  metaFbp        String?
+  utmData        String?
+  capiFired      Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  items          OrderItem[]
+
+  @@index([mobile])
+  @@index([paymentStatus])
+  @@index([orderStatus])
+  @@index([paymentMethod])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String
+  size        String
+  quantity    Int
+  price       Int
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+}
+
+model VerificationSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  mobile    String
+  captcha   String
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  action    String
+  metadata  String?
+  createdAt DateTime @default(now())
+}
+
+model Waitlist {
+  id          String   @id @default(cuid())
+  productId   String
+  productName String
+  size        String
+  mobile      String
+  email       String?
+  notified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([productId, size])
+  @@index([notified])
+}
+
+model BlockedPincode {
+  id        String   @id @default(cuid())
+  pincode   String   @unique
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  productSlug String
+  orderId     String?
+  rating      Int
+  name        String
+  city        String?
+  title       String
+  body        String
+  photos      String
+  size        String?
+  verified    Boolean  @default(false)
+  approved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([productSlug])
+  @@index([approved])
+  @@index([createdAt])
+}
+
+model Referral {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  referrerName  String
+  referrerEmail String?
+  referrerPhone String?
+  invitesUsed   Int      @default(0)
+  creditsEarned Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([code])
+}
+
+model LoyaltyPoints {
+  id          String   @id @default(cuid())
+  customerId  String   @unique
+  points      Int      @default(0)
+  totalSpent  Int      @default(0)
+  totalOrders Int      @default(0)
+  tier        String   @default("bronze")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([tier])
+}
+
+// ================================================================
+// v35: Add this Lead model to your prisma/schema.prisma
+// Then run: npx prisma db push (with Neon URL set)
+// ================================================================
+
+model Lead {
+  id            String   @id @default(cuid())
+  sessionId     String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Progressive contact info
+  name          String?
+  phone         String?
+  email         String?
+
+  // Geo signals
+  city          String?
+  pincode       String?
+  state         String?
+  addressLine1  String?
+  region        String?
+  country       String?
+  timezone      String?
+  language      String?
+
+  // Device signals
+  deviceType    String?  // mobile / desktop / tablet
+  screenWidth   Int?
+  screenHeight  Int?
+  userAgent     String?  @db.Text
+
+  // Traffic source
+  landingUrl    String?  @db.Text
+  referrer      String?  @db.Text
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmTerm       String?
+  utmContent    String?
+
+  // Engagement signals
+  visitCount    Int      @default(1)
+  isReturning   Boolean  @default(false)
+  hasAddress    Boolean  @default(false)
+  timeOnSite    Int?     // seconds
+  pagesViewed   Int      @default(1)
+  scrolled      Boolean  @default(false)
+
+  // Discount
+  optedIn       Boolean  @default(false)   // clicked Yes on chip
+  chipDismissed Boolean  @default(false)   // clicked No
+  couponCode    String?
+  couponPct     Int?
+  segment       String?  // real_intent / returning_vip / browser / bounce_risk / coupon_hunter
+
+  // Cart signals
+  cartAdded     Boolean  @default(false)
+  cartValue     Int?
+  cartSummary   String?  @db.Text
+  cartAbandoned Boolean  @default(false)
+
+  // Purchase link (if converted)
+  orderNumber   String?
+  converted     Boolean  @default(false)
+
+  // Admin ops
+  status        String   @default("new") // new / contacted / converted / lost / spam
+  notes         String?  @db.Text
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([email])
+  @@index([phone])
+  @@index([converted])
+  @@index([utmCampaign])
+}
+
+----- FILE: prisma\seed.ts -----
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+async function main() {
+  // ---------- AMARA (unchanged) ----------
+  await prisma.product.upsert({
+    where: { slug: 'amara-marble-swirl-coord-set' },
+    update: {
+      name: 'Amara Marble Swirl Co-ord Set',
+      description: 'Fitted crop top and high-waist A-line midi skirt in hand-painted marble swirl satin. Deep rose, wine and warm ivory tones on a poly-satin blend (95-105 GSM). Every set is one of a kind. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid: Rs 1,900 (save Rs 100). MRP Rs 3,499.',
+      price: 2000,
+      compareAt: 3499,
+      active: true,
+    },
+    create: {
+      slug: 'amara-marble-swirl-coord-set',
+      name: 'Amara Marble Swirl Co-ord Set',
+      description: 'Fitted crop top and high-waist A-line midi skirt in hand-painted marble swirl satin. Deep rose, wine and warm ivory tones on a poly-satin blend (95-105 GSM). Every set is one of a kind. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid: Rs 1,900 (save Rs 100). MRP Rs 3,499.',
+      price: 2000,
+      compareAt: 3499,
+      images: JSON.stringify([
+        '/products/amara-front.png',
+        '/products/amara-back.png',
+        '/products/amara-left.png',
+        '/products/amara-right.png',
+        '/products/amara-fabric.png',
+      ]),
+      sizes: JSON.stringify([
+        { size: 'XS',  stock: 8 },
+        { size: 'S',   stock: 12 },
+        { size: 'M',   stock: 15 },
+        { size: 'L',   stock: 10 },
+        { size: 'XL',  stock: 6 },
+        { size: 'XXL', stock: 0 },
+      ]),
+      active: true,
+    },
+  });
+  console.log('Seeded Amara: MRP 3499, SP 2000, Prepaid 1900, COD 299+1701.');
+
+  // ---------- AARNA (NEW â€” Amara untouched) ----------
+  await prisma.product.upsert({
+    where: { slug: 'aarna-beige-marble-swirl-coord-set' },
+    update: {
+      name: 'Aarna Beige Marble Swirl Co-ord Set',
+      description: 'Relaxed collared shirt and wide-leg pants in signature beige marble swirl satin. Warm caramel, cream and soft brown tones on a premium poly-satin blend (95-105 GSM). Every set is one of a kind. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid: Rs 2,069 (save Rs 230). MRP Rs 2,999.',
+      price: 2299,
+      compareAt: 2999,
+      active: true,
+    },
+    create: {
+      slug: 'aarna-beige-marble-swirl-coord-set',
+      name: 'Aarna Beige Marble Swirl Co-ord Set',
+      description: 'Relaxed collared shirt and wide-leg pants in signature beige marble swirl satin. Warm caramel, cream and soft brown tones on a premium poly-satin blend (95-105 GSM). Every set is one of a kind. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid: Rs 2,069 (save Rs 230). MRP Rs 2,999.',
+      price: 2299,
+      compareAt: 2999,
+      images: JSON.stringify([
+        '/products/aarna-01-lifestyle.png',
+        '/products/aarna-02-seated.png',
+        '/products/aarna-03-side.png',
+        '/products/aarna-04-back.png',
+        '/products/aarna-05-detail.png',
+      ]),
+      sizes: JSON.stringify([
+        { size: 'XS',  stock: 6 },
+        { size: 'S',   stock: 10 },
+        { size: 'M',   stock: 12 },
+        { size: 'L',   stock: 8 },
+        { size: 'XL',  stock: 5 },
+        { size: 'XXL', stock: 0 },
+      ]),
+      active: true,
+    },
+  });
+  console.log('Seeded Aarna: MRP 2999, SP 2299, Prepaid 2069, COD 299+2000.');
+}
+
+main().catch(e => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());
+
+// ============ SAMPLE REVIEWS ============
+  const AMARA_REVIEWS = [
+    {
+      productSlug: 'amara-marble-swirl-coord-set',
+      rating: 5,
+      name: 'Priya M.',
+      city: 'Mumbai',
+      title: 'Wore it to my sister engagement',
+      body: 'The fabric quality shocked me. So many compliments. Perfect fit on size M.',
+      photos: JSON.stringify([]),
+      size: 'M', verified: true, approved: true,
+    },
+    {
+      productSlug: 'amara-marble-swirl-coord-set',
+      rating: 5,
+      name: 'Ishita R.',
+      city: 'Delhi',
+      title: 'Better than I expected',
+      body: 'Ordered Monday, wore it Saturday. Shipped fast, fit true to size. Getting DMs asking where I got it.',
+      photos: JSON.stringify([]),
+      size: 'S', verified: true, approved: true,
+    },
+    {
+      productSlug: 'amara-marble-swirl-coord-set',
+      rating: 4,
+      name: 'Kavya S.',
+      city: 'Bangalore',
+      title: 'Beautiful but sized down',
+      body: 'Satin has real weight. Went one size down as they suggested. Would buy again.',
+      photos: JSON.stringify([]),
+      size: 'S', verified: true, approved: true,
+    },
+  ];
+
+  const AARNA_REVIEWS = [
+    {
+      productSlug: 'aarna-beige-marble-swirl-coord-set',
+      rating: 5,
+      name: 'Ananya P.',
+      city: 'Pune',
+      title: 'Slow morning perfection',
+      body: 'Wore it to a brunch and felt effortless. The beige is even prettier in person.',
+      photos: JSON.stringify([]),
+      size: 'M', verified: true, approved: true,
+    },
+    {
+      productSlug: 'aarna-beige-marble-swirl-coord-set',
+      rating: 5,
+      name: 'Meera K.',
+      city: 'Hyderabad',
+      title: 'My new favourite set',
+      body: 'The wide leg pants are so flattering. Ordering the red one next.',
+      photos: JSON.stringify([]),
+      size: 'L', verified: true, approved: true,
+    },
+  ];
+
+  for (const r of [...AMARA_REVIEWS, ...AARNA_REVIEWS]) {
+    await prisma.review.create({ data: r });
+  }
+  console.log('Seeded 5 reviews (3 Amara, 2 Aarna).');
+
+----- FILE: prisma\seed-reviews.ts -----
+// prisma/seed-reviews.ts
+// Run: npx tsx prisma/seed-reviews.ts
+// Or add to package.json: "db:seed:reviews": "tsx prisma/seed-reviews.ts"
+
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+const AMARA_REVIEWS = [
+  {
+    productSlug: 'amara-marble-swirl-coord-set',
+    rating: 5,
+    name: 'Priya M.',
+    city: 'Mumbai',
+    title: 'Wore it to my sister engagement',
+    body: 'The fabric quality shocked me. So many compliments. Perfect fit on size M.',
+    photos: JSON.stringify([]),
+    size: 'M', verified: true, approved: true,
+  },
+  {
+    productSlug: 'amara-marble-swirl-coord-set',
+    rating: 5,
+    name: 'Ishita R.',
+    city: 'Delhi',
+    title: 'Better than I expected',
+    body: 'Ordered Monday, wore it Saturday. Shipped fast, fit true to size. Getting DMs asking where I got it.',
+    photos: JSON.stringify([]),
+    size: 'S', verified: true, approved: true,
+  },
+  {
+    productSlug: 'amara-marble-swirl-coord-set',
+    rating: 4,
+    name: 'Kavya S.',
+    city: 'Bangalore',
+    title: 'Beautiful but sized down',
+    body: 'Satin has real weight. Went one size down as they suggested. Would buy again.',
+    photos: JSON.stringify([]),
+    size: 'S', verified: true, approved: true,
+  },
+  {
+    productSlug: 'amara-marble-swirl-coord-set',
+    rating: 5,
+    name: 'Riya T.',
+    city: 'Gurugram',
+    title: 'Actually one-of-a-kind',
+    body: 'The marble print on mine is completely different from the photo â€” deeper wine tones. Loved it.',
+    photos: JSON.stringify([]),
+    size: 'M', verified: true, approved: true,
+  },
+  {
+    productSlug: 'amara-marble-swirl-coord-set',
+    rating: 5,
+    name: 'Nisha V.',
+    city: 'Chennai',
+    title: 'Worth every rupee',
+    body: 'Second co-ord set I own from this brand now. Both hold up beautifully after wear.',
+    photos: JSON.stringify([]),
+    size: 'L', verified: true, approved: true,
+  },
+];
+
+const AARNA_REVIEWS = [
+  {
+    productSlug: 'aarna-beige-marble-swirl-coord-set',
+    rating: 5,
+    name: 'Ananya P.',
+    city: 'Pune',
+    title: 'Slow morning perfection',
+    body: 'Wore it to a brunch and felt effortless. The beige is even prettier in person.',
+    photos: JSON.stringify([]),
+    size: 'M', verified: true, approved: true,
+  },
+  {
+    productSlug: 'aarna-beige-marble-swirl-coord-set',
+    rating: 5,
+    name: 'Meera K.',
+    city: 'Hyderabad',
+    title: 'My new favourite set',
+    body: 'The wide leg pants are so flattering. Ordering the red one next.',
+    photos: JSON.stringify([]),
+    size: 'L', verified: true, approved: true,
+  },
+  {
+    productSlug: 'aarna-beige-marble-swirl-coord-set',
+    rating: 5,
+    name: 'Sneha B.',
+    city: 'Kolkata',
+    title: 'Effortless, exactly as described',
+    body: 'The beige is warm not dull. Perfect for daytime. Went to a work lunch and felt overdressed in the best way.',
+    photos: JSON.stringify([]),
+    size: 'S', verified: true, approved: true,
+  },
+  {
+    productSlug: 'aarna-beige-marble-swirl-coord-set',
+    rating: 4,
+    name: 'Divya M.',
+    city: 'Ahmedabad',
+    title: 'Beautiful but check length',
+    body: 'Pants are on the longer side â€” I am 5\'2\" and had to hem them. Otherwise gorgeous.',
+    photos: JSON.stringify([]),
+    size: 'XS', verified: true, approved: true,
+  },
+];
+
+async function main() {
+  // Delete existing sample reviews to avoid duplicates
+  await prisma.review.deleteMany({
+    where: {
+      OR: [
+        { productSlug: 'amara-marble-swirl-coord-set' },
+        { productSlug: 'aarna-beige-marble-swirl-coord-set' },
+      ],
+    },
+  });
+
+  for (const r of [...AMARA_REVIEWS, ...AARNA_REVIEWS]) {
+    await prisma.review.create({ data: r });
+  }
+
+  console.log(`Seeded ${AMARA_REVIEWS.length + AARNA_REVIEWS.length} reviews`);
+  console.log(`  - ${AMARA_REVIEWS.length} for Amara`);
+  console.log(`  - ${AARNA_REVIEWS.length} for Aarna`);
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
+
+----- FILE: public\manifest.json -----
+{
+  "name": "Rose and Co - Amara Co-ord Set",
+  "short_name": "Rose & Co",
+  "description": "Small-batch co-ord sets in hand-painted marble prints.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF6F0",
+  "theme_color": "#5C1A2B",
+  "icons": [
+    {
+      "src": "/products/amara-front.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/products/amara-front.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "orientation": "portrait"
+}
+
+
+----- FILE: README.md -----
+# RosÃ© & Co â€” Production D2C E-commerce
+
+Next.js 14 Â· TypeScript Â· Tailwind Â· Prisma Â· SQLite (swap to Postgres in prod)
+
+Single product store for **Amara Marble Swirl Co-ord Set â€” â‚¹1,499**, built for Meta Ads day-1 traffic.
+
+## âœ¨ What's Included
+
+- **Home / Product / Cart / Checkout / Order Success / Track / Admin** â€” full flow, no placeholders
+- **Captcha verification** (SVG-rendered, alphanumeric, server-validated) â€” replaces SMS OTP as per your choice
+- **UPI Payment** â€” QR code + deep links (GPay / PhonePe / Paytm / Any UPI) + manual UTR entry
+- **Manual payment verification** via admin dashboard
+- **Two payment methods** â€” Full Prepaid (â‚¹1,499) & Partial COD (â‚¹300 online + â‚¹1,199 on delivery)
+- **Admin dashboard** â€” order search/filter/CSV export, status updates, revenue stats, product view
+- **Meta Pixel** ready â€” env var driven; wires PageView, ViewContent, AddToCart, InitiateCheckout, AddPaymentInfo, Purchase with deduplication event IDs
+- **GA4 & GTM** optional (env-driven, blank = disabled)
+- **SEO** â€” dynamic metadata, JSON-LD product schema, sitemap.xml, robots.ts, OG tags
+- **Security** â€” HSTS, X-Frame-Options, CSP-ready headers, rate limiting (captcha/verify/order/admin), JWT admin sessions, input validation via Zod
+- **PIN code auto-fill** via postalpincode.in
+- **Mobile-first** â€” sticky buy bar, touch-friendly size selector, one-hand checkout
+- **Policies** â€” Privacy, Refund, Shipping, Terms, Cancellation, FAQ, 404, About, Contact
+- **Trust elements** â€” announcement bar, trust badges, review section, countdown, delivery estimator
+
+## ðŸš€ Quick Start (Local)
+
+```bash
+# 1. Install
+npm install
+
+# 2. Configure env
+cp .env.example .env
+# Edit ADMIN_EMAIL, ADMIN_PASSWORD, SESSION_SECRET (min 32 chars), NEXT_PUBLIC_META_PIXEL_ID
+
+# 3. Add product images to /public/products/
+#    - amara-front.png
+#    - amara-back.png
+#    - amara-left.png
+#    - amara-right.png
+#    - amara-fabric.png
+
+# 4. Initialize database
+npx prisma db push
+npm run db:seed
+
+# 5. Run
+npm run dev
+# â†’ http://localhost:3000
+# â†’ Admin: http://localhost:3000/admin/login
+```
+
+## ðŸ–¼ï¸ Product Images
+
+Place these 5 images into `public/products/`:
+
+| File                    | View                    |
+|-------------------------|-------------------------|
+| `amara-front.png`       | Hero front              |
+| `amara-back.png`        | Back view               |
+| `amara-left.png`        | Left profile            |
+| `amara-right.png`       | Right profile           |
+| `amara-fabric.png`      | Fabric close-up / skirt |
+
+Use the images you attached in your prompt â€” resize to ~1200Ã—1600 for best performance.
+
+## ðŸ” Admin
+
+- URL: `/admin/login`
+- Credentials: `ADMIN_EMAIL` + `ADMIN_PASSWORD` from `.env`
+- Session valid 12 hours (JWT httpOnly cookie)
+- Actions:
+  - View, search, filter orders
+  - Mark payment `VERIFIED` after checking UPI ID `8340474678@pthdfc`
+  - Update order status: PLACED â†’ CONFIRMED â†’ PACKED â†’ SHIPPED â†’ DELIVERED
+  - Export all orders as CSV
+  - View product stock
+
+**Manual UPI Verification Workflow:**
+1. Customer places order â†’ captcha verified â†’ sees QR â†’ pays â†’ enters UTR
+2. Order lands in admin with `paymentStatus: PENDING`
+3. You check your UPI app for the incoming amount + matching UTR
+4. If matched â†’ mark `VERIFIED` and set order status to `CONFIRMED`
+5. Proceed with fulfillment
+
+## ðŸ“± Meta Pixel Setup
+
+1. Get your Pixel ID from Facebook Events Manager
+2. Add to `.env`: `NEXT_PUBLIC_META_PIXEL_ID="1234567890"`
+3. Redeploy
+4. Events fire automatically with dedup `eventID`:
+   - `PageView` (all pages)
+   - `ViewContent` (product page)
+   - `AddToCart` (add-to-cart click)
+   - `InitiateCheckout` (cart page load)
+   - `AddPaymentInfo` (address submit)
+   - `Purchase` (order success)
+
+## ðŸš¢ Deploy to Vercel
+
+```bash
+# 1. Push to GitHub
+git init && git add . && git commit -m "init"
+git remote add origin YOUR_GITHUB_REPO
+git push -u origin main
+
+# 2. Import in Vercel
+# 3. Add env vars in Vercel dashboard (copy from .env.example, set real values)
+# 4. IMPORTANT: switch DATABASE_URL to Postgres for production
+#    - Use Vercel Postgres, Neon, or Supabase
+#    - Update prisma/schema.prisma: provider = "postgresql"
+#    - Push schema: npx prisma db push
+# 5. Deploy
+```
+
+## ðŸ—ƒï¸ Swap to Postgres (Production)
+
+Edit `prisma/schema.prisma`:
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+Then:
+```bash
+DATABASE_URL="postgres://..." npx prisma db push
+DATABASE_URL="postgres://..." npm run db:seed
+```
+
+## ðŸ“‚ Structure
+
+```
+â”œâ”€ prisma/
+â”‚  â”œâ”€ schema.prisma        # Product / Order / VerificationSession / AdminLog
+â”‚  â””â”€ seed.ts              # Seeds Amara product
+â”œâ”€ public/
+â”‚  â””â”€ products/            # Product images (add manually)
+â”œâ”€ src/
+â”‚  â”œâ”€ app/
+â”‚  â”‚  â”œâ”€ page.tsx          # Home
+â”‚  â”‚  â”œâ”€ product/[slug]/   # Product page + client
+â”‚  â”‚  â”œâ”€ cart/             # Cart
+â”‚  â”‚  â”œâ”€ checkout/         # 3-step checkout (address â†’ verify â†’ payment)
+â”‚  â”‚  â”œâ”€ order-success/    # Confirmation page
+â”‚  â”‚  â”œâ”€ order-failure/    # Failure fallback
+â”‚  â”‚  â”œâ”€ track/            # Order tracking
+â”‚  â”‚  â”œâ”€ admin/            # Admin dashboard
+â”‚  â”‚  â”œâ”€ api/              # All API routes
+â”‚  â”‚  â”‚  â”œâ”€ captcha/       # generate + verify
+â”‚  â”‚  â”‚  â”œâ”€ payment/       # UPI QR
+â”‚  â”‚  â”‚  â”œâ”€ orders/        # create + track
+â”‚  â”‚  â”‚  â””â”€ admin/         # login / logout / orders / export
+â”‚  â”‚  â”œâ”€ [policies].tsx    # Privacy, Refund, Shipping, Terms, etc.
+â”‚  â”‚  â”œâ”€ robots.ts / sitemap.ts
+â”‚  â”‚  â””â”€ layout.tsx        # Pixel, GTM, GA4 injection
+â”‚  â”œâ”€ components/          # Header, Footer, Cart, Gallery, SizeSelector, etc.
+â”‚  â”œâ”€ lib/                 # captcha, session, pixel, validate, pincode, etc.
+â”‚  â””â”€ middleware.ts        # Basic protection headers
+â”œâ”€ .env.example
+â”œâ”€ next.config.js          # Security headers, image optimization
+â”œâ”€ tailwind.config.ts      # RosÃ© & Co brand palette + fonts
+â””â”€ package.json
+```
+
+## ðŸ›¡ï¸ Security Checklist
+
+- [x] HTTPS enforced via HSTS header
+- [x] X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+- [x] Zod validation on every API input
+- [x] Rate limiting on captcha, verify, order-create, admin-login
+- [x] JWT (jose) admin sessions with httpOnly, secure, sameSite cookies
+- [x] SQL injection prevented via Prisma parameterized queries
+- [x] Captcha with expiry (10 min) + max 5 attempts per session
+- [x] Session-token binding between mobile + captcha + order
+- [x] Admin routes noindex via middleware
+
+## ðŸ“ˆ Post-Launch Tasks
+
+1. **Facebook CAPI** â€” currently client-side only. For iOS 14+ accuracy, wire server-side CAPI:
+   - Add `FB_CAPI_TOKEN` to env
+   - POST to `graph.facebook.com/v18.0/{pixelId}/events` from `/api/orders/create` after order save
+2. **SMS confirmations** â€” plug in MSG91 / Fast2SMS if needed later
+3. **Payment gateway** â€” swap manual UTR â†’ Razorpay/Cashfree webhook when volume increases
+4. **Reviews** â€” add Judge.me or custom review model
+5. **Upsells / Related products** â€” add to cart page and product page
+6. **Meta Ads Pixel test** â€” use Facebook Pixel Helper Chrome extension to verify events fire correctly before scaling ad spend
+
+## ðŸŽ¨ Brand DNA (locked in Tailwind)
+
+| Token       | Hex        | Usage                        |
+|-------------|-----------|------------------------------|
+| `blush`     | `#F4DCD6` | Backgrounds, cards           |
+| `rose`      | `#B03A4C` | Hover states                 |
+| `champagne` | `#E8D5B7` | Accents                      |
+| `wine`      | `#5C1A2B` | Primary CTA, prices          |
+| `ivory`     | `#FAF6F0` | Body background              |
+| `taupe`     | `#8B7568` | Borders, secondary text      |
+| `espresso`  | `#2B1810` | Primary text                 |
+
+Fonts: **Playfair Display** (display) Â· **Italiana** (product names) Â· **Inter** (body)
+
+---
+
+**Made for the girl who walks slow and hits hard. ðŸŒ¹**
+
+
+----- FILE: SEO_PLAYBOOK.md -----
+# Rose & Co SEO / GEO / AEO Playbook
+
+The technical foundation is done. This doc is the operator playbook for what to do next.
+
+Read once. Bookmark. Execute weekly.
+
+---
+
+## Reality check on organic traffic timelines
+
+Be honest with yourself about what to expect:
+
+| Timeframe | What you'll see | Estimated monthly organic visitors |
+|-----------|-----------------|--------------------------------------|
+| Week 1 | Google indexes homepage + product page + 3 journal posts | 5-20 |
+| Week 2-4 | Brand-name searches rank | 50-150 |
+| Month 2-3 | Long-tail queries start ranking | 200-500 |
+| Month 4-6 | Category terms rank IF you publish weekly | 800-2,000 |
+| Month 7-12 | You become the reference site for niche queries | 3,000-8,000 |
+
+**Bottom line:** SEO takes 6-12 months to matter. Meta Ads drives 90% of revenue in Month 1-6. SEO takes over in Year 2.
+
+---
+
+## Day 1 checklist (do within 24 hours of deploying)
+
+- [ ] Verify sitemap loads: https://rose-and-co.vercel.app/sitemap.xml
+- [ ] Verify robots.txt loads: https://rose-and-co.vercel.app/robots.txt
+- [ ] Verify llms.txt loads: https://rose-and-co.vercel.app/llms.txt
+- [ ] Submit sitemap to Google Search Console
+- [ ] Submit sitemap to Bing Webmaster Tools
+- [ ] Test schemas at https://validator.schema.org/
+- [ ] Test rich results at https://search.google.com/test/rich-results (product URL)
+- [ ] Verify OG previews at https://www.opengraph.xyz/ (homepage URL)
+
+Expected schema types visible: Product, Organization, WebSite, BreadcrumbList, FAQPage, Article, AggregateRating, Review
+
+---
+
+## Google Search Console setup (10 min)
+
+1. https://search.google.com/search-console
+2. Add property > URL prefix > https://rose-and-co.vercel.app
+3. Verify via HTML tag method
+4. Once verified: Sitemaps > paste sitemap URL > Submit
+5. Wait 3-7 days for first index reports
+
+## Bing Webmaster Tools setup (5 min)
+
+1. https://www.bing.com/webmasters
+2. Sign in with Microsoft account
+3. Import from Google Search Console (auto-imports property)
+4. Sitemaps > Submit
+
+Why Bing: it powers ChatGPT search. Getting indexed on Bing = getting cited by ChatGPT.
+
+---
+
+## Content publishing schedule (Month 1-3)
+
+**Weekly cadence:** 1 new journal post every Tuesday morning.
+
+Post-writing rules (Human Writing Framework):
+- Minimum 1,200 words
+- Specific numbers (GSM, days, prices)
+- Compare to named competitors when relevant
+- Include one table for LLM extraction
+- FAQ section at the bottom (feeds faqSchema)
+- Link to product page + 2-3 other journal posts
+
+---
+
+## Next 25 blog post ideas (ranked by search intent)
+
+### High commercial intent (write first)
+1. Best satin skirts under Rs 1500 in India: what fabric to look for
+2. Satin co-ord set for engagement functions: what actually works
+3. Poly-satin vs silk satin: which one should you buy?
+4. How to spot cheap satin in online product photos
+5. Amara Marble Swirl Co-ord: fit review by real buyers
+
+### High search volume, medium intent
+6. 20 party wear outfit ideas under Rs 2000
+7. What is a co-ord set? Types, styles, and how to wear one
+8. Airport outfit ideas: satin without wrinkles
+9. Roka ceremony outfit ideas for the bride's family
+10. Sangeet outfit ideas that aren't lehengas
+
+### Long-tail, low competition (rank fast)
+11. How to iron satin without damaging the fabric
+12. Marble print outfit: styling guide for Indian occasions
+13. Delhi NCR fashion brands that ship in 48 hours
+14. How to measure yourself for online satin shopping
+15. Satin skirt for tall women: length guide
+
+### GEO gold (LLM citation magnets)
+16. Sustainable Indian D2C fashion brands: honest 2026 list
+17. Small-batch fashion India: brands that don't mass-produce
+18. Hand-painted textile brands in India: complete guide
+19. Prepaid vs COD in Indian e-commerce: the math for buyers
+20. What GSM means in fabric quality: buyer's guide
+
+### Local + regional intent
+21. Gurugram fashion brands worth knowing (2026 list)
+22. Delhi wedding guest outfit ideas 2026: colour trends
+23. Bangalore-friendly satin: fabric weight for humid climates
+24. Mumbai party outfits: what works, what melts
+25. Chennai wedding season outfit ideas
+
+Publish ideas #1-5 in weeks 1-5. Alternate long-tail with GEO after that.
+
+---
+
+## Off-site SEO (backlinks matter)
+
+### Free directories (do in first week - 30 min)
+
+1. **Google Business Profile** at https://business.google.com
+   - Category: Women's Clothing Store
+   - Verified via postcard (5-7 days)
+2. Wellfound (Angellist) - free brand profile
+3. Product Hunt - post launch
+4. BetaList - early-stage directory
+5. Startup India Recognition
+
+### High-value link building (Month 1)
+
+**Podcast pitches** (3/week for 4 weeks):
+- Founders Podcast IN
+- Shark Tank India Alumni podcasts
+- The Ken
+- Growth Marketing India
+
+**Guest posts** - pitch these:
+- LBB - "Small-batch fashion brands you should know"
+- Hauterrfly - "Sustainable Indian D2C brands"
+- ScoopWhoop - "Gen Z fashion brands to watch"
+- YourStory - founder story
+- Femina India - styling guide feature
+
+**Instagram collabs** - micro-influencers:
+- Target: 20 micro-influencers (5-20K) in Delhi/Mumbai/Bangalore
+- Offer: One free set in exchange for one Reel + one post
+- Ask for website link in bio for 7 days
+- Expected: 5-8 backlinks, 10-15K impressions
+
+**HARO** - free tool at https://www.helpareporter.com/
+- Filter for fashion / D2C / lifestyle queries
+- Respond to 3/week - one out of 5 gets picked up
+
+### Local citations
+- Justdial listing
+- IndiaMart directory
+- Sulekha business listing
+- IndieBrandsHub
+
+---
+
+## GEO tactics (Generative Engine Optimization)
+
+### What LLMs love citing
+1. Comparison content ("Best X under Rs Y") - you have this
+2. Definitional content ("What is GSM?") - you have this
+3. List posts with tables
+4. Content with specific numbers (GSM, prices, days)
+5. Content with named authority (byline matters)
+
+### Monthly GEO tactics
+1. Query Perplexity every Monday for target queries. Check if you appear.
+2. Query ChatGPT weekly for niche terms.
+3. Update llms.txt monthly with new posts.
+4. Screenshot LLM citations. Add "as cited by Perplexity" to relevant posts.
+
+### The "answer the question first" rule
+
+LLMs extract the first 2-3 sentences as the answer.
+
+- **First paragraph:** Direct answer (1-3 sentences, hyper-specific)
+- **Second paragraph:** Context or nuance
+- **Rest of post:** Details, examples, comparisons, tables
+
+Our poly-satin guide opens: "Poly-satin is the fabric that ruined online shopping for a lot of women..." That opening is what an LLM will quote.
+
+---
+
+## Metrics to track weekly
+
+Create a simple Google Sheet:
+
+| Week | Organic sessions | New backlinks | Journal posts published | Google indexed pages | LLM citations | Notes |
+
+Target growth:
+- Month 1: 100 sessions
+- Month 2: 300 sessions
+- Month 3: 800 sessions
+- Month 6: 3,000 sessions
+- Month 12: 10,000+ sessions
+
+---
+
+## What NOT to do
+
+1. Do not buy backlinks - Google will penalise
+2. Do not stuff keywords - write for humans
+3. Do not publish thin content (400 words hurts more than helps)
+4. Do not copy competitor content
+5. Do not spam Instagram - 3x/week max
+6. Do not obsess over daily traffic - weekly trends only
+7. Do not neglect Meta Ads - ads pay bills now, SEO pays in Year 2
+
+---
+
+## When to hire help
+
+- After 6 months: part-time content writer (Rs 15-25K/month)
+- After Month 3: freelance SEO auditor (Rs 5-8K one-time)
+- After Rs 5L monthly revenue: in-house content marketer
+
+Before then: do it yourself. You will understand your customer better than anyone you can hire.
+
+---
+
+**Last updated: January 2026. Update this doc quarterly.**
+
+
+----- FILE: src\app\about\page.tsx -----
+import { SITE } from '@/lib/constants';
+import FounderNote from '@/components/FounderNote';
+
+export const metadata = {
+  title: 'About',
+  description: 'A small studio in Gurugram making one thing at a time.',
+};
+
+export default function AboutPage() {
+  return (
+    <div className="container-x py-16 max-w-2xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">About</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3 mb-10 leading-tight">
+        Small studio.<br/>One thing at a time.
+      </h1>
+
+      <div className="text-espresso/85 leading-[1.9] space-y-6 text-[17px]">
+        <p>
+          We began in the spring of 2026, in a two-bedroom flat in Sector 47, Gurugram. There was one founder, one product, and one long conversation with a mill in Surat about the difference between good satin and satin that only photographs well.
+        </p>
+
+        <p>
+          The problem we set out to solve was small and specific. Satin co-ords under two thousand rupees were almost always too thin, or printed in a way that flattened everything, or shipped from resellers who took three weeks. Satin co-ords above three thousand were the same three brands you already knew. Between them was nothing.
+        </p>
+
+        <p>
+          So we made the thing that should have been there. A poly-satin heavy enough to fall properly. A marble print painted by hand, one panel at a time, before the cloth was ever cut. A satin shirt and wide-leg pants, stitched at a small unit near Karol Bagh, packed and shipped from our own address by Delhivery.
+        </p>
+
+        <p>
+          We do this in batches of two hundred. When the sizes are gone, we wait four to six weeks and begin again. Every set is looked at before it leaves the studio. A loose thread, a print that ran, a missing tag &mdash; we catch it, or we don&apos;t ship it.
+        </p>
+
+        <div className="pt-4">
+          <p className="text-espresso font-medium">A few things we don&apos;t do.</p>
+        </div>
+
+        <p>
+          We don&apos;t invent discounts. The retail markup on a piece like this is real, and our MRP reflects it. We sell direct, and that is the whole reason the price is what it is.
+        </p>
+
+        <p>
+          We don&apos;t do full cash on delivery. We tried it and one in three came back. So we ask for a small deposit at the door, and the rest in cash. It keeps the piece here for someone who actually wants it.
+        </p>
+
+        <p>
+          We don&apos;t send promotional messages. If we write to you, it is about your order.
+        </p>
+
+        <div className="pt-4">
+          <p className="text-espresso font-medium">When something goes wrong.</p>
+        </div>
+
+        <p>
+          Because sometimes it does. This is a new brand made by one person. If your set arrives damaged, if the size chart was off, if Delhivery loses the package &mdash; please write to me at <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a>. Not a form, not a ticket. My inbox. I answer within a few hours during studio time.
+        </p>
+
+        <p className="text-espresso/70 italic">
+          That&apos;s all.
+        </p>
+      </div>
+
+      <FounderNote />
+    </div>
+  );
+}
+
+
+
+----- FILE: src\app\admin\export\route.ts -----
+import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+// CSV escape: wrap in quotes, escape internal quotes
+function csv(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v).replace(/"/g, '""').replace(/\r?\n/g, " ");
+  return `"${s}"`;
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get("status");
+    const q = (searchParams.get("q") || "").trim();
+
+    const where: any = {};
+    if (status && status !== "all") where.status = status;
+    if (q) {
+      where.OR = [
+        { name: { contains: q, mode: "insensitive" } },
+        { phone: { contains: q } },
+        { email: { contains: q, mode: "insensitive" } },
+        { city: { contains: q, mode: "insensitive" } },
+        { pincode: { contains: q } },
+        { coupon: { contains: q, mode: "insensitive" } },
+        { campaign: { contains: q, mode: "insensitive" } },
+      ];
+    }
+
+    const leads = await prisma.lead.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: 5000,
+    });
+
+    const headers = [
+      "Created At", "Name", "Phone", "Email",
+      "Address", "City", "State", "Pincode",
+      "Device", "Source", "Campaign", "Referrer",
+      "Visits", "Cart Value (INR)", "Cart Status", "Coupon",
+      "Status", "Opt-In", "Returning", "IP", "User Agent",
+    ];
+
+    const rows = leads.map((l: any) => [
+      new Date(l.createdAt).toISOString(),
+      l.name || "",
+      l.phone || "",
+      l.email || "",
+      l.address || "",
+      l.city || "",
+      l.state || "",
+      l.pincode || "",
+      l.device || "",
+      l.source || "",
+      l.campaign || "",
+      l.referrer || "",
+      l.visits ?? "",
+      l.cartValue ?? "",
+      l.cartStatus || "",
+      l.coupon || "",
+      l.status || "new",
+      l.optIn ? "yes" : "no",
+      l.returning ? "yes" : "no",
+      l.ip || "",
+      l.userAgent || "",
+    ]);
+
+    const csvBody =
+      headers.map(csv).join(",") + "\n" +
+      rows.map((r) => r.map(csv).join(",")).join("\n");
+
+    // BOM for Excel UTF-8 compatibility
+    const body = "\uFEFF" + csvBody;
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    return new NextResponse(body, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="rose-and-co-leads-${stamp}.csv"`,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (e: any) {
+    console.error("export failed", e);
+    return NextResponse.json({ error: "export_failed", message: e?.message }, { status: 500 });
+  }
+}
+
+
+----- FILE: src\app\admin\leads\page.tsx -----
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+
+type Lead = {
+  id: string;
+  createdAt: string;
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  address?: string | null;
+  device?: string | null;
+  source?: string | null;
+  campaign?: string | null;
+  visits?: number | null;
+  cartValue?: number | null;
+  cartStatus?: string | null;
+  coupon?: string | null;
+  status?: string | null;
+  optIn?: boolean | null;
+  returning?: boolean | null;
+};
+
+const STATUSES = ["all", "new", "contacted", "converted", "lost", "spam"] as const;
+type StatusFilter = typeof STATUSES[number];
+
+export default function LeadsPage() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [q, setQ] = useState("");
+  const [exporting, setExporting] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/leads?limit=500", { cache: "no-store" });
+      const data = await res.json();
+      setLeads(Array.isArray(data.leads) ? data.leads : []);
+    } catch (e) {
+      console.error("leads load failed", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const filtered = useMemo(() => {
+    return leads.filter((l) => {
+      if (filter !== "all" && (l.status || "new") !== filter) return false;
+      if (q) {
+        const hay = [
+          l.name, l.phone, l.email, l.city, l.state, l.pincode,
+          l.address, l.source, l.campaign, l.coupon,
+        ].filter(Boolean).join(" ").toLowerCase();
+        if (!hay.includes(q.toLowerCase())) return false;
+      }
+      return true;
+    });
+  }, [leads, filter, q]);
+
+  const stats = useMemo(() => {
+    return {
+      total: leads.length,
+      optIn: leads.filter((l) => l.optIn).length,
+      phone: leads.filter((l) => !!l.phone).length,
+      email: leads.filter((l) => !!l.email).length,
+      address: leads.filter((l) => !!(l.city || l.pincode || l.address)).length,
+      returning: leads.filter((l) => l.returning).length,
+      abandoned: leads.filter((l) => (l.cartStatus || "").toLowerCase() === "abandoned").length,
+      converted: leads.filter((l) => (l.status || "") === "converted").length,
+    };
+  }, [leads]);
+
+  const exportCSV = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (filter !== "all") params.set("status", filter);
+      if (q) params.set("q", q);
+      const url = `/api/admin/leads/export?${params.toString()}`;
+      // Trigger browser download
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `rose-and-co-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } finally {
+      setTimeout(() => setExporting(false), 800);
+    }
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    // optimistic
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
+    try {
+      await fetch(`/api/admin/leads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+    } catch (e) {
+      console.error("status update failed", e);
+    }
+  };
+
+  const fmtTime = (iso: string) => {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString("en-IN", {
+        day: "2-digit", month: "short",
+        hour: "2-digit", minute: "2-digit", hour12: true,
+      });
+    } catch {
+      return iso;
+    }
+  };
+
+  const contactCell = (l: Lead) => {
+    const name = (l.name || "").trim();
+    const phone = (l.phone || "").trim();
+    const email = (l.email || "").trim();
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="font-medium text-neutral-900">
+          {name || <span className="italic text-neutral-400">anon</span>}
+        </span>
+        {phone ? (
+          <a href={`tel:${phone}`} className="text-sm text-neutral-700 hover:underline">
+            ðŸ“ž {phone}
+          </a>
+        ) : (
+          <span className="text-xs text-neutral-400">no phone</span>
+        )}
+        {email ? (
+          <a href={`mailto:${email}`} className="text-xs text-neutral-500 hover:underline">
+            {email}
+          </a>
+        ) : null}
+      </div>
+    );
+  };
+
+  const addressCell = (l: Lead) => {
+    const parts = [l.address, l.city, l.state, l.pincode].filter(Boolean);
+    if (parts.length === 0) return <span className="text-neutral-400">â€”</span>;
+    return (
+      <div className="text-sm text-neutral-700 leading-snug">
+        {parts.join(", ")}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/" className="text-sm text-neutral-600 hover:text-neutral-900">
+            â† Back
+          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={load}
+              className="px-3 py-1.5 text-sm bg-white border border-neutral-300 rounded hover:bg-neutral-100"
+            >
+              Refresh
+            </button>
+            <button
+              onClick={exportCSV}
+              disabled={exporting || filtered.length === 0}
+              className="px-4 py-1.5 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 disabled:opacity-50"
+            >
+              {exporting ? "Exportingâ€¦" : `â¬‡ Export CSV (${filtered.length})`}
+            </button>
+          </div>
+        </div>
+
+        <h1 className="text-2xl font-semibold text-neutral-900">Leads</h1>
+        <p className="text-sm text-neutral-500 mb-4">
+          Every visitor. Full contact + address captured.
+        </p>
+
+        {/* Stats */}
+        <div className="grid grid-cols-4 md:grid-cols-8 gap-2 mb-4">
+          <Stat label="Total" value={stats.total} />
+          <Stat label="Opted in" value={stats.optIn} />
+          <Stat label="Phone" value={stats.phone} />
+          <Stat label="Email" value={stats.email} />
+          <Stat label="Address" value={stats.address} />
+          <Stat label="Returning" value={stats.returning} />
+          <Stat label="Abandoned" value={stats.abandoned} />
+          <Stat label="Converted" value={stats.converted} />
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {STATUSES.map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={`px-3 py-1 text-sm rounded border ${
+                filter === s
+                  ? "bg-neutral-900 text-white border-neutral-900"
+                  : "bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-100"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name, phone, city, couponâ€¦"
+            className="ml-auto px-3 py-1.5 text-sm border border-neutral-300 rounded w-64"
+          />
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-neutral-100 text-neutral-600 text-left">
+                <tr>
+                  <th className="px-3 py-2 font-medium">Time</th>
+                  <th className="px-3 py-2 font-medium">Contact</th>
+                  <th className="px-3 py-2 font-medium">Address</th>
+                  <th className="px-3 py-2 font-medium">Device</th>
+                  <th className="px-3 py-2 font-medium">Source</th>
+                  <th className="px-3 py-2 font-medium">Visits</th>
+                  <th className="px-3 py-2 font-medium">Cart</th>
+                  <th className="px-3 py-2 font-medium">Coupon</th>
+                  <th className="px-3 py-2 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={9} className="px-3 py-8 text-center text-neutral-500">
+                      Loadingâ€¦
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-3 py-8 text-center text-neutral-500">
+                      No leads match this filter.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((l) => (
+                    <tr key={l.id} className="border-t border-neutral-100 hover:bg-neutral-50 align-top">
+                      <td className="px-3 py-2 whitespace-nowrap text-neutral-600">
+                        {fmtTime(l.createdAt)}
+                      </td>
+                      <td className="px-3 py-2 min-w-[200px]">{contactCell(l)}</td>
+                      <td className="px-3 py-2 min-w-[220px]">{addressCell(l)}</td>
+                      <td className="px-3 py-2">{l.device || "â€”"}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-col">
+                          <span>{l.source || "Direct"}</span>
+                          {l.campaign ? (
+                            <span className="text-xs text-neutral-400">{l.campaign}</span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-col">
+                          <span>{l.visits ?? 1}</span>
+                          {l.returning ? (
+                            <span className="text-xs text-emerald-600">Return</span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        {l.cartValue ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium">â‚¹{l.cartValue.toLocaleString("en-IN")}</span>
+                            <span
+                              className={`text-xs ${
+                                (l.cartStatus || "").toLowerCase() === "abandoned"
+                                  ? "text-red-600"
+                                  : "text-emerald-600"
+                              }`}
+                            >
+                              {l.cartStatus || "Active"}
+                            </span>
+                          </div>
+                        ) : (
+                          "â€”"
+                        )}
+                      </td>
+                      <td className="px-3 py-2">{l.coupon || "â€”"}</td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={l.status || "new"}
+                          onChange={(e) => updateStatus(l.id, e.target.value)}
+                          className="px-2 py-1 text-xs border border-neutral-300 rounded bg-white"
+                        >
+                          {STATUSES.filter((s) => s !== "all").map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="bg-white border border-neutral-200 rounded p-2 text-center">
+      <div className="text-lg font-semibold text-neutral-900">{value}</div>
+      <div className="text-xs text-neutral-500">{label}</div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\admin\login\page.tsx -----
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function AdminLogin() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(null); setLoading(true);
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      router.push('/admin');
+    } catch (e: any) { setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="container-x py-24 max-w-md">
+      <h1 className="font-display text-4xl text-espresso text-center">Admin Login</h1>
+      <form onSubmit={submit} className="mt-8 space-y-4">
+        <div><label className="label">Email</label><input required autoFocus type="email" className="input" value={email} onChange={e => setEmail(e.target.value)} /></div>
+        <div><label className="label">Password</label><input required type="password" className="input" value={password} onChange={e => setPassword(e.target.value)} /></div>
+        {err && <div className="p-3 bg-wine/10 text-wine text-sm border border-wine/30">{err}</div>}
+        <button disabled={loading} className="btn-primary w-full">{loading ? 'Signing inâ€¦' : 'Sign In'}</button>
+      </form>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\admin\orders\[id]\page.tsx -----
+import { redirect, notFound } from 'next/navigation';
+import Link from 'next/link';
+import { verifyAdminSession } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
+import { inr } from '@/lib/format';
+import UpdateOrderForm from './UpdateOrderForm';
+
+export const dynamic = 'force-dynamic';
+
+export default async function AdminOrderDetail({ params }: { params: { id: string } }) {
+  if (!(await verifyAdminSession())) redirect('/admin/login');
+  const order = await prisma.order.findUnique({ where: { id: params.id }, include: { items: true } });
+  if (!order) notFound();
+
+  let utmParsed: Record<string, any> = {};
+  if (order.utmData) { try { utmParsed = JSON.parse(order.utmData); } catch {} }
+
+  return (
+    <div className="container-x py-8 max-w-4xl">
+      <Link href="/admin" className="text-xs uppercase tracking-widest text-espresso/60">â† Back to orders</Link>
+      <h1 className="font-display text-3xl mt-2 text-espresso">Order {order.orderNumber}</h1>
+
+      <div className="grid md:grid-cols-2 gap-6 mt-6">
+        <div className="border border-taupe/20 p-6 bg-white">
+          <h3 className="uppercase tracking-widest text-xs text-espresso/60 mb-3">Customer & shipping</h3>
+          <div className="text-sm space-y-1">
+            <div><b>{order.fullName}</b></div>
+            <div>{order.mobile}{order.altPhone ? ` / ${order.altPhone}` : ''}</div>
+            <div>{order.email || 'â€”'}</div>
+            <div className="pt-2 border-t border-taupe/20 mt-2">
+              {order.addressLine1}<br/>
+              {order.addressLine2 && <>{order.addressLine2}<br/></>}
+              {order.landmark && <>Near {order.landmark}<br/></>}
+              {order.city}, {order.state} â€” {order.pincode}
+            </div>
+          </div>
+        </div>
+
+        <div className="border border-taupe/20 p-6 bg-white">
+          <h3 className="uppercase tracking-widest text-xs text-espresso/60 mb-3">Payment & items</h3>
+          <div className="text-sm space-y-1">
+            <div><b>Method:</b> <span className={order.paymentMethod === 'PREPAID' ? 'text-green-800 font-semibold' : ''}>{order.paymentMethod}</span></div>
+            <div><b>Total:</b> {inr(order.totalAmount)}</div>
+            {order.discountAmount > 0 && <div className="text-green-800"><b>UPI discount:</b> -{inr(order.discountAmount)}</div>}
+            <div><b>Paid online:</b> {inr(order.paidAmount)}</div>
+            <div><b>COD amo

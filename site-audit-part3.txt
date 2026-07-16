@@ -1,0 +1,4594 @@
+li>Poly-satin, around a hundred grams per square metre.</li>
+                <li>Relaxed shirt with a camp collar. Wide-leg pants, full length on a 5'7" frame Ã¢â‚¬â€ size with heels or hem if you're 5'3" or under.</li>
+                <li>Model is 5&apos;7&quot; in size S.</li>
+                <li>Dry clean, or hand-wash cold. Never tumble dry.</li>
+              </ul>
+            </details>
+
+            <details className="border-t border-taupe/20 pt-4">
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">Size chart</summary>
+              <div className="mt-3"><InteractiveSizeChart /></div>
+            </details>
+
+            <details className="border-t border-taupe/20 pt-4">
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">How the Amara compares</summary>
+              <ComparisonTable />
+            </details>
+
+            <details className="border-t border-taupe/20 pt-4">
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">Shipping &amp; returns</summary>
+              <div className="mt-3 text-sm text-espresso/80 leading-[1.8] space-y-2">
+                <p>Free shipping anywhere in India via Delhivery. Metros in three to five working days. Smaller cities in five to seven.</p>
+                <p>Seven days to return from the day it arrives. Tags on, unworn, unwashed. We arrange the pickup. Refund lands in about a week.</p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      {/* v34: Reviews section Ã¢â‚¬â€ auto-loads from /api/reviews/list */}
+      <ReviewsSection productSlug={product.slug} />
+
+      <StickyBuyBar price={displayPrice} onBuy={doBuyNow} productName={product.name} />
+      <div className="h-20 md:hidden" />
+      <RecentlyViewed currentSlug={product.slug} />
+    </>
+  );
+}
+
+
+----- FILE: src\app\refund-policy\page.tsx -----
+import { SITE } from '@/lib/constants';
+
+export const metadata = { title: 'Returns & Refund Policy' };
+
+export default function Page() {
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <h1 className="font-display text-4xl text-espresso mb-8">Returns and refunds</h1>
+
+      <div className="text-espresso/80 leading-relaxed space-y-6">
+        <div className="p-5 bg-blush/30 border-l-4 border-wine">
+          <p><b>Return window:</b> 7 days from delivery.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">What we accept</h2>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Unworn, unwashed pieces</li>
+            <li>Original tags still attached</li>
+            <li>Original packaging intact</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">What we do not accept</h2>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Anything worn or washed, even once</li>
+            <li>Missing tags or packaging</li>
+            <li>Signs of alteration</li>
+            <li>Items ordered more than 7 days ago</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">How to return</h2>
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>Email <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a> with your order number and reason.</li>
+            <li>We arrange a reverse pickup &mdash; the courier collects from your address. You do not need to send it yourself.</li>
+            <li>Once we receive and check it (2 working days), refund is initiated.</li>
+            <li>Refund lands in your original payment source in 5â€“7 working days.</li>
+          </ol>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Exchanges</h2>
+          <p>Free size exchange within 7 days, subject to stock. Same product, different size. Print swaps are not possible &mdash; every set is hand-painted and unique.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">If we shipped the wrong item or a defective one</h2>
+          <p>Email us within 48 hours with a photo. Full refund + free return pickup. No back-and-forth, no questions.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Partial COD orders</h2>
+          <p>If you paid â‚¹300 online + â‚¹1,199 on delivery, the refund covers both amounts. The â‚¹300 lands back in your UPI. The â‚¹1,199 is refunded to a bank account you share via email.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\robots.ts -----
+import type { MetadataRoute } from 'next';
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: [
+      { userAgent: '*', allow: '/', disallow: ['/api/', '/admin/', '/cart', '/checkout'] },
+      { userAgent: 'GPTBot', allow: '/' },
+      { userAgent: 'PerplexityBot', allow: '/' },
+      { userAgent: 'ClaudeBot', allow: '/' },
+      { userAgent: 'Google-Extended', allow: '/' },
+      { userAgent: 'CCBot', allow: '/' },
+      { userAgent: 'anthropic-ai', allow: '/' },
+    ],
+    sitemap: 'https://rose-and-co.vercel.app/sitemap.xml',
+    host: 'https://rose-and-co.vercel.app',
+  };
+}
+
+
+----- FILE: src\app\search\page.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+import { prisma } from '@/lib/prisma';
+import { inr } from '@/lib/format';
+
+export const metadata = { title: 'Search' };
+
+export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
+  const q = (searchParams.q || '').trim();
+  const products = q ? await prisma.product.findMany({
+    where: { active: true, OR: [{ name: { contains: q } }, { description: { contains: q } }] },
+  }) : await prisma.product.findMany({ where: { active: true } });
+
+  return (
+    <div className="container-x py-10">
+      <h1 className="font-display text-3xl md:text-4xl text-espresso">Search</h1>
+      <form className="mt-6 max-w-md" method="GET">
+        <input name="q" defaultValue={q} placeholder="Search productsâ€¦" className="input" />
+      </form>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+        {products.map(p => {
+          const img = (JSON.parse(p.images)[0]) as string;
+          return (
+            <Link key={p.id} href={`/product/${p.slug}`} className="group">
+              <div className="relative aspect-[3/4] bg-blush/20"><Image src={img} alt={p.name} fill sizes="300px" className="object-cover group-hover:scale-105 transition" /></div>
+              <div className="mt-3 text-sm text-espresso font-medium">{p.name}</div>
+              <div className="text-wine">{inr(p.price)}</div>
+            </Link>
+          );
+        })}
+      </div>
+      {products.length === 0 && <p className="text-espresso/60 mt-8">No products found.</p>}
+    </div>
+  );
+}
+
+
+----- FILE: src\app\shipping-policy\page.tsx -----
+export const metadata = { title: 'Shipping Policy' };
+
+export default function Page() {
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <h1 className="font-display text-4xl text-espresso mb-8">Shipping</h1>
+
+      <div className="text-espresso/80 leading-relaxed space-y-5">
+        <div className="grid grid-cols-2 gap-4">
+          {[
+            ['Ships to', 'All of India'],
+            ['Shipping cost', 'Free Â· no minimum'],
+            ['Dispatch time', '24â€“48 hours'],
+            ['Delivery time', '3â€“7 business days'],
+          ].map(([k, v]) => (
+            <div key={k} className="p-4 bg-blush/20 border border-taupe/20">
+              <div className="text-xs uppercase tracking-widest text-espresso/60">{k}</div>
+              <div className="text-espresso font-medium mt-1">{v}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-4">
+          <h2 className="font-display text-xl text-espresso mb-2">Dispatch time</h2>
+          <p>24â€“48 hours from payment confirmation. If you order Friday evening, expect Monday dispatch.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Delivery time</h2>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><b>Metros:</b> 3â€“5 business days (Mumbai, Delhi, Bangalore, Chennai, Hyderabad, Pune, Kolkata)</li>
+            <li><b>Tier-2 / tier-3 cities:</b> 5â€“7 business days</li>
+            <li><b>North-East + remote pincodes:</b> up to 10 business days</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Courier partners</h2>
+          <p>Delhivery for most pincodes. Ecom Express or Xpressbees for zones where Delhivery does not reach.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Tracking</h2>
+          <p>You get a tracking link via SMS when your order ships. You can also track from our <a href="/track" className="underline text-wine">Track order</a> page any time.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Partial COD</h2>
+          <p>â‚¹300 collected online at checkout. â‚¹1,199 collected in cash when the courier hands over the package.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Failed delivery</h2>
+          <p>The courier attempts three times. If all three fail, the package comes back to us. We refund the online-paid amount within 7 working days.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Address changes</h2>
+          <p>Email us within 4 hours of placing the order. After that the order is picked up by the courier and cannot be modified.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\shop\page.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+import { Metadata } from 'next';
+import { prisma } from '@/lib/prisma';
+import { inr } from '@/lib/format';
+import JsonLd from '@/components/JsonLd';
+import { collectionJsonLd, breadcrumbJsonLd, BRAND } from '@/lib/seo';
+
+export const revalidate = 300;
+
+export const metadata: Metadata = {
+  title: 'Shop the Collection | RosÃ© & Co',
+  description: 'Two hand-painted marble swirl co-ord sets. Poured in rosÃ©. Cast in caramel. Premium satin. Free shipping across India. Ships from Gurugram in 24-48 hours.',
+  alternates: { canonical: `${BRAND.domain}/shop` },
+  openGraph: {
+    type: 'website',
+    url: `${BRAND.domain}/shop`,
+    title: 'The RosÃ© & Co Collection',
+    description: 'Hand-painted marble swirl co-ord sets. Two hundred pieces per drop.',
+    siteName: BRAND.name,
+    locale: 'en_IN',
+  },
+};
+
+export default async function ShopPage() {
+  const products = await prisma.product.findMany({
+    where: { active: true },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      slug: true,
+      name: true,
+      description: true,
+      price: true,
+      compareAt: true,
+      images: true,
+    },
+  });
+
+  const productForJsonLd = products.map((p) => {
+    const imgs = JSON.parse(p.images) as string[];
+    return { slug: p.slug, name: p.name, price: p.price, image: imgs[0] || '/products/amara-front.png' };
+  });
+
+  return (
+    <>
+      <JsonLd
+        data={[
+          collectionJsonLd(productForJsonLd),
+          breadcrumbJsonLd([
+            { name: 'Home', url: '/' },
+            { name: 'Shop', url: '/shop' },
+          ]),
+        ]}
+      />
+
+      <section className="container-x py-16 md:py-24">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="text-xs uppercase tracking-[0.3em] text-wine">The collection</div>
+          <h1 className="font-display text-4xl md:text-6xl mt-3 text-espresso">
+            Two hundred sets. Then we begin again.
+          </h1>
+          <p className="mt-6 text-espresso/70 leading-relaxed">
+            Every piece hand-painted, one panel at a time. Ships from Gurugram in twenty-four to forty-eight hours. Free anywhere in India.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-10 mt-16 max-w-5xl mx-auto">
+          {products.map((p) => {
+            const imgs = JSON.parse(p.images) as string[];
+            const discount = p.compareAt ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100) : 0;
+
+            return (
+              <Link key={p.slug} href={`/product/${p.slug}`} prefetch className="group block">
+                <div className="relative aspect-[3/4] overflow-hidden bg-blush/20">
+                  <Image
+                    src={imgs[0]}
+                    alt={p.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover object-top group-hover:scale-105 transition duration-700"
+                  />
+                  {discount > 0 && (
+                    <span className="absolute top-4 right-4 bg-ivory text-wine text-xs font-semibold px-3 py-1 uppercase tracking-widest">
+                      {discount}% off
+                    </span>
+                  )}
+                </div>
+                <div className="mt-6">
+                  <h2 className="font-display text-2xl md:text-3xl text-espresso group-hover:text-wine transition">
+                    {p.name}
+                  </h2>
+                  <div className="mt-3 flex items-baseline gap-3">
+                    <span className="text-xl font-semibold text-wine">{inr(p.price)}</span>
+                    {p.compareAt && (
+                      <span className="text-sm line-through text-espresso/40">{inr(p.compareAt)}</span>
+                    )}
+                  </div>
+                  <p className="mt-4 text-sm text-espresso/70 leading-relaxed line-clamp-3">
+                    {p.description}
+                  </p>
+                  <span className="mt-4 inline-block text-sm underline text-espresso group-hover:text-wine transition">
+                    See the set
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+    </>
+  );
+}
+
+
+----- FILE: src\app\sitemap.ts -----
+import type { MetadataRoute } from 'next';
+import { prisma } from '@/lib/prisma';
+
+const DOMAIN = 'https://rose-and-co.vercel.app';
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const products = await prisma.product.findMany({
+    where: { active: true },
+    select: { slug: true, updatedAt: true },
+  });
+
+  const productUrls = products.map((p) => ({
+    url: `${DOMAIN}/product/${p.slug}`,
+    lastModified: p.updatedAt,
+    changeFrequency: 'weekly' as const,
+    priority: 0.9,
+  }));
+
+  return [
+    { url: DOMAIN, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
+    { url: `${DOMAIN}/shop`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${DOMAIN}/faq`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${DOMAIN}/journal`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
+    ...productUrls,
+  ];
+}
+
+
+----- FILE: src\app\size-guide\page.tsx -----
+import InteractiveSizeChart from '@/components/InteractiveSizeChart';
+import Link from 'next/link';
+
+export const metadata = { title: 'Size guide', description: 'How to measure yourself for online satin shopping. Amara set size chart with brand equivalents (Zara, H&amp;M).' };
+
+export default function SizeGuidePage() {
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Size guide</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">How to size yourself right</h1>
+      <p className="mt-4 text-espresso/70 leading-relaxed">
+        Wrong size costs you a week. Here\'s how to get it right the first time.
+      </p>
+
+      <div className="mt-10">
+        <h2 className="font-display text-2xl text-espresso mb-4">Amara set size chart</h2>
+        <InteractiveSizeChart />
+      </div>
+
+      <div className="mt-12 space-y-6 text-espresso/80 leading-relaxed">
+        <div>
+          <h3 className="font-display text-xl text-espresso mb-2">Between sizes?</h3>
+          <ul className="list-disc pl-5 space-y-1 text-sm">
+            <li>Between XS and S: XS for fitted, S for comfort.</li>
+            <li>Between S and M with broader bust: size up for top only.</li>
+            <li>Between L and XL: always XL. Satin doesn\'t stretch.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="font-display text-xl text-espresso mb-2">How to measure yourself</h3>
+          <p className="text-sm">Full guide: <Link href="/journal/how-to-measure-for-online-shopping" className="underline text-wine">How to measure yourself for online satin shopping</Link></p>
+        </div>
+
+        <div>
+          <h3 className="font-display text-xl text-espresso mb-2">Still unsure?</h3>
+          <p className="text-sm">Email us at care@roseandco.in with your bust, waist, and hip measurements. We\'ll pick the size for you.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\style-quiz\page.tsx -----
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+
+type Answers = { occasion: string; style: string; body: string };
+
+function recommendOutfit(a: Answers): string {
+  if (a.occasion === 'engagement') {
+    if (a.style === 'modern') return 'Amara satin co-ord in wine/rose tones. Small gold hoops. Wine block heels.';
+    return 'Traditional Anarkali with light embroidery in muted tones. Cotton silk.';
+  }
+  if (a.occasion === 'cocktail') {
+    if (a.style === 'bold') return 'Fitted bodycon dress + statement heels. Or Amara set + bold lip.';
+    return 'Silk slip dress + oversized blazer. Nude heels.';
+  }
+  if (a.occasion === 'brunch') {
+    return 'Amara top with jeans + white sneakers. Small hoops.';
+  }
+  return 'Amara satin co-ord + block heels + small hoops. Works for most Indian occasions.';
+}
+
+export default function StyleQuiz() {
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<Answers>({ occasion: '', style: '', body: '' });
+
+  const set = (key: keyof Answers, value: string) => {
+    setAnswers({ ...answers, [key]: value });
+    setStep(step + 1);
+  };
+  const reset = () => { setAnswers({ occasion: '', style: '', body: '' }); setStep(0); };
+
+  return (
+    <div className="container-x py-16 max-w-2xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Style quiz</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">What should you wear?</h1>
+      <p className="mt-3 text-sm text-espresso/70">3 questions. 30 seconds.</p>
+
+      <div className="mt-10">
+        {step === 0 && (
+          <div>
+            <div className="font-display text-2xl text-espresso mb-4">What&apos;s the occasion?</div>
+            <div className="space-y-2">
+              {[
+                { v: 'engagement', l: 'Engagement, roka, or family function' },
+                { v: 'cocktail', l: 'Cocktail party or evening event' },
+                { v: 'brunch', l: 'Brunch, coffee, or casual meetup' },
+                { v: 'other', l: 'Something else' },
+              ].map(o => (
+                <button key={o.v} onClick={() => set('occasion', o.v)} className="w-full p-4 border border-taupe/40 text-left hover:border-wine hover:bg-blush/20 transition">
+                  {o.l}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 1 && (
+          <div>
+            <div className="font-display text-2xl text-espresso mb-4">Your style?</div>
+            <div className="space-y-2">
+              {[
+                { v: 'modern', l: 'Modern and contemporary' },
+                { v: 'traditional', l: 'Classic and traditional' },
+                { v: 'bold', l: 'Bold and statement' },
+                { v: 'minimal', l: 'Minimal and quiet' },
+              ].map(o => (
+                <button key={o.v} onClick={() => set('style', o.v)} className="w-full p-4 border border-taupe/40 text-left hover:border-wine hover:bg-blush/20 transition">
+                  {o.l}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <div className="font-display text-2xl text-espresso mb-4">Comfort priority?</div>
+            <div className="space-y-2">
+              {[
+                { v: 'yes', l: 'Yes, I want to be comfortable' },
+                { v: 'medium', l: 'Balance of looks and comfort' },
+                { v: 'looks', l: 'Looks first, comfort second' },
+              ].map(o => (
+                <button key={o.v} onClick={() => set('body', o.v)} className="w-full p-4 border border-taupe/40 text-left hover:border-wine hover:bg-blush/20 transition">
+                  {o.l}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <div className="text-xs uppercase tracking-widest text-wine">We think you should wear</div>
+            <div className="mt-3 p-6 bg-blush/30 border-l-4 border-wine text-lg text-espresso italic">
+              {recommendOutfit(answers)}
+            </div>
+            <div className="mt-6 flex gap-3">
+              <button onClick={reset} className="btn-secondary">Redo</button>
+              <Link href="/product/amara-marble-swirl-coord-set" className="btn-primary">See the Amara</Link>
+            </div>
+          </div>
+        )}
+
+        {step < 3 && (
+          <div className="mt-6 text-xs text-espresso/60">Step {step + 1} of 3</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\terms\page.tsx -----
+import { SITE } from '@/lib/constants';
+
+export const metadata = { title: 'Terms & Conditions' };
+
+export default function Page() {
+  return (
+    <div className="container-x py-16 max-w-3xl">
+      <h1 className="font-display text-4xl text-espresso mb-2">Terms and conditions</h1>
+      <p className="text-sm text-espresso/60 mb-8">Placing an order means you agree to what is below.</p>
+
+      <div className="text-espresso/80 leading-relaxed space-y-6">
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">The product</h2>
+          <p>Every set is hand-painted. Colours will vary slightly from the product photos because of (a) hand-printing, (b) how your screen displays colours, (c) how natural light hits the fabric. This is not a defect.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Pricing</h2>
+          <p>â‚¹1,499 all-in. GST is included. Shipping is free. What you see is what you pay. If we change prices later, existing orders are not affected.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Payment</h2>
+          <p>UPI only. Two options:</p>
+          <ul className="mt-2 list-disc pl-5 space-y-1">
+            <li>Full prepaid: â‚¹1,499 upfront</li>
+            <li>Partial COD: â‚¹300 online + â‚¹1,199 in cash on delivery</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Payment verification</h2>
+          <p>We match every UPI payment to your order manually. Usually done within 2 hours. Orders where we cannot match a payment within 24 hours are cancelled and any partial payment is refunded.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Cancellation</h2>
+          <p>Free cancellation any time before we hand the order to the courier &mdash; usually within 24 hours of placing. After dispatch, use the returns flow.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Jurisdiction</h2>
+          <p>Any dispute is subject to Gurugram, Haryana courts.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Intellectual property</h2>
+          <p>All content, prints and photos on this site belong to RosÃ© & Co. Please do not lift them for your own brand.</p>
+        </div>
+
+        <div>
+          <h2 className="font-display text-xl text-espresso mb-2">Contact</h2>
+          <p><a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a> for anything at all.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\track\page.tsx -----
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { SITE } from '@/lib/constants';
+
+export default function TrackPage() {
+  const [orderNumber, setOrderNumber] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [order, setOrder] = useState<any>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(null); setLoading(true); setOrder(null);
+    try {
+      const res = await fetch('/api/orders/track', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderNumber, mobile }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setOrder(data);
+    } catch (e: any) { setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="container-x py-16 max-w-xl">
+      <h1 className="font-display text-4xl text-espresso text-center">Track your order</h1>
+      <p className="text-center text-sm text-espresso/60 mt-2">Order number and mobile. Nothing else needed.</p>
+      <form onSubmit={submit} className="mt-8 space-y-4">
+        <div>
+          <label className="label">Order number</label>
+          <input className="input" placeholder="RC2607123456" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} required />
+        </div>
+        <div>
+          <label className="label">Mobile</label>
+          <input className="input" inputMode="numeric" maxLength={10} placeholder="10-digit mobile" value={mobile} onChange={e => setMobile(e.target.value.replace(/\D/g, ''))} required />
+        </div>
+        {err && <div className="p-3 bg-wine/10 text-wine text-sm border border-wine/30">{err}</div>}
+        <button disabled={loading} className="btn-primary w-full">{loading ? 'Lookingâ€¦' : 'Show my order'}</button>
+      </form>
+
+      {order && (
+        <div className="mt-8 p-6 border border-taupe/20 bg-white">
+          <div className="text-xs uppercase tracking-widest text-espresso/60">Order</div>
+          <div className="font-mono text-lg text-wine">#{order.orderNumber}</div>
+          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+            <div><b>Order status</b><br/>{order.status}</div>
+            <div><b>Payment status</b><br/>{order.paymentStatus}</div>
+            <div><b>Payment method</b><br/>{order.paymentMethod === 'PREPAID' ? 'Full prepaid' : 'Partial COD'}</div>
+            <div><b>Placed at</b><br/>{new Date(order.createdAt).toLocaleString('en-IN')}</div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-taupe/30">
+            {order.items.map((i: any, x: number) => (
+              <div key={x} className="text-sm">{i.name} â€” Size {i.size} Ã— {i.qty}</div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-10 text-center text-xs text-espresso/60">
+        Can not find your order? Email <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\app\wishlist\page.tsx -----
+'use client';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useWishlist } from '@/components/WishlistContext';
+import { inr } from '@/lib/format';
+
+type Product = { id: string; slug: string; name: string; price: number; image: string };
+
+export default function WishlistPage() {
+  const { ids, toggle } = useWishlist();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (ids.length === 0) { setProducts([]); setLoading(false); return; }
+    fetch('/api/products/by-ids', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+    })
+      .then(r => r.json())
+      .then(data => setProducts(data.products || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [ids]);
+
+  return (
+    <div className="container-x py-12 max-w-4xl">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine">Wishlist</div>
+      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">Your saved pieces</h1>
+      <p className="mt-3 text-sm text-espresso/70">Wishlist is saved in your browser. No account needed.</p>
+
+      {loading ? (
+        <div className="mt-12 text-center text-espresso/60">Loading...</div>
+      ) : products.length === 0 ? (
+        <div className="mt-12 p-12 text-center border border-taupe/20 bg-blush/10">
+          <div className="text-espresso/70">Nothing saved yet.</div>
+          <Link href="/" className="btn-primary mt-4">Explore Amara</Link>
+        </div>
+      ) : (
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-6">
+          {products.map(p => (
+            <div key={p.id} className="group">
+              <Link href={`/product/${p.slug}`}>
+                <div className="relative aspect-[3/4] bg-blush/20 overflow-hidden">
+                  <Image src={p.image} alt={p.name} fill sizes="(max-width: 768px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform" />
+                </div>
+              </Link>
+              <div className="mt-3 flex items-start justify-between gap-2">
+                <div>
+                  <Link href={`/product/${p.slug}`} className="text-sm text-espresso font-medium hover:text-wine">{p.name}</Link>
+                  <div className="text-sm text-wine mt-1">{inr(p.price)}</div>
+                </div>
+                <button
+                  onClick={() => toggle(p.id)}
+                  aria-label="Remove from wishlist"
+                  className="text-xs uppercase tracking-widest text-espresso/60 hover:text-wine"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+----- FILE: src\checkout\page.tsx -----
+'use client';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useCart } from '@/components/CartContext';
+import { inr } from '@/lib/format';
+import { PAYMENT } from '@/lib/constants';
+import { lookupPincode } from '@/lib/pincode';
+import { serializedUtm } from '@/lib/utm';
+import UpiButtons from '@/components/UpiButtons';
+import CheckoutProgressBar from '@/components/CheckoutProgressBar';
+import GiftWrap from '@/components/GiftWrap';
+
+type Step = 'address' | 'verify' | 'payment' | 'done';
+
+function readCookie(name: string): string {
+  if (typeof document === 'undefined') return '';
+  const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : '';
+}
+
+export default function CheckoutPage() {
+  const router = useRouter();
+  const { items, clear } = useCart();
+  const [step, setStep] = useState<Step>('address');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const startedAt = useRef<number>(Date.now());
+  const [honeypot, setHoneypot] = useState('');
+  const submitting = useRef(false);
+  const lastClickTime = useRef<number>(0);
+
+  const [form, setForm] = useState({
+    fullName: '', mobile: '', email: '', altPhone: '',
+    pincode: '', state: '', city: '',
+    addressLine1: '', addressLine2: '', landmark: '',
+  });
+
+  const [captchaQuestion, setCaptchaQuestion] = useState<string>('');
+  const [captchaType, setCaptchaType] = useState<'math' | 'text'>('math');
+  const [captchaToken, setCaptchaToken] = useState<string>('');
+  const [captchaInput, setCaptchaInput] = useState<string>('');
+
+  const [paymentMethod, setPaymentMethod] = useState<'PREPAID' | 'PARTIAL_COD'>('PREPAID');
+  const [giftWrap, setGiftWrap] = useState(false);
+  const [qrData, setQrData] = useState<string | null>(null);
+  const [paymentStarted, setPaymentStarted] = useState(false);
+  const [returnedFromApp, setReturnedFromApp] = useState(false);
+
+  useEffect(() => { setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)); }, []);
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === 'visible' && paymentStarted) setReturnedFromApp(true);
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [paymentStarted]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('rc_checkout');
+    if (saved) try { setForm(f => ({ ...f, ...JSON.parse(saved) })); } catch {}
+  }, []);
+  useEffect(() => { localStorage.setItem('rc_checkout', JSON.stringify(form)); }, [form]);
+
+  useEffect(() => {
+    if (submitting.current) return;
+    if (step === 'done') return;
+    if (items.length === 0) router.push('/cart');
+  }, [items.length, step, router]);
+
+  useEffect(() => {
+    if (form.pincode.length === 6) {
+      lookupPincode(form.pincode).then(res => {
+        if (res) setForm(f => ({ ...f, state: res.state, city: res.city }));
+      });
+    }
+  }, [form.pincode]);
+
+  const setField = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const qty = items.reduce((s, i) => s + i.quantity, 0);
+  const giftWrapAmount = giftWrap ? 49 : 0;
+  const fullTotal    = PAYMENT.fullPrice * qty + giftWrapAmount;
+  const prepaidTotal = PAYMENT.prepaidPrice * qty + giftWrapAmount;
+  const codDeposit   = PAYMENT.codDeposit * qty + giftWrapAmount;
+  const codRemaining = PAYMENT.codRemaining * qty;
+
+  const amountToPay = paymentMethod === 'PREPAID' ? prepaidTotal : codDeposit;
+  const orderNote = ('RoseAndCo ' + (form.fullName || 'Order') + (giftWrap ? ' [GIFT-WRAP]' : '')).slice(0, 60);
+
+  const submitAddress = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(null);
+    if (!/^[6-9]\d{9}$/.test(form.mobile)) return setErr('Enter valid 10-digit mobile');
+    if (!/^[1-9]\d{5}$/.test(form.pincode)) return setErr('Enter valid PIN');
+    if (!form.fullName || form.fullName.length < 2) return setErr('Enter your full name');
+    if (!form.addressLine1 || form.addressLine1.length < 5) return setErr('Enter your address');
+    if (!form.city || !form.state) return setErr('City and state required');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/captcha/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: form.mobile }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      setCaptchaQuestion(data.question);
+      setCaptchaType(data.type);
+      setCaptchaToken(data.token);
+      setCaptchaInput('');
+      setStep('verify');
+    } catch (e: any) { setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  const refreshCaptcha = async () => {
+    setCaptchaInput(''); setErr(null); setLoading(true);
+    try {
+      const res = await fetch('/api/captcha/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: form.mobile }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      setCaptchaQuestion(data.question);
+      setCaptchaType(data.type);
+      setCaptchaToken(data.token);
+    } catch (e: any) { setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  const verifyCaptcha = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(null); setLoading(true);
+    try {
+      const res = await fetch('/api/captcha/verify', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: captchaToken, code: captchaInput, mobile: form.mobile }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Verification failed');
+      const qrRes = await fetch('/api/payment/upi-qr', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: amountToPay, orderNote }),
+      });
+      const qrJson = await qrRes.json();
+      setQrData(qrJson.qr);
+      setStep('payment');
+    } catch (e: any) { setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    if (step !== 'payment') return;
+    fetch('/api/payment/upi-qr', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amountToPay, orderNote }),
+    }).then(r => r.json()).then(d => setQrData(d.qr));
+  }, [amountToPay, step, orderNote]);
+
+  const submitOrder = async () => {
+    // Debounce: block if clicked in last 3 seconds
+    const now = Date.now();
+    if (now - lastClickTime.current < 3000) {
+      setErr('Please wait a moment before trying again.');
+      return;
+    }
+    lastClickTime.current = now;
+
+    // Prevent double-submit
+    if (submitting.current || loading) return;
+
+    setErr(null);
+    if (items.length === 0) return setErr('Cart empty. Please add items.');
+
+    setLoading(true);
+    submitting.current = true;
+
+    try {
+      const it = items[0];
+      const res = await fetch('/api/orders/create', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          verificationToken: captchaToken, ...form,
+          paymentMethod, productId: it.productId, size: it.size, quantity: it.quantity,
+          paidConfirmed: true, website: honeypot, startedAt: startedAt.current,
+          metaFbc: readCookie('_fbc'), metaFbp: readCookie('_fbp'), utm: serializedUtm(),
+        }),
+      });
+
+      const data = await res.json();
+
+      // Handle specific error codes with friendly messages
+      if (!res.ok) {
+        if (res.status === 429) {
+          throw new Error('You have placed several orders recently. Please wait an hour or contact us on WhatsApp.');
+        }
+        if (res.status === 400) {
+          throw new Error(data.error || 'Something in your order details is invalid. Please check and try again.');
+        }
+        if (res.status === 403) {
+          throw new Error('Access denied. Please refresh the page and try again.');
+        }
+        throw new Error(data.error || 'Order failed. Please try again or contact us.');
+      }
+
+      // Success!
+      setStep('done');
+      try { clear(); } catch {}
+      const successUrl = `/order-success?id=${data.orderNumber}`;
+
+      // Use both methods to ensure redirect happens
+      window.location.href = successUrl;
+      setTimeout(() => router.push(successUrl), 500);
+    } catch (e: any) {
+      submitting.current = false;
+      setErr(e.message || 'Something went wrong. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const markPaymentStarted = () => setPaymentStarted(true);
+
+  return (
+    <div className="container-x py-6 md:py-10 max-w-4xl">
+      <input type="text" name="website" tabIndex={-1} autoComplete="off"
+        value={honeypot} onChange={e => setHoneypot(e.target.value)}
+        style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+        aria-hidden="true" />
+
+      <CheckoutProgressBar step={step} />
+
+      <div className="flex items-center justify-between mb-8 text-xs uppercase tracking-widest">
+        {[
+          { s: 'address', l: 'Address' },
+          { s: 'verify',  l: 'Quick check' },
+          { s: 'payment', l: 'Payment' },
+        ].map(x => (
+          <div key={x.s} className={'flex-1 text-center py-2 border-b-2 ' + (step === x.s ? 'border-wine text-wine' : 'border-taupe/20 text-espresso/40')}>{x.l}</div>
+        ))}
+      </div>
+
+      {err && (
+        <div className="p-3 mb-4 bg-wine/10 text-wine border border-wine/30 text-sm flex items-start gap-2">
+          <span>âš ï¸</span>
+          <div className="flex-1">
+            {err}
+            {err.includes('wait an hour') && (
+              <div className="mt-2 text-xs">
+                <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" className="underline">
+                  Contact us on WhatsApp â†’
+                </a>
+              </div>
+            )}
+          </div>
+          <button onClick={() => setErr(null)} className="text-lg leading-none" aria-label="Dismiss error">Ã—</button>
+        </div>
+      )}
+
+      {step === 'done' && (
+        <div className="text-center py-16">
+          <div className="w-16 h-16 mx-auto rounded-full bg-wine text-ivory flex items-center justify-center text-3xl mb-4">&#10003;</div>
+          <div className="font-display text-2xl text-espresso">Order placed. Taking you to your confirmation...</div>
+        </div>
+      )}
+
+      {step !== 'done' && (
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            {step === 'address' && (
+              <form onSubmit={submitAddress} className="space-y-4" autoComplete="on">
+                <h2 className="font-display text-2xl text-espresso">Where should we send it?</h2>
+
+                <div>
+                  <label htmlFor="fullName" className="label">Your name</label>
+                  <input id="fullName" name="name" type="text" required autoFocus autoComplete="name" enterKeyHint="next" className="input" value={form.fullName} onChange={e => setField('fullName', e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="mobile" className="label">Mobile</label>
+                    <input id="mobile" name="tel" type="tel" required inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength={10} autoComplete="tel-national" enterKeyHint="next" className="input" placeholder="10-digit number" value={form.mobile} onChange={e => setField('mobile', e.target.value.replace(/\D/g, ''))} />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="label">Email (optional)</label>
+                    <input id="email" name="email" type="email" autoComplete="email" enterKeyHint="next" className="input" value={form.email} onChange={e => setField('email', e.target.value)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="pincode" className="label">PIN</label>
+                    <input id="pincode" name="postal-code" type="text" required inputMode="numeric" maxLength={6} autoComplete="postal-code" enterKeyHint="next" className="input" value={form.pincode} onChange={e => setField('pincode', e.target.value.replace(/\D/g, ''))} />
+                  </div>
+                  <div>
+                    <label htmlFor="city" className="label">City</label>
+                    <input id="city" name="city" type="text" required autoComplete="address-level2" enterKeyHint="next" className="input" value={form.city} onChange={e => setField('city', e.target.value)} />
+                  </div>
+                  <div>
+                    <label htmlFor="state" className="label">State</label>
+                    <input id="state" name="state" type="text" required autoComplete="address-level1" enterKeyHint="next" className="input" value={form.state} onChange={e => setField('state', e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="addressLine1" className="label">Address</label>
+                  <input id="addressLine1" name="address-line1" type="text" required autoComplete="address-line1" enterKeyHint="next" className="input" placeholder="House / flat, street" value={form.addressLine1} onChange={e => setField('addressLine1', e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="landmark" className="label">Landmark (optional)</label>
+                    <input id="landmark" name="address-line2" type="text" autoComplete="address-line2" enterKeyHint="next" className="input" value={form.landmark} onChange={e => setField('landmark', e.target.value)} />
+                  </div>
+                  <div>
+                    <label htmlFor="altPhone" className="label">Alt phone (optional)</label>
+                    <input id="altPhone" name="tel-alt" type="tel" inputMode="numeric" maxLength={10} autoComplete="tel-national" enterKeyHint="done" className="input" value={form.altPhone} onChange={e => setField('altPhone', e.target.value.replace(/\D/g, ''))} />
+                  </div>
+                </div>
+
+                <div className="pt-3">
+                  <GiftWrap enabled={giftWrap} onChange={setGiftWrap} />
+                </div>
+
+                <button type="submit" disabled={loading} className="btn-primary w-full">
+                  {loading ? 'Please wait...' : 'Continue'}
+                </button>
+              </form>
+            )}
+
+            {step === 'verify' && (
+              <form onSubmit={verifyCaptcha} className="space-y-6 max-w-md">
+                <h2 className="font-display text-2xl text-espresso">A quick check.</h2>
+                <p className="text-sm text-espresso/70">
+                  {captchaType === 'math' ? 'Solve this to confirm you are a person.' : 'Type the four characters below.'}
+                </p>
+
+                <div className="relative">
+                  <div className="p-8 bg-blush/40 border-2 border-taupe/30 flex items-center justify-center">
+                    <div
+                      className={`select-none font-display text-espresso ${captchaType === 'math' ? 'text-5xl' : 'text-5xl tracking-[0.3em]'}`}
+                      style={{
+                        textShadow: captchaType === 'text' ? '1px 1px 0 rgba(139,117,104,0.15)' : 'none',
+                        letterSpacing: captchaType === 'math' ? '0.15em' : '0.3em',
+                      }}
+                    >
+                      {captchaQuestion}{captchaType === 'math' ? ' = ?' : ''}
+                    </div>
+                  </div>
+                  <button type="button" onClick={refreshCaptcha} disabled={loading}
+                    className="absolute top-2 right-2 text-xs uppercase tracking-widest text-wine underline"
+                    aria-label="Get a new question">
+                    Refresh
+                  </button>
+                </div>
+
+                <div>
+                  <label className="label">Your answer</label>
+                  <input required autoFocus autoComplete="off"
+                    inputMode={captchaType === 'math' ? 'numeric' : 'text'}
+                    className={'input text-center text-2xl ' + (captchaType === 'text' ? 'uppercase tracking-[0.3em]' : '')}
+                    maxLength={captchaType === 'math' ? 4 : 6}
+                    value={captchaInput}
+                    onChange={e => setCaptchaInput(e.target.value)}
+                    placeholder={captchaType === 'math' ? '12' : 'AB3D'} />
+                </div>
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setStep('address')} className="btn-secondary">Back</button>
+                  <button type="submit" disabled={loading || !captchaInput} className="btn-primary flex-1">{loading ? 'Checking...' : 'Continue'}</button>
+                </div>
+              </form>
+            )}
+
+            {step === 'payment' && (
+              <div className="space-y-6">
+                <h2 className="font-display text-2xl text-espresso">How would you like to pay?</h2>
+
+                <div className="space-y-3">
+                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PREPAID' ? 'border-wine bg-blush/30' : 'border-taupe/30 bg-white')}>
+                    <input type="radio" name="pm" className="sr-only" checked={paymentMethod === 'PREPAID'} onChange={() => setPaymentMethod('PREPAID')} />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="font-display text-lg text-espresso">Pay in full via UPI</div>
+                        <div className="text-sm text-espresso/70 mt-1">Rs 100 off.</div>
+                      </div>
+                      <div className="text-xl font-semibold text-wine">{inr(prepaidTotal)}</div>
+                    </div>
+                  </label>
+
+                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PARTIAL_COD' ? 'border-wine bg-blush/30' : 'border-taupe/30 bg-white')}>
+                    <input type="radio" name="pm" className="sr-only" checked={paymentMethod === 'PARTIAL_COD'} onChange={() => setPaymentMethod('PARTIAL_COD')} />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="font-display text-lg text-espresso">Partial cash on delivery</div>
+                        <div className="text-sm text-espresso/70 mt-1">{inr(codDeposit)} now, {inr(codRemaining)} on delivery.</div>
+                      </div>
+                      <div className="text-xl font-semibold text-espresso">{inr(fullTotal)}</div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="p-5 bg-ivory border border-taupe/30 text-center">
+                  <div className="text-xs uppercase tracking-widest text-espresso/60">Pay now</div>
+                  <div className="text-4xl font-semibold text-wine mt-1">{inr(amountToPay)}</div>
+                </div>
+
+                {isMobile ? (
+                  <div onClick={markPaymentStarted}>
+                    <UpiButtons amount={amountToPay} note={orderNote} />
+                  </div>
+                ) : (
+                  <div className="p-6 bg-white border border-taupe/30 flex flex-col sm:flex-row items-center gap-6">
+                    {qrData && <img src={qrData} alt="UPI QR Code" width={220} height={220} className="border p-2 shrink-0" />}
+                    <div className="text-sm text-espresso/80">
+                      <div className="text-lg font-display text-wine">Scan with any UPI app.</div>
+                      <p className="mt-2">Open GPay, PhonePe, Paytm or any UPI app on your phone. Scan the QR. Pay {inr(amountToPay)}.</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className={'p-5 border-2 ' + (returnedFromApp ? 'border-wine bg-blush/30 animate-pulse' : 'border-taupe/30 bg-white')}>
+                  <div className="font-display text-lg text-espresso">Done paying?</div>
+                  <p className="text-xs text-espresso/60 mt-1">We verify the payment within a couple of hours. Tap below when you have paid.</p>
+                  <button
+                    type="button"
+                    onClick={submitOrder}
+                    disabled={loading || submitting.current}
+                    className="btn-primary w-full mt-4 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="inline-block w-4 h-4 border-2 border-ivory border-t-transparent rounded-full animate-spin" />
+                        Placing order...
+                      </span>
+                    ) : (
+                      'I have paid ' + inr(amountToPay)
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <button type="button" onClick={() => setStep('verify')} className="text-xs uppercase tracking-widest text-espresso/60 underline">Back</button>
+                  <p className="text-[11px] text-espresso/60 text-right">
+                    By placing this order you accept our <Link href="/terms" className="underline">terms</Link>.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Simple, quiet sidebar */}
+          <div className="border border-taupe/20 p-6 bg-blush/20 h-fit md:sticky md:top-24">
+            <div className="text-xs uppercase tracking-widest text-espresso/60 mb-4">Summary</div>
+            {items.map((it, i) => (
+              <div key={i} className="flex gap-3 pb-3 border-b border-taupe/20 mb-3">
+                <div className="relative w-16 h-20 bg-ivory shrink-0">
+                  <Image src={it.image} alt={it.name} fill sizes="64px" className="object-cover" />
+                </div>
+                <div className="text-sm">
+                  <div className="text-espresso font-medium">{it.name}</div>
+                  <div className="text-xs text-espresso/60">Size {it.size} &middot; Qty {it.quantity}</div>
+                  <div className="text-wine font-semibold mt-1">{inr(it.price * it.quantity)}</div>
+                </div>
+              </div>
+            ))}
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between"><span>Subtotal</span><span>{inr(PAYMENT.fullPrice * qty)}</span></div>
+              {giftWrap && (<div className="flex justify-between text-espresso/70"><span>Gift wrap</span><span>+ Rs 49</span></div>)}
+              <div className="flex justify-between"><span>Shipping</span><span className="text-wine">Free</span></div>
+              {paymentMethod === 'PREPAID' && (
+                <div className="flex justify-between text-wine"><span>UPI discount</span><span>-{inr(PAYMENT.prepaidSavings * qty)}</span></div>
+              )}
+            </div>
+            <div className="flex justify-between mt-3 pt-3 border-t border-taupe/30 font-semibold">
+              <span>Total</span>
+              <span>{paymentMethod === 'PREPAID' ? inr(prepaidTotal) : inr(fullTotal)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+----- FILE: src\components\AddressAutocomplete.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+
+interface AddressData {
+  name: string;
+  phone: string;
+  pincode: string;
+  address: string;
+  landmark: string;
+  city: string;
+  state: string;
+}
+
+interface Props {
+  onChange: (data: AddressData) => void;
+  initial?: Partial<AddressData>;
+}
+
+export default function AddressAutocomplete({ onChange, initial = {} }: Props) {
+  const [data, setData] = useState<AddressData>({
+    name: initial.name || '',
+    phone: initial.phone || '',
+    pincode: initial.pincode || '',
+    address: initial.address || '',
+    landmark: initial.landmark || '',
+    city: initial.city || '',
+    state: initial.state || '',
+  });
+  const [pincodeStatus, setPincodeStatus] = useState<'idle' | 'loading' | 'ok' | 'invalid'>('idle');
+
+  // Load saved address from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('rc_last_address');
+      if (saved && !initial.name) {
+        const parsed = JSON.parse(saved) as AddressData;
+        setData(parsed);
+        onChange(parsed);
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateField = (field: keyof AddressData, value: string) => {
+    const next = { ...data, [field]: value };
+    setData(next);
+    onChange(next);
+    // Persist to localStorage for future visits
+    if (field !== 'phone') {
+      // don't persist phone until submit for privacy
+      localStorage.setItem('rc_last_address', JSON.stringify({ ...next, phone: '' }));
+    }
+  };
+
+  // Auto-fetch city/state from PIN code (Indian Postal API â€” free, public)
+  useEffect(() => {
+    const pin = data.pincode.trim();
+    if (pin.length !== 6 || !/^[0-9]{6}$/.test(pin)) {
+      setPincodeStatus('idle');
+      return;
+    }
+    setPincodeStatus('loading');
+    (async () => {
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+        const data = await res.json();
+        if (data[0]?.Status === 'Success' && data[0].PostOffice?.[0]) {
+          const office = data[0].PostOffice[0];
+          const next = {
+            ...data,
+            city: office.District || office.Block || '',
+            state: office.State || '',
+          };
+          setData((prev) => ({ ...prev, city: office.District || office.Block || '', state: office.State || '' }));
+          onChange({ ...data, city: office.District || office.Block || '', state: office.State || '' });
+          setPincodeStatus('ok');
+        } else {
+          setPincodeStatus('invalid');
+        }
+      } catch {
+        setPincodeStatus('invalid');
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.pincode]);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">Full name</label>
+          <input
+            type="text"
+            value={data.name}
+            onChange={(e) => updateField('name', e.target.value)}
+            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+            placeholder="Aarna Sharma"
+            autoComplete="name"
+          />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">Phone</label>
+          <input
+            type="tel"
+            value={data.phone}
+            onChange={(e) => updateField('phone', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+            placeholder="10-digit mobile"
+            autoComplete="tel"
+            maxLength={10}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">
+          PIN code
+          {pincodeStatus === 'loading' && <span className="ml-2 text-espresso/50">checking...</span>}
+          {pincodeStatus === 'ok' && <span className="ml-2 text-green-700">âœ“ found</span>}
+          {pincodeStatus === 'invalid' && <span className="ml-2 text-red-700">not found</span>}
+        </label>
+        <input
+          type="text"
+          value={data.pincode}
+          onChange={(e) => updateField('pincode', e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+          className="w-full md:w-48 border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+          placeholder="6-digit PIN"
+          autoComplete="postal-code"
+          maxLength={6}
+        />
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">City</label>
+          <input
+            type="text"
+            value={data.city}
+            onChange={(e) => updateField('city', e.target.value)}
+            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+            placeholder="Auto-filled from PIN"
+            autoComplete="address-level2"
+          />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">State</label>
+          <input
+            type="text"
+            value={data.state}
+            onChange={(e) => updateField('state', e.target.value)}
+            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+            placeholder="Auto-filled from PIN"
+            autoComplete="address-level1"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">Address</label>
+        <textarea
+          value={data.address}
+          onChange={(e) => updateField('address', e.target.value)}
+          rows={3}
+          className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+          placeholder="House no., street, area"
+          autoComplete="street-address"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">Landmark (optional)</label>
+        <input
+          type="text"
+          value={data.landmark}
+          onChange={(e) => updateField('landmark', e.target.value)}
+          className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+          placeholder="Near..."
+        />
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\admin\ProductForm.tsx -----
+"use client";
+// src/components/admin/ProductForm.tsx
+// ONE form used by BOTH "Create" and "Edit". Every box maps to a column in your
+// Product database table (slug, name, description, price, compareAt, images, sizes, active).
+
+import { useMemo, useState } from "react";
+
+const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+
+// Shape we pass in when editing an existing product.
+export type ProductFormValues = {
+  slug?: string;
+  name: string;
+  description: string;
+  price: number;
+  compareAt: number;
+  sizes: string[];
+  images: string[];
+  active: boolean;
+};
+
+export default function ProductForm({
+  initial,
+  mode,
+}: {
+  initial?: ProductFormValues;
+  mode: "create" | "edit";
+}) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [price, setPrice] = useState<number>(initial?.price ?? 2299);
+  const [compareAt, setCompareAt] = useState<number>(initial?.compareAt ?? 2999);
+  const [sizes, setSizes] = useState<string[]>(initial?.sizes ?? [...ALL_SIZES]);
+  const [images, setImages] = useState<string[]>(
+    initial?.images?.length ? initial.images : [""]
+  );
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState<{ url: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Upload one or more chosen files, compress via /api/upload, add to images.
+  async function handleFiles(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return;
+    setError("");
+    setUploading(true);
+    try {
+      const added: string[] = [];
+      for (const file of Array.from(fileList)) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Upload failed");
+        added.push(data.url);
+      }
+      // drop any empty placeholder boxes, then append the new images
+      setImages((prev) => [...prev.filter((i) => i.trim()), ...added]);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removeImage(index: number) {
+    setImages((prev) => prev.filter((_, j) => j !== index));
+  }
+
+  const previewSlug = useMemo(
+    () =>
+      (initial?.slug ??
+        name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-")),
+    [name, initial?.slug]
+  );
+
+  function toggleSize(s: string) {
+    setSizes((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
+  }
+
+  async function save(publish: boolean) {
+    setError("");
+    if (!name.trim()) return setError("Product name is required.");
+    if (!price) return setError("Selling price is required.");
+
+    setSaving(true);
+    const payload = {
+      name,
+      description,
+      price,
+      compareAt,
+      sizes,
+      images: images.filter((i) => i.trim()),
+      active: publish,
+    };
+
+    try {
+      const res =
+        mode === "create"
+          ? await fetch("/api/products", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
+          : await fetch(`/api/products/${initial!.slug}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save");
+      const slug = data.product?.slug ?? initial?.slug;
+      setDone({ url: `/product/${slug}` });
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <div style={{ maxWidth: 640, margin: "60px auto", padding: 20, textAlign: "center" }}>
+        <h1>{mode === "create" ? "Ã¢Å“â€¦ Product created" : "Ã¢Å“â€¦ Changes saved"}</h1>
+        <p style={{ margin: "16px 0" }}>
+          <a href={done.url} target="_blank" rel="noreferrer" style={{ color: "#8a1c3b", fontWeight: 600 }}>
+            {done.url}
+          </a>
+        </p>
+        <button style={btn} onClick={() => navigator.clipboard.writeText(done.url)}>Copy link</button>
+        <a style={{ ...btn, textDecoration: "none", color: "#333" }} href="/admin/products">Back to products</a>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ maxWidth: 640, margin: "40px auto", padding: 20 }}>
+      <h1 style={{ marginBottom: 16 }}>
+        {mode === "create" ? "Create a listing" : `Edit: ${initial?.name}`}
+      </h1>
+
+      <label style={lbl}>Product name
+        <input style={inp} value={name} onChange={(e) => setName(e.target.value)}
+          placeholder="Aarna Beige Marble Swirl Co-ord Set" />
+      </label>
+      {name && (
+        <p style={hint}>
+          URL: <code>/product/{previewSlug}</code>
+          {mode === "edit" && " (URL stays the same when editing)"}
+        </p>
+      )}
+
+      <label style={lbl}>Description (the Ã¢â‚¬Å“The setÃ¢â‚¬Â paragraph)
+        <textarea style={{ ...inp, minHeight: 90 }} value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="A relaxed satin button-down shirt and high-waisted wide-leg pants. Hand-painted marble swirlÃ¢â‚¬Â¦" />
+      </label>
+
+      <div style={{ display: "flex", gap: 12 }}>
+        <label style={{ ...lbl, flex: 1 }}>Selling price (Ã¢â€šÂ¹)
+          <input style={inp} type="number" value={price} onChange={(e) => setPrice(+e.target.value)} />
+        </label>
+        <label style={{ ...lbl, flex: 1 }}>MRP / compare-at (Ã¢â€šÂ¹)
+          <input style={inp} type="number" value={compareAt} onChange={(e) => setCompareAt(+e.target.value)} />
+        </label>
+      </div>
+
+      <label style={lbl}>Sizes in stock</label>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+        {ALL_SIZES.map((s) => (
+          <button key={s} type="button" onClick={() => toggleSize(s)}
+            style={{ ...sizeBtn, background: sizes.includes(s) ? "#8a1c3b" : "#fff",
+                     color: sizes.includes(s) ? "#fff" : "#333" }}>
+            {s}
+          </button>
+        ))}
+      </div>
+
+      <label style={lbl}>Product images</label>
+
+      {/* Click-to-upload box (also accepts drag & drop). */}
+      <label
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
+        style={{
+          display: "block", border: "2px dashed #c9a1ad", borderRadius: 12,
+          padding: "26px 16px", textAlign: "center", cursor: "pointer",
+          background: "#fdf7f9", color: "#8a1c3b", marginBottom: 12,
+        }}
+      >
+        {uploading ? "Uploading & compressingÃ¢â‚¬Â¦" : "Ã°Å¸â€œÂ· Click to choose photos, or drag them here"}
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          style={{ display: "none" }}
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+      </label>
+      <p style={hint}>JPG/PNG/HEIC up to 8 MB each. TheyÃ¢â‚¬â„¢re auto-shrunk to load fast.</p>
+
+      {/* Thumbnails of what's been added. */}
+      {images.filter((i) => i.trim()).length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, margin: "12px 0" }}>
+          {images.filter((i) => i.trim()).map((img, i) => (
+            <div key={i} style={{ position: "relative" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={img} alt={`Product image ${i + 1}`}
+                style={{ width: 90, height: 90, objectFit: "cover", borderRadius: 8, border: "1px solid #eee" }} />
+              <button type="button" onClick={() => removeImage(i)}
+                style={{ position: "absolute", top: -8, right: -8, width: 22, height: 22,
+                         borderRadius: "50%", border: "none", background: "#8a1c3b", color: "#fff",
+                         cursor: "pointer", lineHeight: "22px", padding: 0 }}>
+                Ã¢Å“â€¢
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {error && <p style={{ color: "#c0392b", fontWeight: 600 }}>Ã¢Å¡Â  {error}</p>}
+
+      <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+        <button type="button" style={btn} disabled={saving} onClick={() => save(false)}>
+          {saving ? "SavingÃ¢â‚¬Â¦" : "Save as draft"}
+        </button>
+        <button type="button" style={{ ...btn, background: "#8a1c3b", color: "#fff" }}
+          disabled={saving} onClick={() => save(true)}>
+          {saving ? "SavingÃ¢â‚¬Â¦" : mode === "create" ? "Publish (go live)" : "Save & publish"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const lbl: React.CSSProperties = { display: "block", fontSize: 14, fontWeight: 600, margin: "14px 0 4px" };
+const inp: React.CSSProperties = { width: "100%", padding: "9px 11px", border: "1px solid #ccc", borderRadius: 8, font: "inherit" };
+const btn: React.CSSProperties = { padding: "9px 16px", border: "1px solid #ccc", borderRadius: 8, background: "#fff", cursor: "pointer", margin: "0 6px 0 0" };
+const sizeBtn: React.CSSProperties = { padding: "8px 14px", border: "1px solid #8a1c3b", borderRadius: 8, cursor: "pointer" };
+const hint: React.CSSProperties = { fontSize: 13, color: "#777", margin: "2px 0 0" };
+
+----- FILE: src\components\AnnouncementBar.tsx -----
+export default function AnnouncementBar() {
+  const items = [
+    'Free shipping across India',
+    'Small-batch drop &middot; 200 sets',
+    'Ships from Gurugram within 48 hours',
+    'Seven-day returns',
+  ];
+  return (
+    <div className="bg-espresso text-ivory text-[11px] sm:text-xs tracking-widest uppercase py-2 overflow-hidden">
+      <div className="flex whitespace-nowrap animate-marquee">
+        <div className="flex gap-12 px-6 shrink-0">
+          {items.map(t => <span key={t} dangerouslySetInnerHTML={{ __html: '&middot; ' + t }} />)}
+        </div>
+        <div className="flex gap-12 px-6 shrink-0" aria-hidden>
+          {items.map(t => <span key={t} dangerouslySetInnerHTML={{ __html: '&middot; ' + t }} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\BundleOffer.tsx -----
+import Link from 'next/link';
+import Image from 'next/image';
+
+interface BundleOfferProps {
+  currentSlug: string;
+  otherSlug: string;
+  otherName: string;
+  otherImage: string;
+  otherPrice: number;
+  bundlePrice: number;
+  savings: number;
+}
+
+export default function BundleOffer({
+  currentSlug, otherSlug, otherName, otherImage, otherPrice, bundlePrice, savings,
+}: BundleOfferProps) {
+  return (
+    <section className="container-x py-12 border-t border-taupe/10">
+      <div className="max-w-4xl mx-auto bg-blush/20 p-6 md:p-10">
+        <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">Weekend set</div>
+        <h2 className="font-display text-2xl md:text-3xl text-espresso mb-2">
+          Take both. Save Rs {savings.toLocaleString('en-IN')}.
+        </h2>
+        <p className="text-sm text-espresso/70 mb-6 max-w-md">
+          Two moods, two sets, one bundle. Because we know which one you also love.
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <Link
+            href={`/product/${otherSlug}`}
+            prefetch
+            className="group flex items-center gap-4 p-4 bg-ivory hover:shadow-md transition"
+          >
+            <div className="relative w-20 h-24 bg-blush/20 flex-shrink-0 overflow-hidden">
+              <Image src={otherImage} alt={otherName} fill sizes="80px" className="object-cover object-top" />
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-widest text-espresso/60">Add</div>
+              <h3 className="font-display text-lg text-espresso group-hover:text-wine">{otherName.split(' ')[0]}</h3>
+              <div className="text-sm text-wine mt-1">Rs {otherPrice.toLocaleString('en-IN')}</div>
+            </div>
+          </Link>
+
+          <div className="p-4 bg-ivory border border-wine/30 flex flex-col justify-between">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-wine">Bundle price</div>
+              <div className="text-2xl font-semibold text-wine mt-1">
+                Rs {bundlePrice.toLocaleString('en-IN')}
+              </div>
+              <div className="text-xs text-green-700 font-medium mt-1">
+                You save Rs {savings.toLocaleString('en-IN')}
+              </div>
+            </div>
+            <button className="mt-3 w-full bg-wine text-ivory py-2 uppercase tracking-widest text-xs hover:bg-espresso transition">
+              Add both to cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+----- FILE: src\components\CartAbandonmentTracker.tsx -----
+'use client';
+
+import { useEffect } from 'react';
+import { useCart } from '@/components/CartContext';
+import { updateLead } from '@/lib/analytics';
+
+/**
+ * Watches cart state. If user adds items and doesn't checkout in 20 min,
+ * logs to backend as abandoned cart (for future WhatsApp automation).
+ */
+export default function CartAbandonmentTracker() {
+  const { items, total } = useCart();
+
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    // Mark cart-add event in lead
+    const abandonKey = 'rc_cart_abandon_' + items.length;
+    if (!sessionStorage.getItem(abandonKey)) {
+      sessionStorage.setItem(abandonKey, '1');
+
+      const cartSummary = items.map((i) => `${i.name} (${i.size})`).join(', ');
+      updateLead({
+        // @ts-ignore â€” extension field
+        cartAdded: true,
+        cartValue: total,
+        cartSummary,
+      } as any);
+    }
+
+    // If user leaves the tab, mark as abandoning
+    const handleBeforeUnload = () => {
+      const phone = localStorage.getItem('rc_phone');
+      const email = localStorage.getItem('rc_email');
+      if (phone || email) {
+        // Fire-and-forget beacon so server knows
+        try {
+          navigator.sendBeacon('/api/leads/create', new Blob([JSON.stringify({
+            sessionId: sessionStorage.getItem('rc_session_id'),
+            cartAbandoned: true,
+            cartValue: total,
+            timestamp: Date.now(),
+          })], { type: 'application/json' }));
+        } catch {}
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [items, total]);
+
+  return null;
+}
+
+
+----- FILE: src\components\CartContext.tsx -----
+'use client';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+
+export type CartItem = {
+  productId: string;
+  slug: string;
+  name: string;
+  image: string;
+  size: string;
+  quantity: number;
+  price: number;
+};
+
+type CartContextType = {
+  items: CartItem[];
+  count: number;
+  total: number;
+  add: (item: CartItem) => void;
+  update: (index: number, qty: number) => void;
+  remove: (index: number) => void;
+  clear: () => void;
+};
+
+const CartContext = createContext<CartContextType | null>(null);
+const KEY = 'rc_cart_v1';
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) setItems(JSON.parse(raw));
+    } catch {}
+    setReady(true);
+  }, []);
+  useEffect(() => { if (ready) localStorage.setItem(KEY, JSON.stringify(items)); }, [items, ready]);
+
+  const add = (item: CartItem) => {
+    setItems(prev => {
+      const idx = prev.findIndex(p => p.productId === item.productId && p.size === item.size);
+      if (idx > -1) {
+        const next = [...prev]; next[idx].quantity = Math.min(5, next[idx].quantity + item.quantity); return next;
+      }
+      return [...prev, item];
+    });
+  };
+  const update = (i: number, qty: number) => setItems(prev => {
+    if (qty <= 0) return prev.filter((_, x) => x !== i);
+    const next = [...prev]; next[i].quantity = Math.min(5, qty); return next;
+  });
+  const remove = (i: number) => setItems(prev => prev.filter((_, x) => x !== i));
+  const clear = () => setItems([]);
+
+  const count = items.reduce((s, x) => s + x.quantity, 0);
+  const total = items.reduce((s, x) => s + x.price * x.quantity, 0);
+
+  return <CartContext.Provider value={{ items, count, total, add, update, remove, clear }}>{children}</CartContext.Provider>;
+}
+export const useCart = () => {
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error('useCart must be used within CartProvider');
+  return ctx;
+};
+
+
+----- FILE: src\components\CartReviewsSnippet.tsx -----
+import { REVIEWS } from '@/lib/reviews';
+
+export default function CartReviewsSnippet() {
+  // Take 3 short reviews for the cart
+  const shortReviews = REVIEWS
+    .filter(r => r.text.length < 180)
+    .slice(0, 3);
+
+  return (
+    <div className="mt-6 p-4 bg-blush/20 border border-taupe/20">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="text-wine text-xs">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div className="text-xs uppercase tracking-widest text-espresso/70">4.8 from {REVIEWS.length} verified buyers</div>
+      </div>
+      <ul className="space-y-3">
+        {shortReviews.map((r, i) => (
+          <li key={i} className="text-xs text-espresso/80 leading-relaxed">
+            &ldquo;{r.text}&rdquo;
+            <div className="text-[10px] text-espresso/50 mt-1">- {r.name}, {r.city}</div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\CheckoutProgressBar.tsx -----
+export default function CheckoutProgressBar({ step }: { step: 'address' | 'verify' | 'payment' | 'done' }) {
+  const map: Record<string, number> = { address: 0.25, verify: 0.5, payment: 0.85, done: 1 };
+  const pct = (map[step] || 0.25) * 100;
+
+  return (
+    <div className="mb-6">
+      <div className="h-1 bg-taupe/20 w-full overflow-hidden">
+        <div className="h-full bg-wine transition-all duration-500 ease-out" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\CheckoutSummary.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+
+interface Props {
+  subtotal: number;
+}
+
+interface AppliedDiscount {
+  code: string;
+  pct: number;
+  amount: number;
+}
+
+export default function CheckoutSummary({ subtotal }: Props) {
+  const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
+
+  useEffect(() => {
+    const code = localStorage.getItem('rc_active_code');
+    const pctStr = localStorage.getItem('rc_active_discount');
+    if (code && pctStr) {
+      const pct = parseFloat(pctStr);
+      setDiscount({
+        code,
+        pct,
+        amount: Math.round((subtotal * pct) / 100),
+      });
+    }
+  }, [subtotal]);
+
+  const total = subtotal - (discount?.amount || 0);
+  const shippingText = total >= 999 ? 'Free' : 'Rs 99';
+  const shipping = total >= 999 ? 0 : 99;
+  const grandTotal = total + shipping;
+
+  return (
+    <div className="bg-blush/10 p-6 space-y-3">
+      <div className="flex justify-between text-sm">
+        <span className="text-espresso/70">Subtotal</span>
+        <span>Rs {subtotal.toLocaleString('en-IN')}</span>
+      </div>
+
+      {discount && (
+        <div className="flex justify-between text-sm text-green-700">
+          <div>
+            <span className="font-medium">Discount applied</span>
+            <div className="text-xs font-mono text-green-800/80 mt-0.5">{discount.code}</div>
+          </div>
+          <span>- Rs {discount.amount.toLocaleString('en-IN')}</span>
+        </div>
+      )}
+
+      <div className="flex justify-between text-sm">
+        <span className="text-espresso/70">Shipping</span>
+        <span className={shipping === 0 ? 'text-green-700 font-medium' : ''}>
+          {shippingText}
+        </span>
+      </div>
+
+      <div className="border-t border-taupe/20 pt-3 flex justify-between font-semibold">
+        <span>Total</span>
+        <span className="text-wine text-lg">Rs {grandTotal.toLocaleString('en-IN')}</span>
+      </div>
+
+      {discount && (
+        <div className="text-xs text-green-700 italic">
+          Your personalized code is already applied. Nothing more to do.
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+----- FILE: src\components\ComparisonTable.tsx -----
+export default function ComparisonTable() {
+  const rows = [
+    { label: 'Fabric weight',    us: '~100 GSM',      z: '~65 GSM',       f: '~80 GSM',       h: '40-90 GSM' },
+    { label: 'Print',            us: 'Hand-painted',  z: 'Digital',       f: 'Digital',       h: 'Screen / digital' },
+    { label: 'Each unique',      us: 'Yes',           z: 'No',            f: 'No',            h: 'No' },
+    { label: 'Delivery (Delhi)', us: '3-4 days',      z: '4-7 days',      f: '4-6 days',      h: '5-14 days' },
+    { label: 'Returns',          us: '7 days, free',  z: '30 days',       f: '15 days',       h: 'Rarely' },
+    { label: 'Price',            us: 'Rs 1,499',      z: 'Rs 2,290+',     f: 'Rs 1,899',      h: 'Rs 800-1,800' },
+  ];
+  return (
+    <div className="mt-6">
+      <div className="text-xs uppercase tracking-widest text-espresso/60 mb-3">How the Amara compares</div>
+      <div className="overflow-x-auto border border-taupe/30">
+        <table className="w-full text-sm">
+          <thead className="bg-blush/40 text-espresso">
+            <tr>
+              <th className="p-3 text-left text-xs uppercase tracking-widest"> </th>
+              <th className="p-3 text-left text-xs uppercase tracking-widest text-wine font-bold">Amara</th>
+              <th className="p-3 text-left text-xs uppercase tracking-widest">Zara</th>
+              <th className="p-3 text-left text-xs uppercase tracking-widest">Urbanic</th>
+              <th className="p-3 text-left text-xs uppercase tracking-widest">Instagram brands</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.label} className="border-t border-taupe/20">
+                <td className="p-3 text-xs uppercase tracking-widest text-espresso/70">{r.label}</td>
+                <td className="p-3 font-semibold text-wine">{r.us}</td>
+                <td className="p-3 text-espresso/70">{r.z}</td>
+                <td className="p-3 text-espresso/70">{r.f}</td>
+                <td className="p-3 text-espresso/70">{r.h}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[10px] text-espresso/50 mt-2">Based on our own orders and public size charts. Prices are Nov 2025.</p>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\Countdown.tsx -----
+'use client';
+import { useEffect, useState } from 'react';
+
+export default function Countdown({ minutes = 15 }: { minutes?: number }) {
+  const [sec, setSec] = useState(minutes * 60);
+  useEffect(() => { const t = setInterval(() => setSec(s => s > 0 ? s - 1 : 0), 1000); return () => clearInterval(t); }, []);
+  const m = String(Math.floor(sec / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  return <span className="font-mono">{m}:{s}</span>;
+}
+
+
+----- FILE: src\components\CustomerPhotos.tsx -----
+import { REVIEWS, daysAgoText } from '@/lib/reviews';
+import { SITE } from '@/lib/constants';
+
+export default function CustomerPhotos() {
+  const featured = REVIEWS.slice(0, 6);
+
+  return (
+    <section className="container-x py-16">
+      <div className="text-center max-w-2xl mx-auto">
+        <div className="text-xs uppercase tracking-[0.3em] text-wine">From actual orders</div>
+        <h2 className="font-display text-3xl md:text-4xl mt-3 text-espresso">What they wrote back</h2>
+        <p className="mt-3 text-sm text-espresso/70">
+          Emails and DMs after wearing the set, lightly trimmed. Photos coming as buyers tag us.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
+        {featured.map((r, i) => (
+          <div key={i} className="p-6 bg-white border border-taupe/20 flex flex-col">
+            <div className="text-wine text-sm tracking-widest">
+              {"\u2605".repeat(r.rating)}{"\u2606".repeat(5 - r.rating)}
+            </div>
+            <p className="mt-3 text-espresso italic leading-relaxed text-sm flex-1">
+              &ldquo;{r.text}&rdquo;
+            </p>
+            <div className="mt-4 pt-3 border-t border-taupe/20">
+              <div className="text-sm font-semibold text-espresso">{r.name}</div>
+              <div className="text-[11px] text-espresso/60 mt-0.5">
+                {r.city} &middot; Size {r.size} &middot; {r.occasion}
+              </div>
+              <div className="text-[10px] text-espresso/40 uppercase tracking-widest mt-2">
+                Verified order &middot; {daysAgoText(r.daysAgo)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="text-center mt-10">
+        <p className="text-xs text-espresso/60">
+          Wore yours somewhere? Tag <a href={SITE.instagram} target="_blank" rel="noopener" className="underline text-wine">@roseandco</a>. We&apos;ll ask before adding your photo here.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+
+----- FILE: src\components\ExitIntent.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+
+export default function ExitIntent() {
+  const [show, setShow] = useState(false);
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem('rc_exit_seen')) return;
+
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY <= 0) {
+        setShow(true);
+        sessionStorage.setItem('rc_exit_seen', '1');
+      }
+    };
+
+    // Trigger on mobile after 30s of scrolling (no exit intent on mobile)
+    let scrolled = false;
+    const handleScroll = () => {
+      if (!scrolled && window.scrollY > 500) {
+        scrolled = true;
+        setTimeout(() => {
+          if (!sessionStorage.getItem('rc_exit_seen')) {
+            setShow(true);
+            sessionStorage.setItem('rc_exit_seen', '1');
+          }
+        }, 25000);
+      }
+    };
+
+    document.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.includes('@')) return;
+    localStorage.setItem('rc_email', email);
+    setSubmitted(true);
+    // TODO: send to your backend/email list
+    setTimeout(() => setShow(false), 2500);
+  };
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4" onClick={() => setShow(false)}>
+      <div
+        className="bg-ivory max-w-md w-full p-8 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={() => setShow(false)}
+          className="absolute top-3 right-3 text-espresso/50 hover:text-espresso text-2xl leading-none"
+          aria-label="Close"
+        >
+          Ã—
+        </button>
+
+        {!submitted ? (
+          <>
+            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-3">Before you go</div>
+            <h3 className="font-display text-3xl text-espresso leading-tight">
+              Ten percent off your first set.
+            </h3>
+            <p className="mt-4 text-sm text-espresso/70 leading-relaxed">
+              Drop your email. We'll send the code. And a short note when the next drop lands.
+            </p>
+            <form onSubmit={handleSubmit} className="mt-6 space-y-3">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                className="w-full border border-taupe/40 px-4 py-3 focus:border-wine focus:outline-none"
+                required
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="w-full bg-wine text-ivory py-3 uppercase tracking-widest text-sm hover:bg-espresso transition"
+              >
+                Send me the code
+              </button>
+            </form>
+            <p className="mt-3 text-[10px] text-espresso/50 text-center">
+              No spam. One-click unsubscribe. Not selling data.
+            </p>
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-4xl">ðŸŒ¹</div>
+            <h3 className="font-display text-2xl text-espresso mt-4">Check your inbox.</h3>
+            <p className="mt-2 text-sm text-espresso/70">
+              Code <span className="font-mono font-semibold">WELCOME10</span> is on its way.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\Footer.tsx -----
+import Link from 'next/link';
+
+const FOOTER_LINKS = {
+  Shop: [
+    { label: 'All products', href: '/shop' },
+    { label: 'Co-ord sets', href: '/collections/co-ord-sets' },
+    { label: 'Satin skirts', href: '/collections/satin-skirts' },
+    { label: 'Party wear', href: '/collections/party-wear' },
+    { label: 'Engagement outfits', href: '/collections/engagement-outfits' },
+    { label: 'Gift cards', href: '/gift-cards' },
+  ],
+  Learn: [
+    { label: 'Size guide', href: '/size-guide' },
+    { label: 'Fabric guide', href: '/fabric-guide' },
+    { label: 'Care guide', href: '/care-guide' },
+    { label: 'Style quiz', href: '/style-quiz' },
+    { label: 'The journal', href: '/journal' },
+    { label: 'FAQ', href: '/faq' },
+  ],
+  Help: [
+    { label: 'Contact us', href: '/contact' },
+    { label: 'Track your order', href: '/track' },
+    { label: 'Shipping policy', href: '/shipping-policy' },
+    { label: 'Refund policy', href: '/refund-policy' },
+    { label: 'Cancellation policy', href: '/cancellation-policy' },
+    { label: 'Search', href: '/search' },
+  ],
+  About: [
+    { label: 'Our story', href: '/about' },
+    { label: 'Our impact', href: '/impact' },
+    { label: 'Press', href: '/press' },
+    { label: 'Terms & conditions', href: '/terms' },
+    { label: 'Privacy policy', href: '/privacy-policy' },
+  ],
+};
+
+export default function Footer() {
+  const year = new Date().getFullYear();
+
+  return (
+    <footer className="bg-espresso text-ivory" aria-labelledby="footer-heading">
+      <h2 id="footer-heading" className="sr-only">Footer navigation</h2>
+
+      {/* Top: 4 columns of links */}
+      <div className="container-x pt-16 pb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-12">
+          {/* Brand column â€” spans 2 on desktop */}
+          <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-6 lg:mb-0">
+            <Link href="/" className="font-display text-3xl text-ivory hover:text-champagne transition inline-block">
+              RosÃ© &amp; Co
+            </Link>
+            <p className="mt-4 text-sm text-ivory/70 leading-relaxed max-w-xs">
+              Hand-painted marble swirl satin. Two hundred sets per drop. Ships from Gurugram in twenty-four to forty-eight hours.
+            </p>
+
+            {/* Social links */}
+            <div className="mt-6 flex items-center gap-4">
+              <a
+                href="https://instagram.com/roseandco"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow RosÃ© & Co on Instagram"
+                className="text-ivory/70 hover:text-champagne transition"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                </svg>
+              </a>
+              <a
+                href="https://facebook.com/roseandco"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow RosÃ© & Co on Facebook"
+                className="text-ivory/70 hover:text-champagne transition"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                </svg>
+              </a>
+              <a
+                href="https://wa.me/91979821405"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Chat with RosÃ© & Co on WhatsApp"
+                className="text-ivory/70 hover:text-champagne transition"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* 4 link columns */}
+          {Object.entries(FOOTER_LINKS).map(([heading, links]) => (
+            <div key={heading}>
+              <h3 className="text-xs uppercase tracking-[0.3em] text-champagne mb-4">
+                {heading}
+              </h3>
+              <ul className="space-y-2.5">
+                {links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      prefetch={false}
+                      className="text-sm text-ivory/80 hover:text-champagne transition"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Middle: trust strip */}
+      <div className="border-t border-ivory/10">
+        <div className="container-x py-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-xs text-ivory/70">
+          <div>
+            <div className="font-medium text-ivory">Free shipping</div>
+            <div className="mt-1">Anywhere in India</div>
+          </div>
+          <div>
+            <div className="font-medium text-ivory">Ships in 24â€“48 hrs</div>
+            <div className="mt-1">From Gurugram</div>
+          </div>
+          <div>
+            <div className="font-medium text-ivory">7-day returns</div>
+            <div className="mt-1">Free reverse pickup</div>
+          </div>
+          <div>
+            <div className="font-medium text-ivory">Secure UPI</div>
+            <div className="mt-1">Encrypted checkout</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom: copyright + address */}
+      <div className="border-t border-ivory/10">
+        <div className="container-x py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-ivory/60">
+          <div>
+            Â© {year} RosÃ© &amp; Co. All rights reserved.
+          </div>
+          <div className="text-center md:text-right">
+            Handcrafted in Gurugram, Haryana Â· India
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+
+----- FILE: src\components\FounderNote.tsx -----
+export default function FounderNote() {
+  return (
+    <div className="mt-20 pt-10 border-t border-taupe/20">
+      <div className="grid md:grid-cols-4 gap-6 items-start">
+        <div className="md:col-span-1">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blush to-wine/70 flex items-center justify-center text-ivory font-display text-2xl">
+            A
+          </div>
+        </div>
+        <div className="md:col-span-3 space-y-4">
+          <div className="text-xs uppercase tracking-[0.3em] text-wine">A note</div>
+          <div className="text-espresso/85 leading-[1.9] italic text-[17px]">
+            <p>
+              Hi. I&apos;m Aditi. I&apos;m twenty-three, and this is my first attempt at making clothes.
+            </p>
+            <p className="mt-3">
+              Some things will go wrong. When they do, please write to me before you write about me anywhere else. I read every note, and I fix what I can.
+            </p>
+          </div>
+          <div className="pt-2 text-sm text-espresso/60">
+            &mdash; A, Gurugram
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\GiftWrap.tsx -----
+'use client';
+
+export default function GiftWrap({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-start gap-3 p-4 border border-taupe/30 bg-white cursor-pointer hover:border-wine transition">
+      <input
+        type="checkbox"
+        checked={enabled}
+        onChange={e => onChange(e.target.checked)}
+        className="mt-1 accent-wine w-4 h-4"
+      />
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
+          <div className="font-medium text-espresso">Add gift wrap</div>
+          <div className="text-sm font-semibold text-wine">+ Rs 49</div>
+        </div>
+        <div className="text-xs text-espresso/60 mt-1">Cream tissue, wax seal, hand-written card. Adds no delay to shipping.</div>
+      </div>
+    </label>
+  );
+}
+
+
+----- FILE: src\components\GreetingBanner.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+
+interface UserContext {
+  name?: string;
+  city?: string;
+  isReturning: boolean;
+  visitCount: number;
+  lastVisitDays: number;
+}
+
+export default function GreetingBanner() {
+  const [ctx, setCtx] = useState<UserContext | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    (async () => {
+      // Read localStorage
+      const name = localStorage.getItem('rc_name') || undefined;
+      const visitCount = parseInt(localStorage.getItem('rc_visits') || '0', 10) + 1;
+      const lastVisitStr = localStorage.getItem('rc_last_visit');
+      const lastVisitDays = lastVisitStr
+        ? Math.floor((Date.now() - parseInt(lastVisitStr, 10)) / (1000 * 60 * 60 * 24))
+        : 0;
+
+      localStorage.setItem('rc_visits', String(visitCount));
+      localStorage.setItem('rc_last_visit', String(Date.now()));
+
+      // Fetch city from IP (via our own API route to avoid CORS)
+      let city: string | undefined;
+      try {
+        const res = await fetch('/api/geo', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          city = data.city;
+        }
+      } catch {}
+
+      setCtx({
+        name,
+        city,
+        isReturning: visitCount > 1,
+        visitCount,
+        lastVisitDays,
+      });
+    })();
+
+    const wasDismissed = sessionStorage.getItem('rc_greeting_dismissed');
+    if (wasDismissed) setDismissed(true);
+  }, []);
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    sessionStorage.setItem('rc_greeting_dismissed', '1');
+  };
+
+  if (!ctx || dismissed) return null;
+
+  // Build personalized message
+  const hour = new Date().getHours();
+  const timeGreeting =
+    hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+  let message = '';
+  if (ctx.isReturning && ctx.name) {
+    message = `${timeGreeting}, ${ctx.name}. Your wishlist is waiting.`;
+  } else if (ctx.isReturning && ctx.city) {
+    message = `Welcome back from ${ctx.city}. Free shipping still on us.`;
+  } else if (ctx.isReturning) {
+    message = `Welcome back. Use code WELCOME10 for 10% off your first order.`;
+  } else if (ctx.city) {
+    message = `${timeGreeting} from ${ctx.city}. Free shipping to your door.`;
+  } else {
+    message = `${timeGreeting}. Free shipping across India, ships in 24-48 hrs.`;
+  }
+
+  return (
+    <div className="bg-espresso text-ivory text-center py-2 px-4 text-xs relative">
+      <span>{message}</span>
+      <button
+        onClick={handleDismiss}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-ivory/60 hover:text-ivory text-lg leading-none"
+        aria-label="Dismiss"
+      >
+        Ã—
+      </button>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\Header.tsx -----
+import Link from 'next/link';
+import NavShop from './NavShop';
+import HeaderCart from './HeaderCart';
+
+export default function Header() {
+  return (
+    <header className="sticky top-0 z-40 bg-ivory/90 backdrop-blur border-b border-taupe/10">
+      <div className="container-x flex items-center justify-between h-16">
+        {/* Left nav */}
+        <nav className="hidden md:flex items-center gap-8">
+          <NavShop />
+          <Link href="/journal" className="text-sm uppercase tracking-widest text-espresso hover:text-wine transition">
+            Journal
+          </Link>
+          <Link href="/faq" className="text-sm uppercase tracking-widest text-espresso hover:text-wine transition">
+            Help
+          </Link>
+        </nav>
+
+        {/* Center logo */}
+        <Link href="/" className="font-display text-2xl text-espresso hover:text-wine transition">
+          RosÃ© &amp; Co
+        </Link>
+
+        {/* Right actions */}
+        <div className="flex items-center gap-6">
+          <Link href="/wishlist" className="text-sm uppercase tracking-widest text-espresso hover:text-wine transition hidden md:block">
+            Wishlist
+          </Link>
+          <HeaderCart />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+
+----- FILE: src\components\HeaderCart.tsx -----
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
+export default function HeaderCart() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // Read cart count from localStorage or your cart store
+    try {
+      const raw = localStorage.getItem('cart');
+      if (raw) {
+        const cart = JSON.parse(raw);
+        setCount(Array.isArray(cart) ? cart.length : (cart.items?.length || 0));
+      }
+    } catch {}
+  }, []);
+
+  return (
+    <Link href="/cart" className="relative text-sm uppercase tracking-widest text-espresso hover:text-wine transition">
+      Cart
+      {count > 0 && (
+        <span className="absolute -top-2 -right-4 bg-wine text-ivory text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+          {count}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+
+----- FILE: src\components\HeroSlideshow.tsx -----
+'use client';
+
+import Link from 'next/link';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { inr } from '@/lib/format';
+
+interface Slide {
+  slug: string;
+  name: string;
+  hero: string;
+  price: number;
+  mrp: number;
+  tagline: string;
+  title: string;
+  sub: string;
+}
+
+export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const timer = setInterval(() => {
+      setIndex((i) => (i + 1) % slides.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  if (!slides.length) return null;
+
+  return (
+    <section className="relative bg-blush/40 overflow-hidden">
+      {slides.map((slide, i) => (
+        <div
+          key={slide.slug}
+          className={`transition-opacity duration-1000 ${
+            i === index ? 'opacity-100' : 'opacity-0 absolute inset-0 pointer-events-none'
+          }`}
+        >
+          <div className="container-x grid md:grid-cols-2 gap-8 items-center py-12 md:py-20">
+            <div>
+              <div className="text-xs uppercase tracking-[0.3em] text-wine mb-4">{slide.tagline}</div>
+              <h1 className="font-display text-5xl md:text-7xl leading-[1.05] text-espresso whitespace-pre-line">
+                {slide.title}
+              </h1>
+              <p className="mt-6 text-lg text-espresso/70 max-w-md leading-relaxed">{slide.sub}</p>
+
+              <div className="mt-8 flex items-baseline gap-3">
+                <span className="text-3xl font-semibold text-wine">{inr(slide.price)}</span>
+                <span className="text-base line-through text-espresso/40">{inr(slide.mrp)}</span>
+              </div>
+
+              <div className="mt-6 flex items-center gap-4">
+                <Link href={`/product/${slide.slug}`} prefetch className="btn-primary">
+                  Shop the {slide.name.split(' ')[0]}
+                </Link>
+                <Link href={`/product/${slide.slug}`} prefetch className="text-sm underline text-espresso">
+                  See the set
+                </Link>
+              </div>
+            </div>
+
+            <div className="relative aspect-[3/4] md:aspect-[4/5] max-w-lg mx-auto w-full">
+              <Image
+                src={slide.hero}
+                alt={slide.name}
+                fill
+                priority={i === 0}
+                fetchPriority={i === 0 ? 'high' : 'auto'}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover object-top"
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {slides.length > 1 && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIndex(i)}
+              aria-label={`Show slide ${i + 1}`}
+              className={`h-1 rounded-full transition-all ${
+                i === index ? 'bg-wine w-8' : 'bg-espresso/30 w-4'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+
+----- FILE: src\components\InteractiveSizeChart.tsx -----
+'use client';
+import { useState } from 'react';
+
+const CHART = [
+  { size: 'XS',  bust: 81,  waist: 61, hip: 86,  skirt: 75, matches: 'Zara XS, H&amp;M XS, Fabindia S' },
+  { size: 'S',   bust: 86,  waist: 66, hip: 91,  skirt: 75, matches: 'Zara S, H&amp;M S, Global Desi S' },
+  { size: 'M',   bust: 91,  waist: 71, hip: 97,  skirt: 76, matches: 'Zara M, H&amp;M M, Vero Moda M' },
+  { size: 'L',   bust: 97,  waist: 76, hip: 102, skirt: 76, matches: 'Zara L, H&amp;M L, Only L' },
+  { size: 'XL',  bust: 102, waist: 81, hip: 107, skirt: 77, matches: 'Zara XL, H&amp;M L-XL' },
+  { size: 'XXL', bust: 107, waist: 86, hip: 112, skirt: 77, matches: 'Zara XXL, H&amp;M XL' },
+];
+
+export default function InteractiveSizeChart() {
+  const [selected, setSelected] = useState<string>('M');
+  const current = CHART.find(s => s.size === selected)!;
+
+  return (
+    <div>
+      <div className="text-xs uppercase tracking-widest text-espresso/60 mb-3">Tap a size to see measurements + what it matches in other brands</div>
+      <div className="grid grid-cols-6 gap-2">
+        {CHART.map(s => (
+          <button
+            key={s.size}
+            onClick={() => setSelected(s.size)}
+            className={`py-2 text-xs uppercase tracking-widest border transition ${selected === s.size ? 'bg-wine text-ivory border-wine' : 'bg-white text-espresso border-taupe/40 hover:border-wine'}`}
+          >
+            {s.size}
+          </button>
+        ))}
+      </div>
+      <div className="mt-5 p-4 bg-blush/20 border border-taupe/20">
+        <div className="text-sm uppercase tracking-widest text-espresso mb-3">Size {current.size}</div>
+        <div className="grid grid-cols-4 gap-3 text-sm">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-espresso/60">Bust</div>
+            <div className="text-lg text-espresso mt-1">{current.bust} cm</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-espresso/60">Waist</div>
+            <div className="text-lg text-espresso mt-1">{current.waist} cm</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-espresso/60">Hip</div>
+            <div className="text-lg text-espresso mt-1">{current.hip} cm</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-espresso/60">Skirt length</div>
+            <div className="text-lg text-espresso mt-1">{current.skirt} cm</div>
+          </div>
+        </div>
+        <div className="mt-4 pt-3 border-t border-taupe/20">
+          <div className="text-[10px] uppercase tracking-widest text-espresso/60">Matches</div>
+          <div className="text-sm text-espresso/80 mt-1" dangerouslySetInnerHTML={{ __html: current.matches }} />
+        </div>
+        <p className="mt-4 text-xs text-espresso/60">Measured flat, garment size. Add ~2 cm to each for comfortable body-fit. Satin does not stretch.</p>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\InventoryCountdown.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+
+interface Props {
+  productSlug: string;
+  totalStock?: number; // Total from Prisma sizes sum
+}
+
+export default function InventoryCountdown({ productSlug, totalStock }: Props) {
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [ticking, setTicking] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/inventory?product=${productSlug}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.remaining === 'number') {
+          setRemaining(data.remaining);
+        }
+      })
+      .catch(() => {
+        if (totalStock) setRemaining(totalStock);
+      });
+
+    // Small ticking animation once per minute (fake activity)
+    const tick = setInterval(() => {
+      setTicking(true);
+      setTimeout(() => setTicking(false), 500);
+    }, 45000);
+    return () => clearInterval(tick);
+  }, [productSlug, totalStock]);
+
+  if (remaining === null || remaining > 100) return null;
+
+  const isUrgent = remaining <= 20;
+  const percent = totalStock ? (remaining / totalStock) * 100 : 100;
+
+  return (
+    <div className={`inline-flex items-center gap-2 text-sm ${isUrgent ? 'text-wine' : 'text-espresso'}`}>
+      <span className={`w-2 h-2 rounded-full ${isUrgent ? 'bg-wine' : 'bg-green-600'} ${ticking ? 'animate-pulse' : ''}`} />
+      <span className={isUrgent ? 'font-semibold' : ''}>
+        Only {remaining} left in this drop
+      </span>
+      {isUrgent && (
+        <span className="text-xs text-espresso/60">Â· Selling fast</span>
+      )}
+    </div>
+  );
+}
+
+
+----- FILE: src\components\JsonLd.tsx -----
+import Script from 'next/script';
+
+export default function JsonLd({ data }: { data: any | any[] }) {
+  const items = Array.isArray(data) ? data : [data];
+  return (
+    <>
+      {items.map((item, i) => (
+        <Script
+          key={i}
+          id={`jsonld-${i}`}
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(item) }}
+        />
+      ))}
+    </>
+  );
+}
+
+
+----- FILE: src\components\LeadCaptureChip.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { generateCoupon } from '@/lib/coupon';
+
+async function saveLead(data: Record<string, any>) {
+  try {
+    await fetch('/api/leads/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      keepalive: true,
+    });
+  } catch {}
+}
+
+function getSessionId(): string {
+  let id = sessionStorage.getItem('rc_session_id');
+  if (!id) {
+    id = 'sess_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+    sessionStorage.setItem('rc_session_id', id);
+  }
+  return id;
+}
+
+function parseUTM() {
+  if (typeof window === 'undefined') return {};
+  const p = new URLSearchParams(window.location.search);
+  return {
+    utmSource: p.get('utm_source') || undefined,
+    utmMedium: p.get('utm_medium') || undefined,
+    utmCampaign: p.get('utm_campaign') || undefined,
+    utmTerm: p.get('utm_term') || undefined,
+    utmContent: p.get('utm_content') || undefined,
+  };
+}
+
+function isAdTraffic(): boolean {
+  if (typeof window === 'undefined') return false;
+  const utm = parseUTM();
+  if (utm.utmSource) return true;
+  const refs = ['facebook.com', 'instagram.com', 'l.facebook', 'lm.facebook', 'fb.me', 'ig.me', 't.co', 'lnkd.in', 'google.com/ads'];
+  return refs.some(r => document.referrer.includes(r));
+}
+
+function getDeviceType(): 'mobile' | 'desktop' | 'tablet' {
+  const ua = navigator.userAgent;
+  if (/iPad|tablet/i.test(ua)) return 'tablet';
+  if (/Android|iPhone|iPod/i.test(ua)) return 'mobile';
+  return 'desktop';
+}
+
+export default function LeadCaptureChip() {
+  const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [stage, setStage] = useState<'ask' | 'form' | 'done'>('ask');
+  const [coupon, setCoupon] = useState('WELCOME10');
+  const [fromAd, setFromAd] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [pincode, setPincode] = useState('');
+  const [city, setCity] = useState('');
+  const [stateVal, setStateVal] = useState('');
+  const [address, setAddress] = useState('');
+
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window === 'undefined') return;
+
+    const utm = parseUTM();
+    const sessionId = getSessionId();
+    const isAd = isAdTraffic();
+    setFromAd(isAd);
+
+    // IMMEDIATE silent capture â€” regardless of modal interaction
+    saveLead({
+      sessionId,
+      landingUrl: window.location.href,
+      referrer: document.referrer || 'direct',
+      userAgent: navigator.userAgent.slice(0, 500),
+      deviceType: getDeviceType(),
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+      language: navigator.language,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      visitCount: parseInt(localStorage.getItem('rc_visits') || '0', 10) + 1,
+      isReturning: parseInt(localStorage.getItem('rc_visits') || '0', 10) > 0,
+      hasAddress: !!localStorage.getItem('rc_address'),
+      ...utm,
+      timestamp: Date.now(),
+    });
+
+    localStorage.setItem('rc_visits', String(parseInt(localStorage.getItem('rc_visits') || '0', 10) + 1));
+
+    fetch('/api/geo', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(geo => {
+        if (geo?.city) {
+          saveLead({
+            sessionId,
+            city: geo.city,
+            country: geo.country,
+            region: geo.region,
+            timestamp: Date.now(),
+          });
+        }
+      })
+      .catch(() => {});
+
+    if (localStorage.getItem('rc_lead_captured') === '1') return;
+
+    setName(localStorage.getItem('rc_name') || '');
+    setEmail(localStorage.getItem('rc_email') || '');
+    setPhone(localStorage.getItem('rc_phone') || '');
+    setPincode(localStorage.getItem('rc_pincode') || '');
+    setCity(localStorage.getItem('rc_city') || '');
+    setStateVal(localStorage.getItem('rc_state') || '');
+    setAddress(localStorage.getItem('rc_address') || '');
+
+    const delay = isAd ? 3000 : 8000;
+    const timer = setTimeout(() => setOpen(true), delay);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
+      fetch('https://api.postalpincode.in/pincode/' + pincode)
+        .then(r => r.json())
+        .then(data => {
+          if (data[0]?.Status === 'Success' && data[0].PostOffice?.[0]) {
+            const p = data[0].PostOffice[0];
+            setCity(p.District || p.Block || '');
+            setStateVal(p.State || '');
+          }
+        })
+        .catch(() => {});
+    }
+  }, [pincode]);
+
+  // AUTO-SAVE partial data as user types (fire-and-forget, debounced by field blur)
+  const autoSavePartial = () => {
+    if (!name.trim() && !phone && !email) return;
+    setSaveStatus('saving');
+    saveLead({
+      sessionId: getSessionId(),
+      name: name.trim() || undefined,
+      phone: phone || undefined,
+      email: email || undefined,
+      pincode: pincode || undefined,
+      city: city || undefined,
+      state: stateVal || undefined,
+      addressLine1: address || undefined,
+      optedIn: true,
+      segment: 'real_intent',
+      timestamp: Date.now(),
+    });
+    // Persist to localStorage on every partial too
+    if (name.trim()) localStorage.setItem('rc_name', name.trim());
+    if (phone) localStorage.setItem('rc_phone', phone);
+    if (email) localStorage.setItem('rc_email', email);
+    if (pincode) localStorage.setItem('rc_pincode', pincode);
+    if (city) localStorage.setItem('rc_city', city);
+    if (stateVal) localStorage.setItem('rc_state', stateVal);
+    if (address) localStorage.setItem('rc_address', address);
+    setTimeout(() => setSaveStatus('saved'), 300);
+  };
+
+  const handleYes = () => {
+    setStage('form');
+    saveLead({ sessionId: getSessionId(), optedIn: true, timestamp: Date.now() });
+  };
+
+  const handleNo = () => {
+    // Save that they dismissed but DO NOT mark captured forever
+    // They might come back later, and we still respect their choice for this session
+    sessionStorage.setItem('rc_chip_dismissed_session', '1');
+    saveLead({ sessionId: getSessionId(), chipDismissed: true, timestamp: Date.now() });
+    setOpen(false);
+  };
+
+  const handleFinalClose = () => {
+    // On modal X or backdrop click during FORM stage â€” save whatever we have + give code
+    autoSavePartial();
+
+    // Give code if they gave name (even partial)
+    if (name.trim().length >= 2) {
+      const code = generateCoupon({
+        name: name.trim(),
+        segment: 'real_intent',
+        discountPct: 10,
+      });
+      localStorage.setItem('rc_active_code', code);
+      localStorage.setItem('rc_active_discount', '10');
+      localStorage.setItem('rc_lead_captured', '1');
+      saveLead({
+        sessionId: getSessionId(),
+        name: name.trim(),
+        couponCode: code,
+        couponPct: 10,
+        timestamp: Date.now(),
+      });
+      setCoupon(code);
+      setStage('done');
+      setTimeout(() => setOpen(false), 4000);
+      return;
+    }
+
+    // Nothing given â€” just close, they can come back
+    setOpen(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const hasName = name.trim().length >= 2;
+    const hasPhone = phone.length === 10;
+
+    // FLEXIBLE: allow submit with just name OR just phone OR both
+    if (!hasName && !hasPhone) {
+      setSaveStatus('idle');
+      return;
+    }
+
+    const cleanName = name.trim() || 'friend';
+    const code = generateCoupon({
+      name: hasName ? cleanName : undefined,
+      segment: 'real_intent',
+      discountPct: 10,
+    });
+
+    if (hasName) localStorage.setItem('rc_name', cleanName);
+    if (hasPhone) localStorage.setItem('rc_phone', phone);
+    if (email) localStorage.setItem('rc_email', email);
+    if (pincode) localStorage.setItem('rc_pincode', pincode);
+    if (city) localStorage.setItem('rc_city', city);
+    if (stateVal) localStorage.setItem('rc_state', stateVal);
+    if (address) localStorage.setItem('rc_address', address);
+    localStorage.setItem('rc_active_code', code);
+    localStorage.setItem('rc_active_discount', '10');
+    localStorage.setItem('rc_lead_captured', '1');
+
+    await saveLead({
+      sessionId: getSessionId(),
+      name: hasName ? cleanName : undefined,
+      phone: hasPhone ? phone : undefined,
+      email: email || undefined,
+      pincode: pincode || undefined,
+      city: city || undefined,
+      state: stateVal || undefined,
+      addressLine1: address || undefined,
+      couponCode: code,
+      couponPct: 10,
+      segment: 'real_intent',
+      optedIn: true,
+      timestamp: Date.now(),
+    });
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('rc_identity_updated'));
+    }
+
+    setCoupon(code);
+    setStage('done');
+    setTimeout(() => setOpen(false), 4000);
+  };
+
+  if (!mounted || !open) return null;
+
+  const askHeading = fromAd ? 'Welcome from the ad. 10% off?' : '10% off your first set?';
+  const askSub = fromAd
+    ? 'Just a name gets you the code. Fill more if you want faster checkout.'
+    : 'Just a name gets the code. Rest is optional but saves time later.';
+
+  const canSubmit = name.trim().length >= 2 || phone.length === 10;
+
+  const modal = (
+    <>
+      <div
+        className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+        onClick={stage === 'ask' ? handleNo : handleFinalClose}
+      />
+      <div className="fixed inset-x-4 bottom-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-sm md:w-full bg-ivory shadow-2xl border border-taupe/20 z-50 overflow-hidden">
+        {stage === 'ask' && (
+          <div className="p-6 relative">
+            <button
+              onClick={handleNo}
+              aria-label="Dismiss"
+              className="absolute top-3 right-3 text-espresso/50 hover:text-espresso text-2xl leading-none w-8 h-8 flex items-center justify-center"
+            >Ã—</button>
+            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">
+              {fromAd ? 'Thanks for tapping' : 'A small welcome'}
+            </div>
+            <h3 className="font-display text-2xl text-espresso mb-3">{askHeading}</h3>
+            <p className="text-sm text-espresso/70 mb-6 leading-relaxed">{askSub}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleYes}
+                className="flex-1 bg-wine text-ivory py-3 uppercase tracking-widest text-sm font-medium hover:bg-espresso transition"
+              >
+                Yes, send code
+              </button>
+              <button
+                onClick={handleNo}
+                className="px-4 py-3 text-xs uppercase tracking-widest text-espresso/60 hover:text-espresso"
+              >
+                Not now
+              </button>
+            </div>
+          </div>
+        )}
+
+        {stage === 'form' && (
+          <form onSubmit={handleSubmit} className="p-6 relative" autoComplete="on">
+            {/* Close button - always available */}
+            <button
+              type="button"
+              onClick={handleFinalClose}
+              aria-label="Close"
+              className="absolute top-3 right-3 text-espresso/50 hover:text-espresso text-2xl leading-none w-8 h-8 flex items-center justify-center"
+            >Ã—</button>
+
+            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2 pr-8">Quick moment</div>
+            <p className="text-sm text-espresso/70 mb-4 leading-relaxed pr-8">
+              Just <strong>name OR phone</strong> gets you the code. Fill more for 1-tap checkout later.
+            </p>
+
+            <div className="space-y-2">
+              <div className="relative">
+                <input
+                  type="text"
+                  autoFocus
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={autoSavePartial}
+                  placeholder="Full name"
+                  autoComplete="name"
+                  name="name"
+                  className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                />
+                {name.trim().length >= 2 && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm">âœ“</span>
+                )}
+              </div>
+
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  onBlur={autoSavePartial}
+                  placeholder="Phone (optional but recommended)"
+                  autoComplete="tel-national"
+                  name="tel"
+                  maxLength={10}
+                  inputMode="numeric"
+                  className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                />
+                {phone.length === 10 && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm">âœ“</span>
+                )}
+              </div>
+
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={autoSavePartial}
+                placeholder="Email (optional)"
+                autoComplete="email"
+                name="email"
+                className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+              />
+
+              <div className="grid grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onBlur={autoSavePartial}
+                  placeholder="PIN"
+                  autoComplete="postal-code"
+                  name="postal-code"
+                  maxLength={6}
+                  inputMode="numeric"
+                  className="col-span-1 border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                />
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  onBlur={autoSavePartial}
+                  placeholder="City (auto)"
+                  autoComplete="address-level2"
+                  name="city"
+                  className="col-span-2 border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                />
+              </div>
+
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                onBlur={autoSavePartial}
+                placeholder="Street address (optional)"
+                autoComplete="street-address"
+                name="street-address"
+                className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="mt-4 w-full bg-wine text-ivory py-3 uppercase tracking-widest text-sm font-medium hover:bg-espresso transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {canSubmit ? 'Get my code' : 'Enter name or phone to continue'}
+            </button>
+
+            {saveStatus === 'saving' && (
+              <p className="text-[10px] text-espresso/50 mt-2 text-center">Saving...</p>
+            )}
+            {saveStatus === 'saved' && (
+              <p className="text-[10px] text-green-700 mt-2 text-center">âœ“ Progress saved</p>
+            )}
+            {saveStatus === 'idle' && (
+              <p className="text-[10px] text-espresso/50 mt-2 text-center">
+                We save as you type. Close anytime â€” no data lost.
+              </p>
+            )}
+          </form>
+        )}
+
+        {stage === 'done' && (
+          <div className="p-8 text-center">
+            <div className="text-3xl mb-3">ðŸŒ¹</div>
+            <h3 className="font-display text-2xl text-espresso mb-2">
+              Ready, {name || 'friend'}.
+            </h3>
+            <p className="text-sm text-espresso/70 mb-4">
+              Auto-applied at checkout.
+            </p>
+            <div className="font-mono font-semibold text-wine text-xl bg-blush/40 py-3 px-4 inline-block">
+              {coupon}
+            </div>
+            {(!phone || phone.length < 10) && (
+              <p className="text-xs text-espresso/60 mt-4 leading-relaxed">
+                Add your phone at checkout for WhatsApp order updates.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  return createPortal(modal, document.body);
+}
+
+
+----- FILE: src\components\MadeInIndiaBadge.tsx -----
+export default function MadeInIndiaBadge() {
+  return (
+    <div className="hidden md:flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-espresso/70 border border-taupe/30 px-2 py-1">
+      <span className="inline-block w-4 h-3 rounded-sm overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(180deg, #FF9933 33%, #FFF 33% 66%, #138808 66%)' }} />
+      <span>Made in India</span>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\NameCollector.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+
+export default function NameCollector() {
+  const [show, setShow] = useState(false);
+  const [name, setName] = useState('');
+
+  useEffect(() => {
+    const stored = localStorage.getItem('rc_name');
+    const asked = localStorage.getItem('rc_name_asked');
+    // Ask on 2nd visit if not asked yet
+    const visits = parseInt(localStorage.getItem('rc_visits') || '0', 10);
+    if (!stored && !asked && visits >= 2) {
+      setTimeout(() => setShow(true), 8000);
+    }
+  }, []);
+
+  const handleSave = () => {
+    if (name.trim().length < 2) return;
+    localStorage.setItem('rc_name', name.trim());
+    localStorage.setItem('rc_name_asked', '1');
+    setShow(false);
+  };
+
+  const handleSkip = () => {
+    localStorage.setItem('rc_name_asked', '1');
+    setShow(false);
+  };
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed bottom-24 right-4 max-w-xs bg-ivory shadow-2xl border border-taupe/20 p-4 z-30 md:bottom-24">
+      <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">Quick thing</div>
+      <p className="text-sm text-espresso mb-3">What should we call you?</p>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Your name"
+        className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none text-sm mb-2"
+        onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+      />
+      <div className="flex gap-2">
+        <button
+          onClick={handleSave}
+          className="flex-1 bg-wine text-ivory py-2 text-xs uppercase tracking-widest hover:bg-espresso transition"
+        >
+          Save
+        </button>
+        <button
+          onClick={handleSkip}
+          className="px-3 py-2 text-xs text-espresso/60 hover:text-espresso"
+        >
+          Skip
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\NavShop.tsx -----
+import { prisma } from '@/lib/prisma';
+import ShopDropdown from './ShopDropdown';
+
+const TAGLINES: Record<string, string> = {
+  'amara-marble-swirl-coord-set': 'Poured in rosÃ©. Worn in fire.',
+  'aarna-beige-marble-swirl-coord-set': 'Cast in caramel. Kept in calm.',
+};
+
+export default async function NavShop() {
+  const products = await prisma.product.findMany({
+    where: { active: true },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      slug: true,
+      name: true,
+      price: true,
+      compareAt: true,
+      images: true,
+    },
+  });
+
+  const items = products.map((p) => {
+    const imgs = JSON.parse(p.images) as string[];
+    return {
+      slug: p.slug,
+      name: p.name,
+      price: p.price,
+      compareAt: p.compareAt,
+      image: imgs[0] || '/products/amara-front.png',
+      tagline: TAGLINES[p.slug] || 'One-of-a-kind. Handcrafted in India.',
+    };
+  });
+
+  return <ShopDropdown products={items} />;
+}
+
+
+----- FILE: src\components\PersonalizedDiscount.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+import { humanizeCode } from '@/lib/coupon';
+
+export default function PersonalizedDiscount() {
+  const [message, setMessage] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem('rc_discount_dismissed')) {
+      setDismissed(true);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const name = localStorage.getItem('rc_name');
+      const rawCode = localStorage.getItem('rc_active_code');
+      const pct = localStorage.getItem('rc_active_discount') || '10';
+
+      if (!rawCode) return;
+
+      const friendlyCode = humanizeCode(rawCode);
+      setCode(friendlyCode);
+      setMessage(
+        name
+          ? `${name}, your code is ready.`
+          : `A small welcome â€” ${pct}% off.`
+      );
+    }, 15000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    sessionStorage.setItem('rc_discount_dismissed', '1');
+  };
+
+  if (!code || dismissed) return null;
+
+  return (
+    <div className="bg-espresso text-ivory py-2 px-4 relative text-sm">
+      <div className="container-x flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4">
+        <span>{message}</span>
+        <span className="font-mono font-semibold text-champagne">{code}</span>
+        <span className="text-xs uppercase tracking-widest text-ivory/80">
+          Auto-applied at checkout
+        </span>
+      </div>
+      <button
+        onClick={handleDismiss}
+        aria-label="Dismiss"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-ivory/60 hover:text-ivory text-lg leading-none"
+      >
+        Ã—
+      </button>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\PincodeCheck.tsx -----
+'use client';
+import { useState } from 'react';
+
+const METRO_PINS = ['400', '110', '560', '600', '500', '411', '700'];
+
+export default function PincodeCheck() {
+  const [pin, setPin] = useState('');
+  const [result, setResult] = useState<{ city: string; state: string; days: string; from: string; to: string } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const check = async () => {
+    setErr(null); setResult(null);
+    if (!/^[1-9]\d{5}$/.test(pin)) return setErr('Enter a valid 6-digit PIN');
+    setLoading(true);
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+      const data = await res.json();
+      if (data?.[0]?.Status !== 'Success' || !data[0].PostOffice?.[0]) {
+        setErr('We could not find this PIN. Try again or email us.');
+        return;
+      }
+      const po = data[0].PostOffice[0];
+      const isMetro = METRO_PINS.some(m => pin.startsWith(m));
+      const minDays = isMetro ? 3 : 5;
+      const maxDays = isMetro ? 5 : 7;
+      const now = new Date();
+      const fromDate = new Date(now.getTime() + minDays * 24 * 60 * 60_000);
+      const toDate   = new Date(now.getTime() + maxDays * 24 * 60 * 60_000);
+      const fmt = (d: Date) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      setResult({
+        city: po.District, state: po.State,
+        days: `${minDays}â€“${maxDays} days`,
+        from: fmt(fromDate), to: fmt(toDate),
+      });
+    } catch { setErr('Could not check right now. Try again.'); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="border-t border-taupe/20 pt-4">
+      <div className="text-xs uppercase tracking-widest text-espresso mb-2">Check delivery date</div>
+      <div className="flex gap-2">
+        <input inputMode="numeric" maxLength={6} value={pin}
+          onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
+          placeholder="Enter PIN code" className="input flex-1" />
+        <button onClick={check} disabled={loading} className="btn-secondary px-4">
+          {loading ? 'â€¦' : 'Check'}
+        </button>
+      </div>
+      {err && <div className="mt-2 text-xs text-wine">{err}</div>}
+      {result && (
+        <div className="mt-3 p-3 bg-blush/30 border-l-2 border-wine text-sm text-espresso">
+          <div>Delivering to <b>{result.city}, {result.state}</b></div>
+          <div className="mt-1">Arrives by <b>{result.from} â€“ {result.to}</b> ({result.days})</div>
+          <div className="mt-1 text-xs text-espresso/60">Free shipping. Ships from Delhi NCR in 24â€“48 hours.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+----- FILE: src\components\ProductGallery.tsx -----
+'use client';
+import { useState } from 'react';
+import Image from 'next/image';
+
+export default function ProductGallery({ images, name }: { images: string[]; name: string }) {
+  const [active, setActive] = useState(0);
+  const safeImages = images.length > 0 ? images : ['/products/amara-front.png'];
+
+  return (
+    <div className="space-y-3">
+      <div className="relative aspect-[3/4] bg-blush/20 overflow-hidden">
+        <Image
+          key={safeImages[active]}
+          src={safeImages[active]}
+          alt={name}
+          fill
+          priority={active === 0}
+          fetchPriority={active === 0 ? 'high' : 'low'}
+          sizes="(max-width: 768px) 100vw, 50vw"
+          className="object-cover transition-opacity duration-300"
+          quality={85}
+        />
+      </div>
+      {safeImages.length > 1 && (
+        <div className="grid grid-cols-5 gap-2">
+          {safeImages.map((img, i) => (
+            <button
+              key={img}
+              type="button"
+              onClick={() => setActive(i)}
+              aria-label={`View image ${i + 1}`}
+              className={`relative aspect-square bg-blush/20 border-2 transition ${
+                i === active ? 'border-wine' : 'border-transparent hover:border-taupe/40'
+              }`}
+            >
+              <Image
+                src={img}
+                alt={`${name} view ${i + 1}`}
+                fill
+                sizes="80px"
+                loading="lazy"
+                className="object-cover"
+                quality={60}
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+----- FILE: src\components\PWAInstallPrompt.tsx -----
+'use client';
+import { useEffect, useState } from 'react';
+
+export default function PWAInstallPrompt() {
+  const [prompt, setPrompt] = useState<any>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setPrompt(e);
+      // Show only if user has been on site for 20+ seconds
+      setTimeout(() => {
+        if (!localStorage.getItem('rc_pwa_dismissed')) setVisible(true);
+      }, 20_000);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const install = async () => {
+    if (!prompt) return;
+    prompt.prompt();
+    const { outcome } = await prompt.userChoice;
+    if (outcome === 'accepted') setVisible(false);
+    localStorage.setItem('rc_pwa_dismissed', '1');
+  };
+
+  const dismiss = () => {
+    setVisible(false);
+    localStorage.setItem('rc_pwa_dismissed', '1');
+  };
+
+  if (!visible || !prompt) return null;
+
+  return (
+    <div className="fixed bottom-24 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:max-w-sm z-40 bg-espresso text-ivory p-4 shadow-2xl border border-champagne/30">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="font-medium">Add Rose &amp; Co to your home screen</div>
+          <div className="text-xs text-ivory/70 mt-1">Faster checkout, offline browsing.</div>
+        </div>
+        <button onClick={dismiss} aria-label="Dismiss" className="text-ivory/60 text-xl leading-none">&times;</button>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <button onClick={install} className="flex-1 bg-ivory text-espresso py-2 text-xs uppercase tracking-widest font-medium">Install</button>
+        <button onClick={dismiss} className="px-4 py-2 text-xs uppercase tracking-widest text-ivory/70">Not now</button>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\RatingLine.tsx -----
+'use client';
+import { REVIEWS } from '@/lib/reviews';
+
+export default function RatingLine() {
+  const avg = REVIEWS.reduce((s, r) => s + r.rating, 0) / REVIEWS.length;
+  const avgText = avg.toFixed(1);
+
+  return (
+    <div className="flex items-center gap-3 mt-2">
+      <span className="text-wine">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+      <span className="text-xs text-espresso/60">{avgText} from {REVIEWS.length} verified orders</span>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\RecentlyViewed.tsx -----
+'use client';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { getRecentlyViewed, ViewedProduct } from '@/lib/recentlyViewed';
+import { inr } from '@/lib/format';
+
+export default function RecentlyViewed({ currentSlug }: { currentSlug?: string }) {
+  const [items, setItems] = useState<ViewedProduct[]>([]);
+
+  useEffect(() => {
+    const all = getRecentlyViewed().filter(x => x.slug !== currentSlug);
+    setItems(all);
+  }, [currentSlug]);
+
+  if (items.length === 0) return null;
+
+  return (
+    <section className="container-x py-12 border-t border-taupe/20">
+      <div className="text-xs uppercase tracking-[0.3em] text-espresso/60">Recently viewed</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-4">
+        {items.map(p => (
+          <Link key={p.slug} href={`/product/${p.slug}`} className="group">
+            <div className="relative aspect-[3/4] bg-blush/20 overflow-hidden">
+              <Image src={p.image} alt={p.name} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-cover group-hover:scale-105 transition-transform" />
+            </div>
+            <div className="mt-2 text-xs text-espresso font-medium truncate">{p.name}</div>
+            <div className="text-xs text-wine">{inr(p.price)}</div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+
+----- FILE: src\components\ReviewsSection.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+
+interface Review {
+  id: string;
+  rating: number;
+  name: string;
+  city?: string;
+  title: string;
+  body: string;
+  photos: string[];
+  size?: string;
+  verified: boolean;
+  createdAt: string;
+}
+
+interface Props {
+  productSlug: string;
+}
+
+export default function ReviewsSection({ productSlug }: Props) {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [avgRating, setAvgRating] = useState(0);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/reviews/list?product=${productSlug}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.reviews) {
+          setReviews(data.reviews);
+          if (data.reviews.length > 0) {
+            const avg = data.reviews.reduce((s: number, r: Review) => s + r.rating, 0) / data.reviews.length;
+            setAvgRating(avg);
+          }
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [productSlug]);
+
+  if (loading) return null;
+
+  const displayed = showAll ? reviews : reviews.slice(0, 3);
+  const withPhotos = reviews.filter((r) => r.photos && r.photos.length > 0);
+
+  return (
+    <section className="container-x py-16 border-t border-taupe/20" aria-labelledby="reviews-heading">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-start justify-between flex-wrap gap-4 mb-8">
+          <div>
+            <div className="text-xs uppercase tracking-[0.3em] text-wine">What they said</div>
+            <h2 id="reviews-heading" className="font-display text-3xl md:text-4xl mt-2 text-espresso">
+              {reviews.length} verified reviews
+            </h2>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center gap-2">
+              <div className="flex text-wine">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <span key={n} aria-hidden="true">
+                    {n <= Math.round(avgRating) ? 'â˜…' : 'â˜†'}
+                  </span>
+                ))}
+              </div>
+              <span className="text-lg font-semibold">{avgRating.toFixed(1)}</span>
+            </div>
+            <div className="text-xs text-espresso/70 mt-1">
+              Based on {reviews.length} verified {reviews.length === 1 ? 'buyer' : 'buyers'}
+            </div>
+          </div>
+        </div>
+
+        {/* Photo strip */}
+        {withPhotos.length > 0 && (
+          <div className="mb-8">
+            <div className="text-xs uppercase tracking-widest text-espresso/70 mb-3">
+              Photos from buyers
+            </div>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+              {withPhotos.slice(0, 6).flatMap((r) => r.photos.slice(0, 1)).map((src, i) => (
+                <div key={i} className="relative aspect-square bg-blush/20 overflow-hidden">
+                  <Image src={src} alt={`Customer photo ${i + 1}`} fill sizes="150px" className="object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Reviews list */}
+        <div className="space-y-6">
+          {displayed.map((r) => (
+            <div key={r.id} className="border-b border-taupe/10 pb-6">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex text-wine text-sm">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <span key={n} aria-hidden="true">{n <= r.rating ? 'â˜…' : 'â˜†'}</span>
+                      ))}
+                    </div>
+                    {r.verified && (
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5">
+                        âœ“ Verified purchase
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="font-display text-lg text-espresso mt-2">{r.title}</h3>
+                </div>
+                <div className="text-xs text-espresso/60 text-right">
+                  <div>{r.name}</div>
+                  {r.city && <div>{r.city}</div>}
+                  {r.size && <div className="mt-1">Size: {r.size}</div>}
+                </div>
+              </div>
+              <p className="text-sm text-espresso/80 leading-relaxed">{r.body}</p>
+              {r.photos && r.photos.length > 0 && (
+                <div className="mt-3 flex gap-2 flex-wrap">
+                  {r.photos.map((src, i) => (
+                    <div key={i} className="relative w-20 h-20 bg-blush/20 overflow-hidden">
+                      <Image src={src} alt={`Review photo ${i + 1}`} fill sizes="80px" className="object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="text-[10px] text-espresso/50 mt-2">
+                {new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {reviews.length === 0 && (
+          <div className="text-center py-12 text-espresso/60 bg-blush/10">
+            <p className="mb-2">Be the first to review this piece.</p>
+            <p className="text-xs">We send review requests via WhatsApp seven days after delivery.</p>
+          </div>
+        )}
+
+        {reviews.length > 3 && !showAll && (
+          <div className="text-center mt-6">
+            <button
+              onClick={() => setShowAll(true)}
+              className="text-sm underline text-wine hover:text-espresso"
+            >
+              Read all {reviews.length} reviews
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+
+----- FILE: src\components\ShareButton.tsx -----
+'use client';
+import { useState } from 'react';
+
+export default function ShareButton({ title, url }: { title: string; url: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const share = async () => {
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch { /* user cancelled */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={share}
+      aria-label="Share this product"
+      className="flex items-center justify-center w-11 h-11 bg-white border border-taupe/40 text-espresso hover:border-wine hover:text-wine transition"
+    >
+      {copied ? (
+        <span className="text-xs">Copied</span>
+      ) : (
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/>
+        </svg>
+      )}
+    </button>
+  );
+}
+
+
+----- FILE: src\components\ShipsInCounter.tsx -----
+'use client';
+import { useEffect, useState } from 'react';
+
+export default function ShipsInCounter() {
+  const [text, setText] = useState<string>('Delhivery picks up daily at 6 PM');
+
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      const cutoff = new Date(now);
+      cutoff.setHours(18, 0, 0, 0);
+
+      if (now < cutoff) {
+        const msRemaining = cutoff.getTime() - now.getTime();
+        const h = Math.floor(msRemaining / (1000 * 60 * 60));
+        const m = Math.floor((msRemaining / (1000 * 60)) % 60);
+        if (h === 0) {
+          setText(`Order in ${m} min - goes out with today\'s Delhivery pickup`);
+        } else {
+          setText(`Order in ${h}h ${m}m - goes out with today\'s Delhivery pickup`);
+        }
+      } else {
+        setText('Order now, goes out tomorrow morning');
+      }
+    };
+    update();
+    const id = setInterval(update, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="flex items-center gap-2 text-sm text-espresso bg-green-50 border-l-4 border-green-600 p-3">
+      <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
+      <span className="font-medium text-green-800">{text}</span>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\ShopDropdown.tsx -----
+'use client';
+
+import Link from 'next/link';
+import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
+
+interface Product {
+  slug: string;
+  name: string;
+  price: number;
+  compareAt: number | null;
+  image: string;
+  tagline: string;
+}
+
+export default function ShopDropdown({ products }: { products: Product[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, []);
+
+  const handleEnter = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpen(true);
+  };
+
+  const handleLeave = () => {
+    closeTimer.current = setTimeout(() => setOpen(false), 200);
+  };
+
+  return (
+    <div ref={ref} className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      <button
+        onClick={() => setOpen(!open)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        className="flex items-center gap-1 text-sm uppercase tracking-widest text-espresso hover:text-wine transition"
+      >
+        Shop
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform ${open ? 'rotate-180' : ''}`}>
+          <path d="M1 3L5 7L9 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </button>
+
+      {open && (
+<div
+  className="absolute left-0 top-full mt-3 w-[min(92vw,640px)] bg-ivory shadow-2xl border border-taupe/10 z-50"
+  role="menu"
+>          <div className="absolute -top-3 left-0 right-0 h-3" />
+          <div className="p-6">
+            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-4">The collection</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {products.map((p) => {
+                const discount = p.compareAt ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100) : 0;
+                return (
+                  <Link
+                    key={p.slug}
+                    href={`/product/${p.slug}`}
+                    prefetch
+                    onClick={() => setOpen(false)}
+                    className="group flex gap-4 p-3 hover:bg-blush/20 transition rounded"
+                  >
+                    <div className="relative w-24 h-32 flex-shrink-0 overflow-hidden bg-blush/20">
+                      <Image
+                        src={p.image}
+                        alt={p.name}
+                        fill
+                        sizes="96px"
+                        className="object-cover object-top group-hover:scale-105 transition duration-500"
+                      />
+                      {discount > 0 && (
+                        <span className="absolute top-1 right-1 bg-ivory text-wine text-[10px] font-semibold px-1.5 py-0.5">
+                          {discount}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display text-lg text-espresso group-hover:text-wine transition truncate">
+                        {p.name.split(' ')[0]}
+                      </div>
+                      <div className="text-xs text-espresso/60 mt-1 line-clamp-2">{p.tagline}</div>
+                      <div className="flex items-baseline gap-2 mt-2">
+                        <span className="text-sm font-semibold text-wine">
+                          Rs {p.price.toLocaleString('en-IN')}
+                        </span>
+                        {p.compareAt && (
+                          <span className="text-xs line-through text-espresso/40">
+                            Rs {p.compareAt.toLocaleString('en-IN')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="border-t border-taupe/10 mt-4 pt-4 flex items-center justify-between text-xs">
+              <Link href="/shop" onClick={() => setOpen(false)} className="text-wine underline uppercase tracking-widest">
+                View all
+              </Link>
+              <div className="text-espresso/60">Free shipping - 7-day returns</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+----- FILE: src\components\SizeFinder.tsx -----
+// Removed in v9.
+export default function SizeFinder() { return null; }
+
+
+----- FILE: src\components\SizeGuideModal.tsx -----
+'use client';
+
+import { useState } from 'react';
+
+const SIZE_TABLE = [
+  { size: 'XS', bust: '32', waist: '25', hip: '35', height: '5\'0\" - 5\'4\"' },
+  { size: 'S',  bust: '34', waist: '27', hip: '37', height: '5\'1\" - 5\'5\"' },
+  { size: 'M',  bust: '36', waist: '29', hip: '39', height: '5\'2\" - 5\'6\"' },
+  { size: 'L',  bust: '38', waist: '31', hip: '41', height: '5\'3\" - 5\'7\"' },
+  { size: 'XL', bust: '40', waist: '33', hip: '43', height: '5\'4\" - 5\'8\"' },
+];
+
+export default function SizeGuideModal() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="text-xs underline text-espresso hover:text-wine transition"
+        aria-label="Open size guide"
+      >
+        Size guide
+      </button>
+
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={() => setOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="bg-ivory max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 md:p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <div className="text-xs uppercase tracking-[0.3em] text-wine">Fit guide</div>
+                  <h2 className="font-display text-2xl md:text-3xl text-espresso mt-1">
+                    Find your size.
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  aria-label="Close"
+                  className="text-espresso/50 hover:text-espresso text-2xl leading-none"
+                >
+                  Ã—
+                </button>
+              </div>
+
+              <p className="text-sm text-espresso/70 mb-6 leading-relaxed">
+                Sizing is true to what you already own from Zara or H&amp;M. When in doubt, we recommend
+                going down for the top and up for the skirt â€” satin does not stretch.
+              </p>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-taupe/30 text-left">
+                      <th className="py-2 pr-4">Size</th>
+                      <th className="py-2 pr-4">Bust (in)</th>
+                      <th className="py-2 pr-4">Waist (in)</th>
+                      <th className="py-2 pr-4">Hip (in)</th>
+                      <th className="py-2">Model height</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {SIZE_TABLE.map((row) => (
+                      <tr key={row.size} className="border-b border-taupe/10">
+                        <td className="py-3 pr-4 font-medium">{row.size}</td>
+                        <td className="py-3 pr-4">{row.bust}</td>
+                        <td className="py-3 pr-4">{row.waist}</td>
+                        <td className="py-3 pr-4">{row.hip}</td>
+                        <td className="py-3 text-xs text-espresso/70">{row.height}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-taupe/20 text-xs text-espresso/70 space-y-2">
+                <p><strong>How to measure:</strong> Use a soft measuring tape. Keep it snug, not tight.</p>
+                <p><strong>Bust:</strong> around the fullest part.</p>
+                <p><strong>Waist:</strong> narrowest point, above the belly button.</p>
+                <p><strong>Hip:</strong> around the fullest part of your hips.</p>
+              </div>
+
+              <div className="mt-6 flex items-center gap-3">
+                <span className="text-xs text-espresso/60">Still unsure?</span>
+                <a
+                  href="https://wa.me/919999999999?text=Hi%20Ros%C3%A9%20%26%20Co%2C%20I%20need%20help%20choosing%20my%20size."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs underline text-wine"
+                >
+                  Ask us on WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+
+----- FILE: src\components\SizeSelector.tsx -----
+'use client';
+import { clsx } from '@/lib/format';
+
+export type SizeOption = { size: string; stock: number };
+
+export default function SizeSelector({
+  sizes, value, onChange,
+}: {
+  sizes: SizeOption[];
+  value: string | null;
+  onChange: (s: string) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <span className="label !mb-0">Select size</span>
+      </div>
+      <div className="grid grid-cols-6 gap-2">
+        {sizes.map(s => {
+          const outOfStock = s.stock <= 0;
+          const active = value === s.size;
+          return (
+            <button
+              key={s.size}
+              type="button"
+              disabled={outOfStock}
+              onClick={() => !outOfStock && onChange(s.size)}
+              className={clsx(
+                'py-3 text-sm uppercase tracking-widest border transition-all relative',
+                active ? 'bg-wine text-ivory border-wine' :
+                outOfStock ? 'bg-ivory text-taupe/40 border-taupe/20 line-through cursor-not-allowed' :
+                'bg-white text-espresso border-taupe/40 hover:border-wine',
+              )}
+              aria-label={outOfStock ? `Size ${s.size} out of stock` : `Size ${s.size}`}
+            >
+              {s.size}
+              {!outOfStock && s.stock <= 3 && !active && (
+                <span className="absolute -top-2 -right-1 bg-wine text-ivory text-[8px] px-1">{s.stock} left</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\SocialProof.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+
+const NAMES = ['Priya', 'Aarushi', 'Kavya', 'Ishita', 'Ananya', 'Meera', 'Riya', 'Nisha', 'Sneha', 'Divya'];
+const CITIES = ['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Hyderabad', 'Chennai', 'Gurugram', 'Kolkata', 'Jaipur', 'Ahmedabad'];
+const PRODUCTS = ['Amara', 'Aarna'];
+const ACTIONS = ['just bought', 'added to cart', 'is viewing'];
+
+export default function SocialProof() {
+  const [message, setMessage] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    let interval: ReturnType<typeof setInterval>;
+
+    const showNext = () => {
+      const name = NAMES[Math.floor(Math.random() * NAMES.length)];
+      const city = CITIES[Math.floor(Math.random() * CITIES.length)];
+      const product = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
+      const action = ACTIONS[Math.floor(Math.random() * ACTIONS.length)];
+      const mins = Math.floor(Math.random() * 30) + 2;
+      setMessage(`${name} from ${city} ${action} ${product} Â· ${mins} min ago`);
+      setVisible(true);
+      timer = setTimeout(() => setVisible(false), 5000);
+    };
+
+    // First one after 8 seconds
+    timer = setTimeout(showNext, 8000);
+    // Then every 25 seconds
+    interval = setInterval(showNext, 25000);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, []);
+
+  return (
+    <div
+      className={`fixed bottom-4 left-4 max-w-xs bg-ivory shadow-2xl border border-taupe/20 p-3 z-30 transition-all duration-500 ${
+        visible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'
+      }`}
+    >
+      <div className="flex items-start gap-2">
+        <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0 animate-pulse" />
+        <div className="text-xs text-espresso">{message}</div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\StickyBuyBar.tsx -----
+'use client';
+
+import { useEffect, useState } from 'react';
+
+interface Props {
+  price: number;
+  compareAt?: number | null;
+  onBuy?: () => void;
+  onBuyClick?: () => void;
+  productName?: string;
+}
+
+export default function StickyBuyBar({ price, compareAt, onBuy, onBuyClick, productName }: Props) {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    // Show immediately on mobile â€” no scroll requirement
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setShow(true);
+      return;
+    }
+
+    // On desktop, only show after scrolling
+    const handleScroll = () => setShow(window.scrollY > 400);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  if (!show) return null;
+
+  const handleClick = () => {
+    if (onBuy) onBuy();
+    else if (onBuyClick) onBuyClick();
+  };
+
+  return (
+    <div className="md:hidden fixed bottom-0 inset-x-0 bg-ivory border-t border-taupe/20 shadow-2xl z-40 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          {productName && (
+            <div className="text-xs text-espresso/70 truncate">{productName}</div>
+          )}
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-semibold text-wine">Rs {price.toLocaleString('en-IN')}</span>
+            {compareAt && (
+              <span className="text-xs line-through text-espresso/40">
+                Rs {compareAt.toLocaleString('en-IN')}
+              </span>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={handleClick}
+          className="bg-wine text-ivory px-6 py-3 uppercase tracking-widest text-xs font-medium hover:bg-espresso transition flex-shrink-0"
+        >
+          Buy Now
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\StockUrgency.tsx -----
+'use client';
+
+interface Props {
+  stock: number;
+  size?: string;
+}
+
+export default function StockUrgency({ stock, size }: Props) {
+  if (stock === 0) {
+    return (
+      <div className="mt-3 inline-flex items-center gap-2 text-red-700 text-sm">
+        <span className="w-2 h-2 rounded-full bg-red-600" />
+        Sold out {size && `in ${size}`}
+      </div>
+    );
+  }
+
+  if (stock <= 3) {
+    return (
+      <div className="mt-3 inline-flex items-center gap-2 text-wine text-sm font-medium">
+        <span className="w-2 h-2 rounded-full bg-wine animate-pulse" />
+        Only {stock} left {size && `in ${size}`}
+      </div>
+    );
+  }
+
+  if (stock <= 8) {
+    return (
+      <div className="mt-3 inline-flex items-center gap-2 text-espresso/70 text-sm">
+        <span className="w-2 h-2 rounded-full bg-green-500" />
+        In stock {size && `in ${size}`}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+
+----- FILE: src\components\TestimonialsCarousel.tsx -----
+'use client';
+import { useEffect, useRef, useState } from 'react';
+import { REVIEWS, daysAgoText } from '@/lib/reviews';
+
+export default function TestimonialsCarousel() {
+  const [idx, setIdx] = useState(0);
+  const [inView, setInView] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const visible = REVIEWS.slice(0, 6);
+
+  // Only auto-rotate when the carousel is actually on screen
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') { setInView(true); return; }
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.2 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!inView) return;
+    const t = setInterval(() => setIdx(i => (i + 1) % visible.length), 6000);
+    return () => clearInterval(t);
+  }, [inView, visible.length]);
+
+  const stars = (n: number) => '\u2605'.repeat(n) + '\u2606'.repeat(5 - n);
+
+  return (
+    <div className="relative max-w-2xl mx-auto" ref={containerRef}>
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-700 ease-out will-change-transform"
+          style={{ transform: `translateX(-${idx * 100}%)` }}
+        >
+          {visible.map((r, i) => (
+            <div key={i} className="min-w-full px-4">
+              <div className="text-wine text-center text-lg tracking-widest">{stars(r.rating)}</div>
+              <p className="mt-4 text-lg text-espresso italic text-center leading-relaxed max-w-xl mx-auto">&ldquo;{r.text}&rdquo;</p>
+              <div className="mt-6 text-center">
+                <div className="text-sm text-espresso font-semibold">{r.name}</div>
+                <div className="text-[11px] text-espresso/60 mt-0.5">
+                  {r.city} &middot; Size {r.size} &middot; {r.occasion} &middot; {daysAgoText(r.daysAgo)}
+                </div>
+                <div className="text-[10px] text-espresso/40 uppercase tracking-widest mt-2">Verified order</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex justify-center gap-2 mt-6">
+        {visible.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setIdx(i)}
+            aria-label={`Show review ${i + 1}`}
+            className={`h-2 rounded-full transition-all ${i === idx ? 'bg-wine w-8' : 'bg-taupe/40 w-2'}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\TrustBadges.tsx -----
+export default function TrustBadges() {
+  const items = [
+    { icon: 'FREE',   title: 'Free shipping',  sub: 'Anywhere in India' },
+    { icon: '24-48',  title: 'Ships in',       sub: 'From Gurugram unit' },
+    { icon: '7 DAYS', title: 'To return',      sub: 'Free reverse pickup' },
+    { icon: 'UPI',    title: 'Secure checkout', sub: 'No cards, no netbanking' },
+  ];
+  return (
+    <div className="grid grid-cols-4 gap-2 py-4 border-y border-taupe/20">
+      {items.map(x => (
+        <div key={x.title} className="text-center">
+          <div className="text-[10px] font-bold text-wine tracking-wider">{x.icon}</div>
+          <div className="text-xs font-medium text-espresso mt-1 leading-tight">{x.title}</div>
+          <div className="text-[10px] text-espresso/60 mt-0.5">{x.sub}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+----- FILE: src\components\TrustBar.tsx -----
+export default function TrustBar() {
+  const items = [
+    { title: 'Free shipping', sub: 'Anywhere in India' },
+    { title: 'Ships in 48 hours', sub: 'From Gurugram' },
+    { title: 'Seven-day returns', sub: 'We arrange the pickup' },
+    { title: 'Written by a person', sub: 'Every note answered' },
+  ];
+
+  return (
+    <div className="bg-ivory border-y border-taupe/20">
+      <div className="container-x grid grid-cols-2 md:grid-cols-4 gap-4 py-8">
+        {items.map(x => (
+          <div key={x.title} className="text-center">
+            <div className="text-xs uppercase tracking-widest text-wine font-semibold">{x.title}</div>
+            <div className="text-[11px] text-espresso/60 mt-1">{x.sub}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\UpiButtons.tsx -----
+'use client';
+import { UPI } from '@/lib/constants';
+
+type App = { id: string; name: string; short: string; bg: string; fg: string; scheme: (p: string) => string; };
+
+const APPS: App[] = [
+  { id: 'gpay', name: 'Google Pay', short: 'GPay',
+    bg: 'linear-gradient(135deg,#4285F4 0%,#34A853 40%,#FBBC04 70%,#EA4335 100%)', fg: '#fff',
+    scheme: p => `tez://upi/pay?${p}` },
+  { id: 'phonepe', name: 'PhonePe', short: 'PhonePe', bg: '#5F259F', fg: '#fff',
+    scheme: p => `phonepe://pay?${p}` },
+  { id: 'paytm', name: 'Paytm', short: 'Paytm', bg: '#00BAF2', fg: '#fff',
+    scheme: p => `paytmmp://pay?${p}` },
+  { id: 'bhim', name: 'BHIM', short: 'BHIM', bg: '#00449E', fg: '#fff',
+    scheme: p => `bhim://pay?${p}` },
+  { id: 'amazonpay', name: 'Amazon Pay', short: 'AmazonPay', bg: '#232F3E', fg: '#FF9900',
+    scheme: p => `upi://pay?${p}` },
+  { id: 'cred', name: 'CRED', short: 'CRED', bg: '#0F0F0F', fg: '#fff',
+    scheme: p => `credpay://upi/pay?${p}` },
+];
+
+function AppIcon({ id }: { id: string }) {
+  switch (id) {
+    case 'gpay':      return <span className="font-bold text-[22px] leading-none">G</span>;
+    case 'phonepe':   return <span className="font-bold text-[20px] leading-none">â‚¹</span>;
+    case 'paytm':     return <span className="font-bold text-[22px] leading-none italic">P</span>;
+    case 'bhim':      return <span className="font-bold text-[14px] leading-none tracking-tight">BHIM</span>;
+    case 'amazonpay': return <span className="font-bold text-[13px] leading-none">a</span>;
+    case 'cred':      return <span className="font-bold text-[14px] leading-none">CRED</span>;
+    default:          return <span>ðŸ’³</span>;
+  }
+}
+
+export default function UpiButtons({ amount, note }: { amount: number; note: string }) {
+  const params = new URLSearchParams({
+    pa: UPI.id, pn: UPI.name, am: String(amount), cu: 'INR', tn: note,
+  }).toString();
+
+  const universalUpi = `upi://pay?${params}`;
+
+  const openApp = (app: App) => {
+    const link = app.scheme(params);
+    window.location.href = link;
+    // Fallback to universal UPI if specific app isn't installed
+    setTimeout(() => {
+      if (!document.hidden) window.location.href = universalUpi;
+    }, 1200);
+  };
+
+  const openAnyUpi = () => { window.location.href = universalUpi; };
+
+  return (
+    <div>
+      <button type="button" onClick={openAnyUpi} className="btn-primary w-full text-base py-4">
+        Pay â‚¹{amount.toLocaleString('en-IN')} â€” Open UPI App
+      </button>
+      <p className="text-[11px] text-espresso/60 mt-2 text-center">
+        Tapping opens your default UPI app with amount pre-filled.
+      </p>
+      <div className="mt-4">
+        <div className="text-[10px] uppercase tracking-widest text-espresso/50 text-center mb-3">Or pick your app</div>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          {APPS.map(app => (
+            <button key={app.id} type="button" onClick={() => openApp(app)}
+              className="flex flex-col items-center gap-2 group active:scale-95 transition"
+              aria-label={`Pay with ${app.name}`}>
+              <span className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:-translate-y-0.5 transition"
+                style={{ background: app.bg, color: app.fg }}>
+                <AppIcon id={app.id} />
+              </span>
+              <span className="text-[10px] uppercase tracking-widest text-espresso/70">{app.short}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\UpiLogos.tsx -----
+export default function UpiLogos() {
+  const apps = [
+    { id: 'gpay', name: 'GPay', bg: 'linear-gradient(135deg,#4285F4 0%,#34A853 40%,#FBBC04 70%,#EA4335 100%)', letter: 'G', fg: '#fff' },
+    { id: 'phonepe', name: 'PhonePe', bg: '#5F259F', letter: 'Pe', fg: '#fff' },
+    { id: 'paytm', name: 'Paytm', bg: '#00BAF2', letter: 'P', fg: '#fff' },
+    { id: 'bhim', name: 'BHIM', bg: '#00449E', letter: 'B', fg: '#fff' },
+    { id: 'amazonpay', name: 'AmazonPay', bg: '#232F3E', letter: 'a', fg: '#FF9900' },
+    { id: 'cred', name: 'CRED', bg: '#0F0F0F', letter: 'C', fg: '#fff' },
+  ];
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-[10px] uppercase tracking-widest text-espresso/60 mr-1">Pay via</span>
+      {apps.map(a => (
+        <div key={a.id} className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold" style={{ background: a.bg, color: a.fg }} title={a.name}>
+          {a.letter}
+        </div>
+      ))}
+      <span className="text-[10px] text-espresso/60 ml-1">or any UPI app</span>
+    </div>
+  );
+}
+
+
+----- FILE: src\components\UPIPayButton.tsx -----
+'use client';
+
+import { useState } from 'react';
+import { buildUPIUrl, buildGPayUrl, buildPhonePeUrl, buildPaytmUrl, isMobile, isAndroid, generateOrderId } from '@/lib/upi';
+
+interface Props {
+  amount: number;
+  orderId?: string;
+  note?: string;
+  onPaymentInitiated?: (orderId: string) => void;
+}
+
+export default function UPIPayButton({ amount, orderId, note, onPaymentInitiated }: Props) {
+  const [showApps, setShowApps] = useState(false);
+  const finalOrderId = order

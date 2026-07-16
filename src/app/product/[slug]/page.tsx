@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!p) return { title: 'Product' };
   return {
     title: `${p.name} - Rs ${p.price} (MRP Rs ${p.compareAt || 3499}) - Hand-painted marble swirl satin`,
-    description: `${p.description} MRP Rs ${p.compareAt || 3499}, selling at Rs ${p.price}. Free shipping across India, ships from Delhi NCR in 24-48 hours. UPI prepaid Rs 1,900 (save Rs 100). COD available (Rs 299 online + rest on delivery).`,
+    description: `${p.description} MRP Rs ${p.compareAt || 3499}, selling at Rs ${p.price}. Free shipping across India, ships from Delhi NCR in 24-48 hours. UPI prepaid Rs 2,199 (save Rs 100). COD available (Rs 299 online + rest on delivery).`,
     keywords: ['satin co-ord set', 'marble print co-ord set', 'poly-satin midi', 'indian D2C fashion', 'satin shirt and pants set', 'engagement outfit', 'party wear india', p.name.toLowerCase()],
     openGraph: {
       title: p.name, description: p.description,
@@ -56,7 +56,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
     { q: 'How does the sizing run?', a: 'True to size for most women. Between sizes, size down for the top and up for the skirt.' },
     { q: 'How long does delivery take?', a: 'Ships from Delhi NCR within 24 to 48 hours of payment confirmation. Delivered in 3 to 5 business days to metros, 5 to 7 to smaller cities.' },
     { q: 'Can I wear the top separately?', a: 'Yes. Works with jeans, tailored trousers, or a plain skirt.' },
-    { q: 'What is the difference between prepaid and COD?', a: 'Prepaid via UPI is Rs 1,900 (save Rs 100). Partial COD is Rs 2,000 total, split as Rs 299 online plus Rs 1,701 cash on delivery.' },
+    { q: 'What is the difference between prepaid and COD?', a: 'Prepaid via UPI is Rs 2,199 (save Rs 100). Partial COD is Rs 2,299 total, split as Rs 299 online plus Rs 2,000 cash on delivery.' },
     { q: 'What is the MRP?', a: 'MRP is Rs 3,499. We sell at Rs 2,000 - Rs 1,499 off - because we go direct to buyer and skip the retail markup.' },
   ];
 

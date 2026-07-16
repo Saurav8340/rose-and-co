@@ -441,7 +441,7 @@ export default function LeadCaptureChip() {
               Ready, {name || 'friend'}.
             </h3>
             <p className="text-sm text-espresso/70 mb-4">
-              Save it for your next order.
+              Auto-applied at checkout.
             </p>
             <div className="font-mono font-semibold text-wine text-xl bg-blush/40 py-3 px-4 inline-block">
               {coupon}

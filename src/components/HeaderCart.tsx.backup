@@ -9,7 +9,7 @@ export default function HeaderCart() {
   useEffect(() => {
     // Read cart count from localStorage or your cart store
     try {
-      const raw = localStorage.getItem('rc_cart_v1');
+      const raw = localStorage.getItem('cart');
       if (raw) {
         const cart = JSON.parse(raw);
         setCount(Array.isArray(cart) ? cart.length : (cart.items?.length || 0));

@@ -23,7 +23,7 @@ export const PAYMENT = {
   prepaidPrice:   2199,
   prepaidSavings: 100,
   codDeposit:     299,     // low deposit lowers COD friction, keeps intent
-  codRemaining:   1701,    // fullPrice - codDeposit
+  codRemaining:   2000,    // fullPrice - codDeposit
 };
 
 export const SIZES = ['XS','S','M','L','XL','XXL'] as const;

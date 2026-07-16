@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma"; import { verifyAdminSession } from "@/lib/session";
 
-const prisma = new PrismaClient();
+
 
 // CSV escape: wrap in quotes, escape internal quotes
 function csv(v: unknown): string {
@@ -10,7 +10,7 @@ function csv(v: unknown): string {
   return `"${s}"`;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest) { if (!(await verifyAdminSession())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); if (!(await verifyAdminSession())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");

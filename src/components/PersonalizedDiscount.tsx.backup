@@ -47,7 +47,7 @@ export default function PersonalizedDiscount() {
         <span>{message}</span>
         <span className="font-mono font-semibold text-champagne">{code}</span>
         <span className="text-xs uppercase tracking-widest text-ivory/80">
-          Save it for your next order
+          Auto-applied at checkout
         </span>
       </div>
       <button

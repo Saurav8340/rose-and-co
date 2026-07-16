@@ -7,9 +7,9 @@ export const dynamic = 'force-dynamic';
 export default async function OrderSuccessPage({
   searchParams,
 }: {
-  searchParams: { id?: string };
+  searchParams: { order?: string };
 }) {
-  const orderId = searchParams.id;
+  const orderId = searchParams.order;
 
   // Get another product to upsell
   const otherProducts = await prisma.product.findMany({
