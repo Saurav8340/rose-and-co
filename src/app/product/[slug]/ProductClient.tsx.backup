@@ -89,7 +89,7 @@ export default function ProductClient({ product }: { product: Product }) {
               </div>
             </div>
 
-            {/* v34: Inventory countdown â€” replaces old "Only X left" line */}
+            {/* v34: Inventory countdown — replaces old "Only X left" line */}
             <InventoryCountdown productSlug={product.slug} totalStock={totalStock} />
 
             <ShipsInCounter />
@@ -130,7 +130,7 @@ export default function ProductClient({ product }: { product: Product }) {
             <details open className="border-t border-taupe/20 pt-4">
               <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">The set</summary>
               <div className="mt-3 text-espresso/80 leading-[1.8] space-y-3 text-sm">
-                <p>A relaxed satin button-down shirt and high-waisted wide-leg pants. Hand-painted marble swirl in warm tones â€” beige, caramel and soft brown &mdash; deep rose, wine, warm ivory.</p>
+                <p>A relaxed satin button-down shirt and high-waisted wide-leg pants. Hand-painted marble swirl in warm tones — beige, caramel and soft brown &mdash; deep rose, wine, warm ivory.</p>
                 <p>Every set is painted before the cloth is cut, so no two look the same. If that isn&apos;t what you want, this may not be the piece.</p>
               </div>
             </details>
@@ -139,7 +139,7 @@ export default function ProductClient({ product }: { product: Product }) {
               <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">Fabric &amp; fit</summary>
               <ul className="mt-3 space-y-2 text-espresso/80 text-sm leading-[1.8] list-disc pl-5">
                 <li>Poly-satin, around a hundred grams per square metre.</li>
-                <li>Relaxed shirt with a camp collar. Wide-leg pants, full length on a 5'7" frame â€” size with heels or hem if you're 5'3" or under.</li>
+                <li>Relaxed shirt with a camp collar. Wide-leg pants, full length on a 5'7" frame — size with heels or hem if you're 5'3" or under.</li>
                 <li>Model is 5&apos;7&quot; in size S.</li>
                 <li>Dry clean, or hand-wash cold. Never tumble dry.</li>
               </ul>
@@ -166,7 +166,7 @@ export default function ProductClient({ product }: { product: Product }) {
         </div>
       </div>
 
-      {/* v34: Reviews section â€” auto-loads from /api/reviews/list */}
+      {/* v34: Reviews section — auto-loads from /api/reviews/list */}
       <ReviewsSection productSlug={product.slug} />
 
       <StickyBuyBar price={displayPrice} onBuy={doBuyNow} productName={product.name} />

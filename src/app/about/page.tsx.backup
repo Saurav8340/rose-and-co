@@ -1,4 +1,4 @@
-import { SITE } from '@/lib/constants';
+﻿import { SITE } from '@/lib/constants';
 import FounderNote from '@/components/FounderNote';
 
 export const metadata = {

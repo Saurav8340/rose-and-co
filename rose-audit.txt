@@ -1,0 +1,460 @@
+===== ROSE & CO AUDIT =====
+Date: 07/16/2026 15:50:28
+
+===== 1. FOLDER STRUCTURE (src) =====
+C:\rose-and-co\src\app
+C:\rose-and-co\src\checkout
+C:\rose-and-co\src\components
+C:\rose-and-co\src\hooks
+C:\rose-and-co\src\lib
+C:\rose-and-co\src\app\about
+C:\rose-and-co\src\app\admin
+C:\rose-and-co\src\app\api
+C:\rose-and-co\src\app\cancellation-policy
+C:\rose-and-co\src\app\care-guide
+C:\rose-and-co\src\app\cart
+C:\rose-and-co\src\app\checkout
+C:\rose-and-co\src\app\collections
+C:\rose-and-co\src\app\contact
+C:\rose-and-co\src\app\fabric-guide
+C:\rose-and-co\src\app\faq
+C:\rose-and-co\src\app\gift-cards
+C:\rose-and-co\src\app\impact
+C:\rose-and-co\src\app\journal
+C:\rose-and-co\src\app\order success
+C:\rose-and-co\src\app\order-failure
+C:\rose-and-co\src\app\order-success
+C:\rose-and-co\src\app\press
+C:\rose-and-co\src\app\privacy-policy
+C:\rose-and-co\src\app\product
+C:\rose-and-co\src\app\refund-policy
+C:\rose-and-co\src\app\search
+C:\rose-and-co\src\app\shipping-policy
+C:\rose-and-co\src\app\shop
+C:\rose-and-co\src\app\size-guide
+C:\rose-and-co\src\app\style-quiz
+C:\rose-and-co\src\app\terms
+C:\rose-and-co\src\app\track
+C:\rose-and-co\src\app\wishlist
+C:\rose-and-co\src\app\admin\export
+C:\rose-and-co\src\app\admin\leads
+C:\rose-and-co\src\app\admin\login
+C:\rose-and-co\src\app\admin\orders
+C:\rose-and-co\src\app\admin\products
+C:\rose-and-co\src\app\admin\orders\[id]
+C:\rose-and-co\src\app\api\admin
+C:\rose-and-co\src\app\api\captcha
+C:\rose-and-co\src\app\api\geo
+C:\rose-and-co\src\app\api\inventory
+C:\rose-and-co\src\app\api\leads
+C:\rose-and-co\src\app\api\orders
+C:\rose-and-co\src\app\api\payment
+C:\rose-and-co\src\app\api\products
+C:\rose-and-co\src\app\api\reviews
+C:\rose-and-co\src\app\api\admin\leads
+C:\rose-and-co\src\app\api\admin\login
+C:\rose-and-co\src\app\api\admin\logout
+C:\rose-and-co\src\app\api\admin\orders
+C:\rose-and-co\src\app\api\admin\leads\export
+C:\rose-and-co\src\app\api\admin\orders\export
+C:\rose-and-co\src\app\api\admin\orders\[id]
+C:\rose-and-co\src\app\api\captcha\generate
+C:\rose-and-co\src\app\api\captcha\verify
+C:\rose-and-co\src\app\api\leads\create
+C:\rose-and-co\src\app\api\leads\debug
+C:\rose-and-co\src\app\api\leads\list
+C:\rose-and-co\src\app\api\leads\update
+C:\rose-and-co\src\app\api\orders\create
+C:\rose-and-co\src\app\api\orders\track
+C:\rose-and-co\src\app\api\payment\upi-qr
+C:\rose-and-co\src\app\api\products\by-ids
+C:\rose-and-co\src\app\api\reviews\create
+C:\rose-and-co\src\app\api\reviews\list
+C:\rose-and-co\src\app\collections\co-ord-sets
+C:\rose-and-co\src\app\collections\engagement-outfits
+C:\rose-and-co\src\app\collections\party-wear
+C:\rose-and-co\src\app\collections\satin-skirts
+C:\rose-and-co\src\app\journal\[slug]
+C:\rose-and-co\src\app\product\[slug]
+
+===== 2. PACKAGE.JSON =====
+{
+  "name": "rose-and-co",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:reviews": "tsx prisma/seed-reviews.ts",
+    "db:studio": "prisma studio",
+    "analyze": "ANALYZE=true next build"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.1",
+    "gray-matter": "^4.0.3",
+    "jose": "^5.9.6",
+    "marked": "^14.1.3",
+    "next": "14.2.33",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sharp": "^0.33.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.7.4",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8.4.47",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^3.4.13",
+    "tsx": "^4.23.0",
+    "typescript": "^5.6.2"
+  }
+}
+
+===== 3. PRISMA SCHEMA =====
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String
+  price       Int
+  compareAt   Int?
+  images      String
+  sizes       String
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique
+  fullName       String
+  mobile         String
+  email          String?
+  altPhone       String?
+  pincode        String
+  state          String
+  city           String
+  addressLine1   String
+  addressLine2   String?
+  landmark       String?
+  paymentMethod  String
+  paidAmount     Int
+  codAmount      Int
+  totalAmount    Int
+  discountAmount Int         @default(0)
+  paymentStatus  String      @default("PENDING")
+  orderStatus    String      @default("PLACED")
+  utr            String?
+  notes          String?
+  metaFbc        String?
+  metaFbp        String?
+  utmData        String?
+  capiFired      Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  items          OrderItem[]
+
+  @@index([mobile])
+  @@index([paymentStatus])
+  @@index([orderStatus])
+  @@index([paymentMethod])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String
+  size        String
+  quantity    Int
+  price       Int
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+}
+
+model VerificationSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  mobile    String
+  captcha   String
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  action    String
+  metadata  String?
+  createdAt DateTime @default(now())
+}
+
+model Waitlist {
+  id          String   @id @default(cuid())
+  productId   String
+  productName String
+  size        String
+  mobile      String
+  email       String?
+  notified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([productId, size])
+  @@index([notified])
+}
+
+model BlockedPincode {
+  id        String   @id @default(cuid())
+  pincode   String   @unique
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  productSlug String
+  orderId     String?
+  rating      Int
+  name        String
+  city        String?
+  title       String
+  body        String
+  photos      String
+  size        String?
+  verified    Boolean  @default(false)
+  approved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([productSlug])
+  @@index([approved])
+  @@index([createdAt])
+}
+
+model Referral {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  referrerName  String
+  referrerEmail String?
+  referrerPhone String?
+  invitesUsed   Int      @default(0)
+  creditsEarned Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([code])
+}
+
+model LoyaltyPoints {
+  id          String   @id @default(cuid())
+  customerId  String   @unique
+  points      Int      @default(0)
+  totalSpent  Int      @default(0)
+  totalOrders Int      @default(0)
+  tier        String   @default("bronze")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([tier])
+}
+
+// ================================================================
+// v35: Add this Lead model to your prisma/schema.prisma
+// Then run: npx prisma db push (with Neon URL set)
+// ================================================================
+
+model Lead {
+  id            String   @id @default(cuid())
+  sessionId     String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Progressive contact info
+  name          String?
+  phone         String?
+  email         String?
+
+  // Geo signals
+  city          String?
+  pincode       String?
+  state         String?
+  addressLine1  String?
+  region        String?
+  country       String?
+  timezone      String?
+  language      String?
+
+  // Device signals
+  deviceType    String?  // mobile / desktop / tablet
+  screenWidth   Int?
+  screenHeight  Int?
+  userAgent     String?  @db.Text
+
+  // Traffic source
+  landingUrl    String?  @db.Text
+  referrer      String?  @db.Text
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmTerm       String?
+  utmContent    String?
+
+  // Engagement signals
+  visitCount    Int      @default(1)
+  isReturning   Boolean  @default(false)
+  hasAddress    Boolean  @default(false)
+  timeOnSite    Int?     // seconds
+  pagesViewed   Int      @default(1)
+  scrolled      Boolean  @default(false)
+
+  // Discount
+  optedIn       Boolean  @default(false)   // clicked Yes on chip
+  chipDismissed Boolean  @default(false)   // clicked No
+  couponCode    String?
+  couponPct     Int?
+  segment       String?  // real_intent / returning_vip / browser / bounce_risk / coupon_hunter
+
+  // Cart signals
+  cartAdded     Boolean  @default(false)
+  cartValue     Int?
+  cartSummary   String?  @db.Text
+  cartAbandoned Boolean  @default(false)
+
+  // Purchase link (if converted)
+  orderNumber   String?
+  converted     Boolean  @default(false)
+
+  // Admin ops
+  status        String   @default("new") // new / contacted / converted / lost / spam
+  notes         String?  @db.Text
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([email])
+  @@index([phone])
+  @@index([converted])
+  @@index([utmCampaign])
+}
+
+===== 4. WHERE SKIRT / CROP / PANTS APPEARS =====
+C:\rose-and-co\src\app\about\page.tsx:27: So we made the thing that should have been there. A poly-satin heavy enough to fall properly. A marble print painted by hand, one panel at a time, before the cloth was ever cut. A crop top and a midi skirt, stitched at a small unit near Karol Bagh, packed and shipped from our own address by Delhivery.
+C:\rose-and-co\src\app\product\[slug]\page.tsx:35: keywords: ['satin co-ord set', 'marble print skirt set', 'poly-satin midi', 'indian D2C fashion', 'crop top skirt set', 'engagement outfit', 'party wear india', p.name.toLowerCase()],
+C:\rose-and-co\src\app\product\[slug]\ProductClient.tsx:133: <p>A fitted crop top and a high-waisted midi skirt. Hand-painted marble swirl in three tones &mdash; deep rose, wine, warm ivory.</p>
+C:\rose-and-co\src\app\product\[slug]\ProductClient.tsx:142: <li>Fitted top, sits at the natural waist. A-line midi skirt, mid-calf on a 5&apos;7&quot; frame.</li>
+C:\rose-and-co\content\journal\diwali-outfit-ideas-not-kurta.md:19: Take a plain silk saree, drape it as a pre-stitched skirt with the pallu tied at the waist. Wear a fitted crop top on top.
+C:\rose-and-co\content\journal\how-to-style-marble-swirl-coord.md:99: The Amara top works with high-waist jeans (dark denim), tailored trousers (black or cream), or a plain A-line midi skirt in a solid tone. The skirt works with a plain white or cream fitted top, a black bodysuit, or a cropped denim jacket buttoned like a shirt.
+C:\rose-and-co\content\journal\sangeet-outfit-ideas-not-lehengas.md:53: Wide-legged sharara with a fitted or short top and light dupatta.
+C:\rose-and-co\content\journal\satin-skirt-for-petite-women.md:3: excerpt: "If you are 5 foot 3 or under, most midi skirts hit at your ankle. Here is how to work around that."
+C:\rose-and-co\content\journal\satin-skirt-for-tall-women.md:3: excerpt: "If you are 5 foot 8 or taller, most midi skirts hit above your knee. Here is what to look for and what to avoid."
+C:\rose-and-co\content\journal\satin-skirt-for-tall-women.md:6: keywords: [tall women fashion, satin skirt length, midi skirt for tall]
+C:\rose-and-co\content\journal\satin-skirt-for-tall-women.md:9: If you are 5 foot 8 or taller, you already know the problem. Midi skirts are marketed to 5 foot 4 bodies. They hit above your knee on you and look like short skirts.
+
+===== 5. WHERE PRICE NUMBERS APPEAR =====
+C:\rose-and-co\src\app\collections\co-ord-sets\page.tsx:40: <li>&middot; <Link href="/journal/best-satin-coord-sets-under-2000-india" className="underline text-wine">Best satin co-ord sets under Rs 2,000 in India</Link></li>
+C:\rose-and-co\src\app\collections\party-wear\page.tsx:40: <li>&middot; <Link href="/journal/20-party-wear-outfit-ideas-under-2000" className="underline text-wine">20 party wear outfit ideas under Rs 2,000</Link></li>
+C:\rose-and-co\src\app\product\[slug]\ProductClient.tsx:53: setTimeout(() => setMsg(null), 2000);
+C:\rose-and-co\src\components\ShareButton.tsx:17: setTimeout(() => setCopied(false), 2000);
+C:\rose-and-co\src\components\UPIPayButton.tsx:23: setTimeout(() => setShowApps(true), 2000);
+C:\rose-and-co\src\components\UtmCapture.tsx:10: const id = requestIdleCallback(run, { timeout: 2000 });
+C:\rose-and-co\src\lib\constants.ts:22: fullPrice:      2000,
+C:\rose-and-co\src\lib\constants.ts:23: prepaidPrice:   1900,
+C:\rose-and-co\content\journal\best-satin-coord-sets-under-2000-india.md:6: keywords: [satin co-ord set india, best co-ord sets under 2000, indian D2C fashion brands, satin skirt sets, affordable party wear india]
+
+===== 6. PRODUCT-RELATED FILES =====
+C:\rose-and-co\src\app\admin\export\route.ts
+C:\rose-and-co\src\app\admin\leads\page.tsx
+C:\rose-and-co\src\app\admin\login\page.tsx
+C:\rose-and-co\src\app\admin\orders\[id]\page.tsx
+C:\rose-and-co\src\app\admin\orders\[id]\UpdateOrderForm.tsx
+C:\rose-and-co\src\app\admin\products\page.tsx
+C:\rose-and-co\src\app\admin\page.tsx
+C:\rose-and-co\src\app\api\admin\leads\export\route.ts
+C:\rose-and-co\src\app\api\admin\leads\page.tsx
+C:\rose-and-co\src\app\api\admin\login\route.ts
+C:\rose-and-co\src\app\api\admin\logout\route.ts
+C:\rose-and-co\src\app\api\admin\orders\export\route.ts
+C:\rose-and-co\src\app\api\admin\orders\[id]\route.ts
+C:\rose-and-co\src\app\api\products\by-ids\route.ts
+C:\rose-and-co\src\app\cart\page.tsx
+C:\rose-and-co\src\app\product\[slug]\page.tsx
+C:\rose-and-co\src\app\product\[slug]\ProductClient.tsx
+C:\rose-and-co\src\components\CartAbandonmentTracker.tsx
+C:\rose-and-co\src\components\CartContext.tsx
+C:\rose-and-co\src\components\CartReviewsSnippet.tsx
+C:\rose-and-co\src\components\HeaderCart.tsx
+C:\rose-and-co\src\components\ProductGallery.tsx
+
+===== 7. ADMIN FOLDER =====
+C:\rose-and-co\src\app\admin\export
+C:\rose-and-co\src\app\admin\leads
+C:\rose-and-co\src\app\admin\login
+C:\rose-and-co\src\app\admin\orders
+C:\rose-and-co\src\app\admin\products
+C:\rose-and-co\src\app\admin\page.tsx
+C:\rose-and-co\src\app\admin\export\route.ts
+C:\rose-and-co\src\app\admin\leads\page.tsx
+C:\rose-and-co\src\app\admin\login\page.tsx
+C:\rose-and-co\src\app\admin\orders\[id]
+C:\rose-and-co\src\app\admin\orders\[id]\page.tsx
+C:\rose-and-co\src\app\admin\orders\[id]\UpdateOrderForm.tsx
+C:\rose-and-co\src\app\admin\products\page.tsx
+
+===== 8. WHERE 'Aarna' DATA LIVES =====
+C:\rose-and-co\src\app\api\admin\orders\[id]\route.ts:69
+C:\rose-and-co\src\app\api\products\by-ids\route.ts:20
+C:\rose-and-co\src\app\care-guide\page.tsx:3
+C:\rose-and-co\src\app\cart\page.tsx:17
+C:\rose-and-co\src\app\fabric-guide\page.tsx:16
+C:\rose-and-co\src\app\gift-cards\page.tsx:8
+C:\rose-and-co\src\app\journal\[slug]\page.tsx:86
+C:\rose-and-co\src\app\journal\[slug]\page.tsx:90
+C:\rose-and-co\src\app\press\page.tsx:27
+C:\rose-and-co\src\app\product\[slug]\ProductClient.tsx:154
+C:\rose-and-co\src\app\shop\page.tsx:41
+C:\rose-and-co\src\app\size-guide\page.tsx:4
+C:\rose-and-co\src\app\size-guide\page.tsx:16
+C:\rose-and-co\src\app\style-quiz\page.tsx:9
+C:\rose-and-co\src\app\style-quiz\page.tsx:13
+C:\rose-and-co\src\app\style-quiz\page.tsx:17
+C:\rose-and-co\src\app\style-quiz\page.tsx:19
+C:\rose-and-co\src\app\style-quiz\page.tsx:100
+C:\rose-and-co\src\app\wishlist\page.tsx:38
+C:\rose-and-co\src\app\page.tsx:16
+C:\rose-and-co\src\app\page.tsx:21
+C:\rose-and-co\src\app\page.tsx:51
+C:\rose-and-co\src\components\AddressAutocomplete.tsx:98
+C:\rose-and-co\src\components\ComparisonTable.tsx:12
+C:\rose-and-co\src\components\ComparisonTable.tsx:18
+C:\rose-and-co\src\components\NavShop.tsx:5
+C:\rose-and-co\src\components\NavShop.tsx:6
+C:\rose-and-co\src\components\NavShop.tsx:29
+C:\rose-and-co\src\components\ProductGallery.tsx:7
+C:\rose-and-co\src\components\SocialProof.tsx:7
+
+===== END =====

@@ -18,7 +18,7 @@ export async function generateStaticParams() {
     return products.map((p) => ({ slug: p.slug }));
   } catch (err) {
     console.warn('DB not reachable at build time, using empty params', err);
-    return []; // fallback â€” pages will still be generated on-demand
+    return []; // fallback — pages will still be generated on-demand
   }
 }
 
