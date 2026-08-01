@@ -1,0 +1,368 @@
+{
+  "root": "C:\\rose-and-co",
+  "generated": "2026-08-01T22:46:45.408965",
+  "code_files": 170,
+  "images": 10,
+  "score": 0,
+  "counts": {
+    "CRITICAL": 1,
+    "HIGH": 6,
+    "MEDIUM": 13,
+    "LOW": 1,
+    "INFO": 3
+  },
+  "findings": [
+    {
+      "sev": "CRITICAL",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "Exposed secret: Hard-coded credential",
+      "detail": "A credential-like string was found in source. If this is a real key it can be stolen from your repo/bundle and abused (billing fraud, data theft).",
+      "fix": "Move it to an environment variable / server-side only. Rotate the key now. Add the file to .gitignore. Never ship secrets in client JS.",
+      "effort": "S",
+      "file": "src/lib/autofill.ts",
+      "line": 109
+    },
+    {
+      "sev": "HIGH",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "React dangerouslySetInnerHTML \u2014 sanitize input",
+      "detail": "Untrusted data reaching this sink can execute scripts in your users' browsers.",
+      "fix": "Sanitize/escape input, prefer textContent, or use a trusted templating layer.",
+      "effort": "M",
+      "file": "src/app/faq/page.tsx",
+      "line": 69
+    },
+    {
+      "sev": "HIGH",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "React dangerouslySetInnerHTML \u2014 sanitize input",
+      "detail": "Untrusted data reaching this sink can execute scripts in your users' browsers.",
+      "fix": "Sanitize/escape input, prefer textContent, or use a trusted templating layer.",
+      "effort": "M",
+      "file": "src/app/faq/page.tsx",
+      "line": 72
+    },
+    {
+      "sev": "HIGH",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "React dangerouslySetInnerHTML \u2014 sanitize input",
+      "detail": "Untrusted data reaching this sink can execute scripts in your users' browsers.",
+      "fix": "Sanitize/escape input, prefer textContent, or use a trusted templating layer.",
+      "effort": "M",
+      "file": "src/app/journal/[slug]/page.tsx",
+      "line": 81
+    },
+    {
+      "sev": "HIGH",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "React dangerouslySetInnerHTML \u2014 sanitize input",
+      "detail": "Untrusted data reaching this sink can execute scripts in your users' browsers.",
+      "fix": "Sanitize/escape input, prefer textContent, or use a trusted templating layer.",
+      "effort": "M",
+      "file": "src/components/AnnouncementBar.tsx",
+      "line": 12
+    },
+    {
+      "sev": "HIGH",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "React dangerouslySetInnerHTML \u2014 sanitize input",
+      "detail": "Untrusted data reaching this sink can execute scripts in your users' browsers.",
+      "fix": "Sanitize/escape input, prefer textContent, or use a trusted templating layer.",
+      "effort": "M",
+      "file": "src/components/AnnouncementBar.tsx",
+      "line": 15
+    },
+    {
+      "sev": "HIGH",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "React dangerouslySetInnerHTML \u2014 sanitize input",
+      "detail": "Untrusted data reaching this sink can execute scripts in your users' browsers.",
+      "fix": "Sanitize/escape input, prefer textContent, or use a trusted templating layer.",
+      "effort": "M",
+      "file": "src/components/InteractiveSizeChart.tsx",
+      "line": 53
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Marketing",
+      "impact": [
+        "CVR"
+      ],
+      "title": "A form has 9+ fields",
+      "detail": "Every extra field cuts completion. Long forms are a top CVR killer for lead gen.",
+      "fix": "Cut to essentials (often just email/phone). Use multi-step for the rest.",
+      "effort": "S",
+      "file": "",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Performance",
+      "impact": [
+        "CVR",
+        "ROAS",
+        "CTR"
+      ],
+      "title": "Heavy image 2222 KB (.png)",
+      "detail": "Large images are the #1 cause of slow LCP. Slow pages = lower conversion, higher CPC/CPA, worse ad Quality Score \u2192 lower ROAS.",
+      "fix": "Compress and convert to WebP/AVIF; serve responsive sizes with srcset. Target < 150 KB for hero, < 80 KB for supporting images.",
+      "effort": "S",
+      "file": "public/products/aarna-01-lifestyle.png",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Performance",
+      "impact": [
+        "CVR",
+        "ROAS",
+        "CTR"
+      ],
+      "title": "Heavy image 2259 KB (.png)",
+      "detail": "Large images are the #1 cause of slow LCP. Slow pages = lower conversion, higher CPC/CPA, worse ad Quality Score \u2192 lower ROAS.",
+      "fix": "Compress and convert to WebP/AVIF; serve responsive sizes with srcset. Target < 150 KB for hero, < 80 KB for supporting images.",
+      "effort": "S",
+      "file": "public/products/aarna-02-seated.png",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Performance",
+      "impact": [
+        "CVR",
+        "ROAS",
+        "CTR"
+      ],
+      "title": "Heavy image 2153 KB (.png)",
+      "detail": "Large images are the #1 cause of slow LCP. Slow pages = lower conversion, higher CPC/CPA, worse ad Quality Score \u2192 lower ROAS.",
+      "fix": "Compress and convert to WebP/AVIF; serve responsive sizes with srcset. Target < 150 KB for hero, < 80 KB for supporting images.",
+      "effort": "S",
+      "file": "public/products/aarna-03-side.png",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Performance",
+      "impact": [
+        "CVR",
+        "ROAS",
+        "CTR"
+      ],
+      "title": "Heavy image 2218 KB (.png)",
+      "detail": "Large images are the #1 cause of slow LCP. Slow pages = lower conversion, higher CPC/CPA, worse ad Quality Score \u2192 lower ROAS.",
+      "fix": "Compress and convert to WebP/AVIF; serve responsive sizes with srcset. Target < 150 KB for hero, < 80 KB for supporting images.",
+      "effort": "S",
+      "file": "public/products/aarna-04-back.png",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Performance",
+      "impact": [
+        "CVR",
+        "ROAS",
+        "CTR"
+      ],
+      "title": "Heavy image 2367 KB (.png)",
+      "detail": "Large images are the #1 cause of slow LCP. Slow pages = lower conversion, higher CPC/CPA, worse ad Quality Score \u2192 lower ROAS.",
+      "fix": "Compress and convert to WebP/AVIF; serve responsive sizes with srcset. Target < 150 KB for hero, < 80 KB for supporting images.",
+      "effort": "S",
+      "file": "public/products/aarna-05-detail.png",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Performance",
+      "impact": [
+        "CVR",
+        "ROAS",
+        "CTR"
+      ],
+      "title": "Heavy image 1851 KB (.png)",
+      "detail": "Large images are the #1 cause of slow LCP. Slow pages = lower conversion, higher CPC/CPA, worse ad Quality Score \u2192 lower ROAS.",
+      "fix": "Compress and convert to WebP/AVIF; serve responsive sizes with srcset. Target < 150 KB for hero, < 80 KB for supporting images.",
+      "effort": "S",
+      "file": "public/products/amara-back.png",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Performance",
+      "impact": [
+        "CVR",
+        "ROAS",
+        "CTR"
+      ],
+      "title": "Heavy image 2430 KB (.png)",
+      "detail": "Large images are the #1 cause of slow LCP. Slow pages = lower conversion, higher CPC/CPA, worse ad Quality Score \u2192 lower ROAS.",
+      "fix": "Compress and convert to WebP/AVIF; serve responsive sizes with srcset. Target < 150 KB for hero, < 80 KB for supporting images.",
+      "effort": "S",
+      "file": "public/products/amara-fabric.png",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Performance",
+      "impact": [
+        "CVR",
+        "ROAS",
+        "CTR"
+      ],
+      "title": "Heavy image 1792 KB (.png)",
+      "detail": "Large images are the #1 cause of slow LCP. Slow pages = lower conversion, higher CPC/CPA, worse ad Quality Score \u2192 lower ROAS.",
+      "fix": "Compress and convert to WebP/AVIF; serve responsive sizes with srcset. Target < 150 KB for hero, < 80 KB for supporting images.",
+      "effort": "S",
+      "file": "public/products/amara-front.png",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Performance",
+      "impact": [
+        "CVR",
+        "ROAS",
+        "CTR"
+      ],
+      "title": "Heavy image 1776 KB (.png)",
+      "detail": "Large images are the #1 cause of slow LCP. Slow pages = lower conversion, higher CPC/CPA, worse ad Quality Score \u2192 lower ROAS.",
+      "fix": "Compress and convert to WebP/AVIF; serve responsive sizes with srcset. Target < 150 KB for hero, < 80 KB for supporting images.",
+      "effort": "S",
+      "file": "public/products/amara-left.png",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Performance",
+      "impact": [
+        "CVR",
+        "ROAS",
+        "CTR"
+      ],
+      "title": "Heavy image 1782 KB (.png)",
+      "detail": "Large images are the #1 cause of slow LCP. Slow pages = lower conversion, higher CPC/CPA, worse ad Quality Score \u2192 lower ROAS.",
+      "fix": "Compress and convert to WebP/AVIF; serve responsive sizes with srcset. Target < 150 KB for hero, < 80 KB for supporting images.",
+      "effort": "S",
+      "file": "public/products/amara-right.png",
+      "line": 0
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "target=\"_blank\" without rel=\"noopener\"",
+      "detail": "Opened page can access window.opener and redirect your tab (tabnabbing).",
+      "fix": "Add rel=\"noopener noreferrer\" to external target=_blank links.",
+      "effort": "S",
+      "file": "src/app/admin/products/page.tsx",
+      "line": 57
+    },
+    {
+      "sev": "MEDIUM",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "target=\"_blank\" without rel=\"noopener\"",
+      "detail": "Opened page can access window.opener and redirect your tab (tabnabbing).",
+      "fix": "Add rel=\"noopener noreferrer\" to external target=_blank links.",
+      "effort": "S",
+      "file": "src/components/admin/ProductForm.tsx",
+      "line": 128
+    },
+    {
+      "sev": "LOW",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "No Content-Security-Policy detected",
+      "detail": "A CSP is one of the strongest defenses against XSS and injected scripts.",
+      "fix": "Add a CSP via server header or <meta http-equiv> once you know your asset origins.",
+      "effort": "M",
+      "file": "src/app/layout.tsx",
+      "line": 0
+    },
+    {
+      "sev": "INFO",
+      "cat": "SEO",
+      "impact": [
+        "SEO"
+      ],
+      "title": "Next.js Metadata API in use \u2014 verify per-route metadata",
+      "detail": "This file renders <head> but the project uses the metadata export API. Confirm each route/page defines its own title, description, canonical and OG image.",
+      "fix": "Ensure every page.tsx exports `metadata` (or generateMetadata) with unique values.",
+      "effort": "S",
+      "file": "src/app/layout.tsx",
+      "line": 0
+    },
+    {
+      "sev": "INFO",
+      "cat": "Security",
+      "impact": [
+        "Security"
+      ],
+      "title": "React dangerouslySetInnerHTML \u2014 sanitize input",
+      "detail": "This is the standard Next.js pattern for injecting JSON-LD structured data from a trusted, server-built object \u2014 low risk.",
+      "fix": "Fine as-is if the object is server-built. Only escape < in the JSON string if any field can contain user input.",
+      "effort": "M",
+      "file": "src/components/JsonLd.tsx",
+      "line": 13
+    },
+    {
+      "sev": "INFO",
+      "cat": "Upgrade",
+      "impact": [
+        "Security",
+        "Performance"
+      ],
+      "title": "package.json present \u2014 run a dependency audit",
+      "detail": "Offline scan can't check npm advisories, but outdated deps are a top vuln source.",
+      "fix": "Run `npm audit` and `npm outdated`; update majors carefully and re-test.",
+      "effort": "M",
+      "file": "package.json",
+      "line": 0
+    }
+  ],
+  "marketing_signals": {
+    "ga4": true,
+    "gtm": true,
+    "meta_pixel": true,
+    "capi_eventid": true,
+    "tiktok": true,
+    "google_ads": true,
+    "linkedin": true,
+    "cta_count": 27,
+    "form_count": 11,
+    "form_fields_max": 9,
+    "trust_hits": 107,
+    "review_schema": true,
+    "sticky_cta": true,
+    "ab_test": true,
+    "html_pages": 4,
+    "consent": true,
+    "og": true
+  }
+}

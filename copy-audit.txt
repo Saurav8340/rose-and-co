@@ -1,0 +1,1202 @@
+===== ROSE & CO - CUSTOMER-FACING COPY AUDIT =====
+Generated: 07/16/2026 23:22:33
+Purpose: review + rewrite all shopper-visible text to sound human and friendly.
+Note: admin pages are intentionally excluded (internal-only).
+
+===== SECTION 1: PAGES & COMPONENTS (shopper-visible) =====
+
+----- FILE: src\app\about\page.tsx -----
+  L5: About
+  L6: A small studio in Gurugram making one thing at a time.
+  L12: About
+  L35: A few things we don&apos;t do.
+  L51: When something goes wrong.
+
+----- FILE: src\app\cancellation-policy\page.tsx -----
+  L3: Cancellation Policy
+  L8: Cancellations
+  L11: You can cancel any order before it ships. Just email
+  L11: with your order number.
+  L14: Before dispatch
+  L15: Full refund of anything you paid online. Refund lands in your original payment method in 5â€“7 working days.
+  L19: After dispatch
+  L20: Can not cancel &mdash; the order is already with the courier. You have two options:
+  L22: Refuse delivery when the courier arrives. It comes back to us and we refund the online-paid amount within 7 working days.
+  L23: Accept delivery and return it under our Refund Policy within 7 days.
+
+----- FILE: src\app\care-guide\page.tsx -----
+  L3: Care guide
+  L3: How to wash, dry, iron, and store satin without damaging it. Rules that keep your Amara set looking new.
+  L8: Care guide
+  L9: Keep your satin looking new
+  L16: The four rules
+  L18: Never tumble dry.
+  L18: Heat kills poly-satin. Air dry only.
+  L19: Cold water only.
+  L19: Warm water breaks down the fibre finish.
+  L20: No wringing.
+  L20: Squeeze water out gently.
+  L21: Iron on the reverse only, low heat.
+  L21: Or steam in a bathroom.
+  L26: Washing
+  L28: Hand wash cold with mild detergent.
+  L29: Or gentle cycle in a mesh bag.
+  L30: Never bleach.
+  L31: Never soak overnight.
+  L36: Drying
+  L38: Hang or lay flat.
+  L39: Never direct sunlight.
+  L40: Never near a heater.
+  L45: Storage
+  L47: Cotton bag, not plastic.
+  L48: Away from perfume and hairspray.
+  L49: Air out every 2 months.
+  L54: Read more
+  L56: How to iron satin without damaging it
+  L57: Remove wrinkles without an iron
+  L58: Storing satin without yellowing
+
+----- FILE: src\app\cart\page.tsx -----
+  L15: Your bag is empty.
+  L16: Take another look.
+  L17: Shop the Amara
+  L27: Your bag
+  L42: Decrease
+  L44: Increase
+  L46: Remove
+  L55: Summary
+  L57: Was
+  L58: Subtotal
+  L59: Shipping
+  L59: Free
+  L62: Total
+  L64: Checkout
+
+----- FILE: src\app\checkout\page.tsx -----
+  L96: Enter valid 10-digit mobile
+  L97: Enter valid PIN
+  L98: Enter your full name
+  L99: Enter your address
+  L100: City and state required
+  L142: Verification failed
+  L164: Cart empty
+  L179: Order failed
+  L202: Quick check
+  L214: Order placed. Taking you to your confirmation...
+  L223: Where should we send it?
+  L226: Your name
+  L231: Mobile
+  L232: 10-digit number
+  L235: Email (optional)
+  L241: PIN
+  L245: City
+  L249: State
+  L254: Address
+  L255: House / flat, street
+  L259: Landmark (optional)
+  L263: Alt phone (optional)
+  L273: Please wait...
+  L280: A quick check.
+  L282: Solve this to confirm you are a person.
+  L282: Type the four characters below.
+  L299: Get a new question
+  L305: Your answer
+  L316: Back
+  L324: How would you like to pay?
+  L331: Pay in full via UPI
+  L332: Rs 100 off.
+  L342: Partial cash on delivery
+  L351: Pay now
+  L361: UPI QR Code
+  L363: Scan with any UPI app.
+  L370: Done paying?
+  L371: We verify the payment within a couple of hours. Tap below when you have paid.
+  L373: Placing order...
+  L373: I have paid
+  L378: Back
+  L380: terms
+  L389: Summary
+  L403: Subtotal
+  L404: Gift wrap
+  L405: Shipping
+  L405: Free
+  L407: UPI discount
+  L411: Total
+
+----- FILE: src\app\collections\co-ord-sets\page.tsx -----
+  L6: Co-ord sets
+  L6: Matching top and skirt or top and pant sets. Small batch, hand-painted prints, satin fabric.
+  L13: Co-ord sets
+  L14: Matching top and bottom sets
+  L37: Learn about co-ord sets
+  L39: What is a co-ord set? Types and styles
+  L40: Best satin co-ord sets under Rs 2,000 in India
+  L41: How to style a marble swirl co-ord set
+
+----- FILE: src\app\collections\engagement-outfits\page.tsx -----
+  L6: Engagement outfits
+  L6: Outfits for engagement functions and roka ceremonies. Warm tones, small batch, works for family functions.
+  L13: Engagement outfits
+  L14: Roka, engagement, family functions
+  L37: Guides for engagement functions
+  L38: Roka outfit ideas for the bride\'s family
+  L39: Satin co-ord for engagement functions
+
+----- FILE: src\app\collections\party-wear\page.tsx -----
+  L6: Party wear
+  L6: Satin co-ords, dresses, and evening wear for Indian parties. Made in small batches, shipped from Gurugram.
+  L13: Party wear
+  L14: For cocktail parties, engagements, dinners
+  L37: More on party wear
+  L39: Cocktail party outfit ideas for Indian women in 2026
+  L41: Sangeet outfit ideas that aren\'t lehengas
+
+----- FILE: src\app\collections\satin-skirts\page.tsx -----
+  L6: Satin skirts
+  L6: Poly-satin skirts at 95+ GSM. Falls with weight, doesn\
+  L13: Satin skirts
+  L14: Real satin, real weight
+  L37: On satin
+  L39: Poly-satin fabric guide: GSM and care
+  L40: Poly-satin vs silk satin
+  L41: Best satin skirts under Rs 1,500
+  L42: How to spot cheap satin in photos
+
+----- FILE: src\app\contact\page.tsx -----
+  L3: Contact
+  L8: Get in touch
+  L15: Email
+  L19: Instagram
+  L21: DMs are open. Slower than email but we do check.
+  L24: Address
+  L26: Not a shopfront. Studio + fulfilment only.
+  L31: Before you write in
+  L33: Order help:
+  L33: include your order number in the subject line.
+  L34: Sizing help:
+  L34: tell us your height and usual size in Zara or H&M. We will pick for you.
+  L35: Payment issues:
+  L35: attach your UPI transaction reference.
+  L36: Return / exchange:
+  L36: just say &ldquo;return&rdquo; or &ldquo;exchange&rdquo; and your order number. We do the rest.
+
+----- FILE: src\app\fabric-guide\page.tsx -----
+  L3: Fabric guide
+  L3: What we look for in fabric and why. Complete guide to GSM, satin types, and quality signals.
+  L8: Fabric guide
+  L9: What we obsess over
+  L16: The Amara fabric
+  L17: Poly-satin blend, 95-105 GSM. Sourced from a mill in Surat. We tested 9 swatches from 6 mills before choosing this one.
+  L21: Why this GSM
+  L22: Under 90 GSM, satin looks flat and feels plasticky. Above 130 GSM, it starts feeling like curtain material. 95-110 is the sweet spot for drape and photographs.
+  L26: Read more
+  L28: Full poly-satin GSM guide
+  L29: What GSM means across all fabrics
+  L30: Poly-satin vs silk satin
+  L31: Spot cheap satin in product photos
+
+----- FILE: src\app\faq\page.tsx -----
+  L3: Questions
+  L7: Shipping and delivery
+  L9: When will my order reach me?
+  L9: Metros usually see it in three to five working days. Smaller cities in five to seven. Everything ships from our Gurugram studio within forty-eight hours of your order.
+  L10: Do you ship internationally?
+  L10: Not yet. India only, for now.
+  L11: Who handles the delivery?
+  L11: Delhivery, mostly. A handful of remote pincodes are served by Ecom Express or Xpressbees.
+  L12: How do I track it?
+  L12: A tracking link goes to your registered mobile once the courier picks it up.
+  L13: What happens if I
+  L13: The courier tries three times. If all three fail, it comes back to us and we refund what you paid.
+  L17: Payment
+  L19: Which methods do you accept?
+  L19: UPI only. GPay, PhonePe, Paytm, BHIM, Amazon Pay, CRED. No cards or netbanking yet.
+  L20: Why UPI only?
+  L20: Because we are small. Card gateways cost more than they are worth at our volume. UPI does the same job at no fee.
+  L21: Is cash on delivery available?
+  L21: Partial. A small deposit online, the rest in cash when it arrives.
+  L22: Why not full COD?
+  L22: We tried, and thirty percent came back. Every refused delivery costs us in shipping. A small deposit keeps the piece here for someone who actually wants it.
+  L23: My payment is pending, is something wrong?
+  L23: No. We check every UPI payment against our bank statement by hand. Usually done in an hour. If it
+  L24: My money left, but no order confirmation.
+  L24: Write to us with the UPI reference and the amount. We create the order manually, usually within the hour.
+  L28: Product and fit
+  L30: Tell me about the fabric.
+  L30: Poly-satin, around a hundred grams per square metre. It has weight. It falls without clinging.
+  L31: Is it really hand-painted?
+  L31: Yes. Every panel is painted before the cloth is cut. Yours will look a little different from the photos. Same three tones, different arrangement.
+  L32: How does the sizing run?
+  L32: True to Zara and H&amp;M. Between sizes, we usually say down for the top and up for the skirt.
+  L33: How do I take care of it?
+  L33: Dry clean is safest. Hand-wash cold works too. Never tumble dry. Never wring. Iron on the reverse, low heat, if needed.
+  L34: Will the print fade?
+  L34: The pigment sits inside the fibre. Wash cold, skip the bleach, and it stays true.
+  L38: Returns
+  L40: Can I return it?
+  L40: Yes, within seven days of it arriving. Tags on, unworn, unwashed, original packaging.
+  L41: How does the return work?
+  L41: Email us at care@roseandco.in with your order number. We arrange a free pickup. Once we check it in, the refund is on its way &mdash; usually about a week.
+  L42: Can I exchange for a different size?
+  L42: Yes, free, if the size you want is in stock.
+  L43: It arrived damaged.
+  L43: Email within forty-eight hours with a photo. Full refund. We arrange the pickup. No back and forth.
+  L47: Order changes
+  L49: Can I change my address?
+  L49: Yes, within four hours of ordering. After that, the courier has picked it up.
+  L50: Can I cancel?
+  L50: Any time before dispatch. Anything you paid online lands back in about a week.
+  L58: Help
+  L59: A few common questions.
+  L81: Anything else? Write to us.
+
+----- FILE: src\app\gift-cards\page.tsx -----
+  L3: Gift cards
+  L3: Give Rose &amp; Co credit as a gift. Rs 500, Rs 1,000, or Rs 2,000 amounts. Emailed instantly.
+  L7: A small gift
+  L8: A full Amara set
+  L9: Two sets, or one plus another drop
+  L14: Gift cards
+  L15: Give a Rose &amp; Co gift card
+  L30: How it works
+  L32: Email us at
+  L32: with the amount and recipient email.
+  L33: Pay via UPI (send to the ID on our checkout page).
+  L34: We generate the gift card code, email it to the recipient.
+  L35: They enter the code at checkout when they order.
+
+----- FILE: src\app\impact\page.tsx -----
+  L1: Our impact
+  L1: Small-batch production, transparent supply chain. What we actually do vs what other brands say.
+  L6: Our impact
+  L7: Small-batch, transparent, honest
+  L14: What we do
+  L16: Produce 200 sets per drop. No overstock. When it sells out, wait 4-6 weeks for the next drop.
+  L17: Hand-paint each fabric panel. Not machine-printed. Not digital.
+  L18: Source poly-satin from a single mill in Surat. We know their conditions and pay above market rate.
+  L19: Stitch at a small unit near Karol Bagh, Delhi. 8 tailors, one supervisor. Fair wages.
+  L20: Pack each order by hand at our Gurugram address.
+  L21: Free return shipping via Delhivery. Returned pieces are inspected, repaired if needed, resold at a small discount (or donated if not resalable).
+  L26: What we don\'t do
+  L28: Use organic or handloom fabric. Poly-satin is not eco-friendly. We\'re honest about that.
+  L29: Claim carbon neutrality. We\'re not there yet.
+  L30: Have take-back or resale programs. Considering both for future.
+  L31: Charge extra for &quot;sustainability&quot;. Rs 1,499 is the price.
+  L36: Why we\'re transparent about this
+  L37: Most brands claim sustainability without doing the work. We think being honest about limitations is more valuable than performing perfection.
+
+----- FILE: src\app\journal\[slug]\page.tsx -----
+  L18: Not found
+  L57: Home
+  L57: Journal
+  L85: The product
+  L86: Amara Marble Swirl Co-ord Set
+  L90: See the set &rarr;
+
+----- FILE: src\app\journal\page.tsx -----
+  L12: Journal â€” guides on fabric, styling, and Indian D2C fashion
+  L13: Honest guides on satin fabric, styling co-ord sets, and how small-batch Indian brands make things. From Rose & Co, Gurugram.
+  L16: Journal | Rose & Co
+  L17: Guides on satin, styling, and Indian D2C fashion.
+  L34: The Journal
+  L44: No posts yet.
+  L70: Read &rarr;
+
+----- FILE: src\app\layout.tsx -----
+  L19: RosÃ© & Co - Hand-painted Marble Swirl Co-ord Sets
+  L22: Hand-painted marble swirl satin co-ord sets. Ships from Gurugram in 24-48 hours. Free shipping across India.
+  L28: RosÃ© & Co - Hand-painted Marble Swirl Co-ord Sets
+  L29: Two hundred sets. Then we begin again.
+  L48: Skip to main content
+
+----- FILE: src\app\not-found.tsx -----
+  L7: We do not have a page at this URL.
+  L8: Back to shop
+
+----- FILE: src\app\order-failure\page.tsx -----
+  L8: Order did not go through.
+  L13: Try again
+  L14: Email us
+
+----- FILE: src\app\order-success\page.tsx -----
+  L26: Order confirmed
+
+----- FILE: src\app\page.tsx -----
+  L17: A new drop
+  L18: Poured in rosÃ©.\nWorn in fire.
+  L19: Hand-painted marble swirl on satin that actually has weight. Two hundred sets, and then we begin again.
+  L22: A quieter drop
+  L23: Cast in caramel.\nKept in calm.
+  L24: Warm marble on satin that actually has weight. Slow mornings, long lunches, the kind of day that does not rush.
+  L44: A new drop
+  L46: One-of-a-kind. Handcrafted in Delhi NCR. Two hundred sets, then we begin again.
+  L61: When will it arrive?
+  L61: Metros, three to five working days. Smaller cities, five to seven. Ships from Gurugram within forty-eight hours of your order.
+  L62: Is cash on delivery available?
+  L62: Partial. A small deposit at the door, the rest in cash when it arrives.
+  L63: Tell me about the fabric.
+  L63: Poly-satin, around a hundred grams per square metre. It has weight. It falls without clinging.
+  L64: What if the size is wrong?
+  L64: Seven days to return. Free pickup. Refund lands in a week.
+  L77: The collection
+  L146: The set
+  L147: Three things worth knowing.
+  L151: The print
+  L157: The fabric
+  L163: The fit
+  L173: How we work
+  L174: Two hundred sets, then we begin again.
+  L185: Notes from buyers
+  L186: What they told us after.
+  L192: A few questions.
+  L207: Read all frequently asked questions
+  L217: The journal
+  L218: On fabric, fit, and other quiet obsessions.
+  L223: Read the RosÃ© and Co journal
+
+----- FILE: src\app\press\page.tsx -----
+  L3: Press
+  L3: Media mentions and press coverage of Rose &amp; Co.
+  L8: Press
+  L9: Mentions and coverage
+  L15: Press enquiries
+  L16: Working on a piece about Indian D2C fashion? Reach us at:
+  L24: About Rose &amp; Co
+
+----- FILE: src\app\privacy-policy\page.tsx -----
+  L3: Privacy Policy
+  L8: Privacy policy
+  L9: Last updated: 1 January 2026
+  L13: What we collect
+  L14: Your name, mobile, address, PIN, email (if you share it), and your UPI transaction reference. That is it.
+  L17: What we do not collect
+  L18: Card numbers, bank credentials, biometrics, browsing history outside our site &mdash; none of that.
+  L21: Why we collect it
+  L22: To ship your order, verify your payment, and update you when the package moves. That is the entire reason.
+  L25: Who we share it with
+  L26: Our courier partners get your name, address, and mobile so they can deliver. That is the only third party we share personal data with. We do not sell your data.
+  L29: Marketing messages
+  L30: We do not spam you with WhatsApp or SMS blasts. If we message you, it is about your order.
+  L33: Analytics and cookies
+  L34: We use Meta Pixel to measure ad performance. It drops standard cookies in your browser. You can block these in browser settings &mdash; the site will still work.
+  L37: Your rights
+  L38: Email
+  L38: to see your data, correct it, or delete it. We will do it within 7 working days.
+  L41: Data storage
+  L42: Data lives in an encrypted Postgres database. Access is limited to two people on our team. Payment credentials are never stored.
+
+----- FILE: src\app\product\[slug]\page.tsx -----
+  L20: DB not reachable at build time, using empty params
+  L31: Product
+  L54: What is the fabric?
+  L54: Poly-satin blend, around 90 to 100 GSM. Has weight, falls with drape. Not the thin shiny kind you see in Rs 500 satin.
+  L55: Is the print really hand-painted?
+  L55: Yes. Each panel is hand-painted before the fabric is cut. Your swirl pattern will look slightly different from the one in the photos.
+  L56: How does the sizing run?
+  L56: True to size for most women. Between sizes, size down for the top and up for the skirt.
+  L57: How long does delivery take?
+  L57: Ships from Delhi NCR within 24 to 48 hours of payment confirmation. Delivered in 3 to 5 business days to metros, 5 to 7 to smaller cities.
+  L58: Can I wear the top separately?
+  L58: Yes. Works with jeans, tailored trousers, or a plain skirt.
+  L59: What is the difference between prepaid and COD?
+  L59: Prepaid via UPI is Rs 2,199 (save Rs 100). Partial COD is Rs 2,299 total, split as Rs 299 online plus Rs 2,000 cash on delivery.
+  L60: What is the MRP?
+  L60: MRP is Rs 3,499. We sell at Rs 2,000 - Rs 1,499 off - because we go direct to buyer and skip the retail markup.
+
+----- FILE: src\app\product\[slug]\ProductClient.tsx -----
+  L48: Pick a size first.
+  L50: Added.
+  L57: Pick a size first.
+  L67: Breadcrumb
+  L68: Home
+  L74: Rose &amp; Co
+  L92: Only X left
+  L98: This drop is sold out. Next drop in four to six weeks.
+  L104: Size
+  L111: Quantity
+  L113: Decrease quantity
+  L115: Increase quantity
+  L120: Buy Now
+  L121: Add to Bag
+  L131: The set
+  L133: A relaxed satin button-down shirt and high-waisted wide-leg pants. Hand-painted marble swirl in warm tones Ã¢â‚¬â€ beige, caramel and soft brown &mdash; deep rose, wine, warm ivory.
+  L134: Every set is painted before the cloth is cut, so no two look the same. If that isn&apos;t what you want, this may not be the piece.
+  L139: Fabric &amp; fit
+  L141: Poly-satin, around a hundred grams per square metre.
+  L142: Relaxed shirt with a camp collar. Wide-leg pants, full length on a 5'7" frame Ã¢â‚¬â€ size with heels or hem if you're 5'3" or under.
+  L143: Model is 5&apos;7&quot; in size S.
+  L144: Dry clean, or hand-wash cold. Never tumble dry.
+  L149: Size chart
+  L154: How the Amara compares
+  L159: Shipping &amp; returns
+  L161: Free shipping anywhere in India via Delhivery. Metros in three to five working days. Smaller cities in five to seven.
+  L162: Seven days to return from the day it arrives. Tags on, unworn, unwashed. We arrange the pickup. Refund lands in about a week.
+
+----- FILE: src\app\refund-policy\page.tsx -----
+  L3: Returns & Refund Policy
+  L8: Returns and refunds
+  L12: Return window:
+  L16: What we accept
+  L18: Unworn, unwashed pieces
+  L19: Original tags still attached
+  L20: Original packaging intact
+  L25: What we do not accept
+  L27: Anything worn or washed, even once
+  L28: Missing tags or packaging
+  L29: Signs of alteration
+  L30: Items ordered more than 7 days ago
+  L35: How to return
+  L37: Email
+  L37: with your order number and reason.
+  L38: We arrange a reverse pickup &mdash; the courier collects from your address. You do not need to send it yourself.
+  L39: Once we receive and check it (2 working days), refund is initiated.
+  L40: Refund lands in your original payment source in 5â€“7 working days.
+  L45: Exchanges
+  L46: Free size exchange within 7 days, subject to stock. Same product, different size. Print swaps are not possible &mdash; every set is hand-painted and unique.
+  L50: If we shipped the wrong item or a defective one
+  L51: Email us within 48 hours with a photo. Full refund + free return pickup. No back-and-forth, no questions.
+  L55: Partial COD orders
+  L56: If you paid â‚¹299 online + â‚¹2,000 on delivery, the refund covers both amounts. The â‚¹299 lands back in your UPI. The â‚¹2,000 is refunded to a bank account you share via email.
+
+----- FILE: src\app\search\page.tsx -----
+  L6: Search
+  L16: Search
+  L18: Search productsâ€¦
+  L32: No products found.
+
+----- FILE: src\app\shipping-policy\page.tsx -----
+  L1: Shipping Policy
+  L6: Shipping
+  L11: Ships to
+  L11: All of India
+  L12: Shipping cost
+  L12: Free Â· no minimum
+  L13: Dispatch time
+  L14: Delivery time
+  L24: Dispatch time
+  L29: Delivery time
+  L31: Metros:
+  L32: Tier-2 / tier-3 cities:
+  L33: North-East + remote pincodes:
+  L33: up to 10 business days
+  L38: Courier partners
+  L39: Delhivery for most pincodes. Ecom Express or Xpressbees for zones where Delhivery does not reach.
+  L43: Tracking
+  L44: You get a tracking link via SMS when your order ships. You can also track from our
+  L44: Track order
+  L44: page any time.
+  L48: Partial COD
+  L53: Failed delivery
+  L54: The courier attempts three times. If all three fail, the package comes back to us. We refund the online-paid amount within 7 working days.
+  L58: Address changes
+  L59: Email us within 4 hours of placing the order. After that the order is picked up by the courier and cannot be modified.
+
+----- FILE: src\app\shop\page.tsx -----
+  L12: Shop the Collection | RosÃ© & Co
+  L13: Two hand-painted marble swirl co-ord sets. Poured in rosÃ©. Cast in caramel. Premium satin. Free shipping across India. Ships from Gurugram in 24-48 hours.
+  L18: The RosÃ© & Co Collection
+  L19: Hand-painted marble swirl co-ord sets. Two hundred pieces per drop.
+  L58: The collection
+
+----- FILE: src\app\size-guide\page.tsx -----
+  L4: Size guide
+  L4: How to measure yourself for online satin shopping. Amara set size chart with brand equivalents (Zara, H&amp;M).
+  L9: Size guide
+  L10: How to size yourself right
+  L16: Amara set size chart
+  L22: Between sizes?
+  L24: Between XS and S: XS for fitted, S for comfort.
+  L25: Between S and M with broader bust: size up for top only.
+  L26: Between L and XL: always XL. Satin doesn\'t stretch.
+  L31: How to measure yourself
+  L32: Full guide:
+  L32: How to measure yourself for online satin shopping
+  L36: Still unsure?
+  L37: Email us at care@roseandco.in with your bust, waist, and hip measurements. We\'ll pick the size for you.
+
+----- FILE: src\app\style-quiz\page.tsx -----
+  L9: Amara satin co-ord in wine/rose tones. Small gold hoops. Wine block heels.
+  L10: Traditional Anarkali with light embroidery in muted tones. Cotton silk.
+  L13: Fitted bodycon dress + statement heels. Or Amara set + bold lip.
+  L14: Silk slip dress + oversized blazer. Nude heels.
+  L17: Amara top with jeans + white sneakers. Small hoops.
+  L19: Amara satin co-ord + block heels + small hoops. Works for most Indian occasions.
+  L34: Style quiz
+  L35: What should you wear?
+  L41: What&apos;s the occasion?
+  L44: Engagement, roka, or family function
+  L45: Cocktail party or evening event
+  L46: Brunch, coffee, or casual meetup
+  L47: Something else
+  L59: Your style?
+  L62: Modern and contemporary
+  L63: Classic and traditional
+  L64: Bold and statement
+  L65: Minimal and quiet
+  L77: Comfort priority?
+  L80: Yes, I want to be comfortable
+  L81: Balance of looks and comfort
+  L82: Looks first, comfort second
+  L94: We think you should wear
+  L99: Redo
+  L100: See the Amara
+
+----- FILE: src\app\terms\page.tsx -----
+  L3: Terms & Conditions
+  L8: Terms and conditions
+  L9: Placing an order means you agree to what is below.
+  L13: The product
+  L14: Every set is hand-painted. Colours will vary slightly from the product photos because of (a) hand-printing, (b) how your screen displays colours, (c) how natural light hits the fabric. This is not a defect.
+  L18: Pricing
+  L23: Payment
+  L24: UPI only. Two options:
+  L26: Full prepaid: â‚¹2,199 upfront
+  L27: Partial COD: â‚¹299 online + â‚¹2,000 in cash on delivery
+  L32: Payment verification
+  L33: We match every UPI payment to your order manually. Usually done within 2 hours. Orders where we cannot match a payment within 24 hours are cancelled and any partial payment is refunded.
+  L37: Cancellation
+  L38: Free cancellation any time before we hand the order to the courier &mdash; usually within 24 hours of placing. After dispatch, use the returns flow.
+  L42: Jurisdiction
+  L43: Any dispute is subject to Gurugram, Haryana courts.
+  L47: Intellectual property
+  L48: All content, prints and photos on this site belong to RosÃ© & Co. Please do not lift them for your own brand.
+  L52: Contact
+  L53: for anything at all.
+
+----- FILE: src\app\track\page.tsx -----
+  L29: Track your order
+  L30: Order number and mobile. Nothing else needed.
+  L33: Order number
+  L34: RC2607123456
+  L37: Mobile
+  L38: 10-digit mobile
+  L41: Show my order
+  L46: Order
+  L49: Order status
+  L50: Payment status
+  L51: Payment method
+  L51: Full prepaid
+  L51: Partial COD
+  L52: Placed at
+
+----- FILE: src\app\wishlist\page.tsx -----
+  L29: Wishlist
+  L30: Your saved pieces
+  L31: Wishlist is saved in your browser. No account needed.
+  L34: Loading...
+  L37: Nothing saved yet.
+  L38: Explore Amara
+  L56: Remove from wishlist
+
+----- FILE: src\components\AddressAutocomplete.tsx -----
+  L92: Full name
+  L98: Aarna Sharma
+  L103: Phone
+  L109: 10-digit mobile
+  L119: checking...
+  L121: not found
+  L128: 6-digit PIN
+  L136: City
+  L142: Auto-filled from PIN
+  L147: State
+  L153: Auto-filled from PIN
+  L160: Address
+  L166: House no., street, area
+  L172: Landmark (optional)
+  L178: Near...
+
+----- FILE: src\components\AnnouncementBar.tsx -----
+  L3: Free shipping across India
+  L4: Small-batch drop &middot; 200 sets
+  L5: Ships from Gurugram within 48 hours
+  L6: Seven-day returns
+
+----- FILE: src\components\BundleOffer.tsx -----
+  L20: Weekend set
+  L38: Add
+  L46: Bundle price
+
+----- FILE: src\components\CartContext.tsx -----
+  L63: useCart must be used within CartProvider
+
+----- FILE: src\components\CartReviewsSnippet.tsx -----
+  L6: r.text.length
+
+----- FILE: src\components\ComparisonTable.tsx -----
+  L3: Fabric weight
+  L4: Screen / digital
+  L5: Each unique
+  L6: Delivery (Delhi)
+  L8: Rs 1,499
+  L8: Rs 2,290+
+  L8: Rs 1,899
+  L8: Rs 800-1,800
+  L12: How the Amara compares
+  L18: Amara
+  L19: Zara
+  L20: Urbanic
+  L21: Instagram brands
+  L37: Based on our own orders and public size charts. Prices are Nov 2025.
+
+----- FILE: src\components\CustomerPhotos.tsx -----
+  L10: From actual orders
+  L11: What they wrote back
+
+----- FILE: src\components\ExitIntent.tsx -----
+  L63: Close
+  L70: Before you go
+  L82: you@email.com
+  L101: Check your inbox.
+  L103: WELCOME10
+
+----- FILE: src\components\Footer.tsx -----
+  L5: All products
+  L6: Co-ord sets
+  L7: Satin skirts
+  L8: Party wear
+  L9: Engagement outfits
+  L10: Gift cards
+  L13: Size guide
+  L14: Fabric guide
+  L15: Care guide
+  L16: Style quiz
+  L17: The journal
+  L21: Contact us
+  L22: Track your order
+  L23: Shipping policy
+  L24: Refund policy
+  L25: Cancellation policy
+  L29: Our story
+  L30: Our impact
+  L32: Terms & conditions
+  L33: Privacy policy
+  L42: Footer navigation
+  L62: Follow RosÃ© & Co on Instagram
+  L66: M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z
+  L73: Follow RosÃ© & Co on Facebook
+  L77: M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z
+  L84: Chat with RosÃ© & Co on WhatsApp
+  L88: M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488
+  L122: Free shipping
+  L123: Anywhere in India
+  L126: Ships in 24â€“48 hrs
+  L127: From Gurugram
+  L131: Free reverse pickup
+  L134: Secure UPI
+  L135: Encrypted checkout
+
+----- FILE: src\components\FounderNote.tsx -----
+  L11: A note
+
+----- FILE: src\components\GiftWrap.tsx -----
+  L14: Add gift wrap
+  L17: Cream tissue, wax seal, hand-written card. Adds no delay to shipping.
+
+----- FILE: src\components\GreetingBanner.tsx -----
+  L64: Good morning
+  L64: Good afternoon
+  L64: Good evening
+  L85: Dismiss
+
+----- FILE: src\components\InteractiveSizeChart.tsx -----
+  L5: Zara XS, H&amp;M XS, Fabindia S
+  L6: Zara S, H&amp;M S, Global Desi S
+  L7: Zara M, H&amp;M M, Vero Moda M
+  L8: Zara L, H&amp;M L, Only L
+  L9: Zara XL, H&amp;M L-XL
+  L10: Zara XXL, H&amp;M XL
+  L19: Tap a size to see measurements + what it matches in other brands
+  L35: Bust
+  L39: Waist
+  L43: Hip
+  L47: Skirt length
+  L52: Matches
+  L55: Measured flat, garment size. Add ~2 cm to each for comfortable body-fit. Satin does not stretch.
+
+----- FILE: src\components\LeadCaptureChip.tsx -----
+  L275: Just a name gets you the code. Fill more if you want faster checkout.
+  L276: Just a name gets the code. Rest is optional but saves time later.
+  L291: Dismiss
+  L295: Thanks for tapping
+  L295: A small welcome
+  L322: Close
+  L326: Quick moment
+  L328: name OR phone
+  L339: Full name
+  L355: Phone (optional but recommended)
+  L372: Email (optional)
+  L384: PIN
+  L396: City (auto)
+  L408: Street address (optional)
+  L420: Get my code
+  L420: Enter name or phone to continue
+  L424: Saving...
+
+----- FILE: src\components\MadeInIndiaBadge.tsx -----
+  L5: Made in India
+
+----- FILE: src\components\NameCollector.tsx -----
+  L35: Quick thing
+  L36: What should we call you?
+  L41: Your name
+
+----- FILE: src\components\NavShop.tsx -----
+  L5: Poured in rosÃ©. Worn in fire.
+  L6: Cast in caramel. Kept in calm.
+  L30: One-of-a-kind. Handcrafted in India.
+
+----- FILE: src\components\PersonalizedDiscount.tsx -----
+  L55: Dismiss
+
+----- FILE: src\components\PincodeCheck.tsx -----
+  L14: Enter a valid 6-digit PIN
+  L20: We could not find this PIN. Try again or email us.
+  L36: Could not check right now. Try again.
+  L42: Check delivery date
+  L46: Enter PIN code
+  L54: Delivering to
+  L55: Arrives by
+  L56: Free shipping. Ships from Delhi NCR in 24â€“48 hours.
+
+----- FILE: src\components\PWAInstallPrompt.tsx -----
+  L40: Add Rose &amp; Co to your home screen
+  L41: Faster checkout, offline browsing.
+  L43: Dismiss
+  L46: Install
+  L47: Not now
+
+----- FILE: src\components\RecentlyViewed.tsx -----
+  L20: Recently viewed
+
+----- FILE: src\components\ReviewsSection.tsx -----
+  L54: What they said
+  L137: Be the first to review this piece.
+  L138: We send review requests via WhatsApp seven days after delivery.
+
+----- FILE: src\components\ShareButton.tsx -----
+  L25: Share this product
+  L29: Copied
+  L32: M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z
+
+----- FILE: src\components\ShipsInCounter.tsx -----
+  L23: Order now, goes out tomorrow morning
+
+----- FILE: src\components\ShopDropdown.tsx -----
+  L55: M1 3L5 7L9 3
+  L65: The collection
+  L115: Free shipping - 7-day returns
+
+----- FILE: src\components\SizeGuideModal.tsx -----
+  L21: Open size guide
+  L40: Fit guide
+  L47: Close
+  L63: Size
+  L64: Bust (in)
+  L65: Waist (in)
+  L66: Hip (in)
+  L67: Model height
+  L85: How to measure:
+  L85: Use a soft measuring tape. Keep it snug, not tight.
+  L86: Bust:
+  L86: around the fullest part.
+  L87: Waist:
+  L87: narrowest point, above the belly button.
+  L88: Hip:
+  L88: around the fullest part of your hips.
+  L92: Still unsure?
+
+----- FILE: src\components\SizeSelector.tsx -----
+  L16: Select size
+
+----- FILE: src\components\TestimonialsCarousel.tsx -----
+  L44: Verified order
+
+----- FILE: src\components\TrustBadges.tsx -----
+  L3: Free shipping
+  L3: Anywhere in India
+  L4: Ships in
+  L4: From Gurugram unit
+  L5: To return
+  L5: Free reverse pickup
+  L6: Secure checkout
+  L6: No cards, no netbanking
+
+----- FILE: src\components\TrustBar.tsx -----
+  L3: Free shipping
+  L3: Anywhere in India
+  L4: Ships in 48 hours
+  L4: From Gurugram
+  L5: Seven-day returns
+  L5: We arrange the pickup
+  L6: Written by a person
+  L6: Every note answered
+
+----- FILE: src\components\UpiButtons.tsx -----
+  L7: Google Pay
+  L16: Amazon Pay
+  L27: BHIM
+  L29: CRED
+  L61: Or pick your app
+
+----- FILE: src\components\UpiLogos.tsx -----
+  L13: Pay via
+  L19: or any UPI app
+
+----- FILE: src\components\UPIPayButton.tsx -----
+  L35: Open your UPI app on phone to scan:
+  L39: UPI QR Code
+  L60: M5 12H19M19 12L13 6M19 12L13 18
+  L69: Choose your UPI app:
+  L75: Google Pay
+  L82: PhonePe
+  L88: Pay
+  L89: Paytm
+
+----- FILE: src\components\WhatsAppButton.tsx -----
+  L14: Chat on WhatsApp
+  L18: M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488
+
+----- FILE: src\components\WishlistButton.tsx -----
+  L12: Remove from wishlist
+  L12: Add to wishlist
+  L16: M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z
+
+----- FILE: src\components\WishlistContext.tsx -----
+  L37: useWishlist must be used inside WishlistProvider
+
+----- FILE: src\lib\constants.ts -----
+  L2: Rose & Co
+  L3: Small-batch co-ord sets. Hand-painted prints.
+  L6: Gurugram, Haryana, India
+  L12: Rose And Co
+
+----- FILE: src\lib\reviews.ts -----
+  L13: Ananya Verma
+  L17: Ordered on Wednesday, got it by Saturday. The skirt actually has weight, doesn\
+  L22: Sneha Iyer
+  L25: Anniversary dinner
+  L26: Fit is true to size for me (I\
+  L31: Priya Nair
+  L34: House party
+  L35: Honestly bought this because everyone on my feed was tagging Rose & Co. Was expecting to be disappointed. But no. Fabric is solid, and the top can be worn with just jeans. Only complaint - delivery took 6 days to Kochi.
+  L40: Riya Bhardwaj
+  L44: Wore it to my friend\
+  L49: Meher Kapoor
+  L52: Brunch at Perch
+  L53: The top is a proper crop, not too short. Paired with white sneakers for brunch and it worked. Skirt has more swish than I expected. Would order in another colour if they release one.
+  L58: Ishani Reddy
+  L61: Engagement function
+  L62: Ordered on a Tuesday, wanted for Saturday engagement. Reached Wednesday afternoon. Packed properly, tissue paper and everything. Fit was accurate. Only wish they had matching earrings or something.
+  L67: Tanvi Shah
+  L70: Dinner date
+  L71: Was between M and L, went with L based on the size chart. Right call. The satin doesn\
+  L76: Sara Menon
+  L80: Delivery was 4 days to Pune, ok. Fabric feels premium, like the kind you\
+  L85: Nikita Joshi
+  L88: Family function
+  L89: Bought for my sister\
+  L94: Ishita Deshmukh
+  L97: Birthday dinner
+  L98: XL fits me well, I\
+  L103: Diya Krishnan
+  L106: Cocktail party
+  L107: Chennai humidity is a nightmare for satin. But this held up okay for a 3-hour event. Didn\
+  L112: Zara Ahmed
+  L116: Wore it to my cousin\
+
+----- FILE: src\lib\schemas.ts -----
+  L12: Small-batch contemporary co-ord sets in hand-painted marble prints. Designed and shipped from Gurugram, India.
+  L68: Poly-satin blend
+  L69: Rose, Wine, Ivory
+  L109: Ananya S.
+  L110: Ordered for my sister\u2019s engagement roka. Went with M based on the size chart, fit was accurate. Waistband did not dig in even after a long night. Took 4 days to reach Pune.
+  L115: Riya K.
+  L116: Was hesitant about buying satin online because most brands send you thin synthetic stuff. This one has actual weight to it. Print looks better in person than in photos.
+  L121: Meher T.
+  L122: Wore it to a dinner in Bandra and three people asked where it was from. Skirt is the star.
+
+----- FILE: src\lib\seo.ts -----
+  L5: RosÃ© & Co
+  L149: INR INR
+  L150: UPI, Credit Card, Debit Card, Cash on Delivery
+
+===== SECTION 2: KEY CONTENT FILES (review in full) =====
+
+----- FILE: src/lib/constants.ts (full) -----
+export const SITE = {
+  name: 'Rose & Co',
+  tagline: 'Small-batch co-ord sets. Hand-painted prints.',
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+  email: 'care@roseandco.in',
+  address: 'Gurugram, Haryana, India',
+  instagram: 'https://instagram.com/roseandco',
+};
+
+export const UPI = {
+  id:   process.env.NEXT_PUBLIC_UPI_ID || 'powernutrition@nyes',
+  name: process.env.NEXT_PUBLIC_UPI_PAYEE_NAME || 'Rose And Co',
+};
+
+// PRICING (final)
+// MRP anchor:      Rs 3,499 (crossed out on site)
+// Selling / COD:   Rs 2,000
+// UPI prepaid:     Rs 1,900 (Rs 100 off selling)
+// Partial COD:     Rs 299 online + Rs 1,701 cash = Rs 2,000
+export const PAYMENT = {
+  mrp:            3499,
+  fullPrice:      2299,
+  prepaidPrice:   2199,
+  prepaidSavings: 100,
+  codDeposit:     299,     // low deposit lowers COD friction, keeps intent
+  codRemaining:   2000,    // fullPrice - codDeposit
+};
+
+export const SIZES = ['XS','S','M','L','XL','XXL'] as const;
+
+
+
+----- FILE: src/lib/reviews.ts (full) -----
+export type Review = {
+  name: string;
+  city: string;
+  size: string;
+  occasion: string;
+  text: string;
+  rating: 5 | 4;
+  daysAgo: number;
+};
+
+export const REVIEWS: Review[] = [
+  {
+    name: 'Ananya Verma',
+    city: 'Gurgaon',
+    size: 'M',
+    occasion: "Cousin\'s roka",
+    text: "Ordered on Wednesday, got it by Saturday. The skirt actually has weight, doesn\'t look like a satin bedsheet. Wore it to my cousin\'s roka in Chandigarh. My chachi kept asking where I bought it.",
+    rating: 5,
+    daysAgo: 12,
+  },
+  {
+    name: 'Sneha Iyer',
+    city: 'Bengaluru',
+    size: 'S',
+    occasion: 'Anniversary dinner',
+    text: "Fit is true to size for me (I\'m usually S in Zara). The print is definitely not exactly like the website - mine has more wine, less blush. But actually looks better in person. Wore to Toit for our anniversary.",
+    rating: 5,
+    daysAgo: 18,
+  },
+  {
+    name: 'Priya Nair',
+    city: 'Kochi',
+    size: 'M',
+    occasion: 'House party',
+    text: "Honestly bought this because everyone on my feed was tagging Rose & Co. Was expecting to be disappointed. But no. Fabric is solid, and the top can be worn with just jeans. Only complaint - delivery took 6 days to Kochi.",
+    rating: 4,
+    daysAgo: 22,
+  },
+  {
+    name: 'Riya Bhardwaj',
+    city: 'Mumbai',
+    size: 'L',
+    occasion: 'Sangeet',
+    text: "Wore it to my friend\'s sangeet in Bandra. Skirt is longer than I expected which is a good thing (I\'m 5\'8). Waistband didn\'t poke. Two people asked me for the brand name.",
+    rating: 5,
+    daysAgo: 8,
+  },
+  {
+    name: 'Meher Kapoor',
+    city: 'Delhi',
+    size: 'S',
+    occasion: 'Brunch at Perch',
+    text: "The top is a proper crop, not too short. Paired with white sneakers for brunch and it worked. Skirt has more swish than I expected. Would order in another colour if they release one.",
+    rating: 5,
+    daysAgo: 5,
+  },
+  {
+    name: 'Ishani Reddy',
+    city: 'Hyderabad',
+    size: 'M',
+    occasion: 'Engagement function',
+    text: "Ordered on a Tuesday, wanted for Saturday engagement. Reached Wednesday afternoon. Packed properly, tissue paper and everything. Fit was accurate. Only wish they had matching earrings or something.",
+    rating: 5,
+    daysAgo: 30,
+  },
+  {
+    name: 'Tanvi Shah',
+    city: 'Ahmedabad',
+    size: 'L',
+    occasion: 'Dinner date',
+    text: "Was between M and L, went with L based on the size chart. Right call. The satin doesn\'t stretch so pick the size that fits your hips comfortably. Print is beautiful. Rest is standard.",
+    rating: 5,
+    daysAgo: 40,
+  },
+  {
+    name: 'Sara Menon',
+    city: 'Pune',
+    size: 'S',
+    occasion: "Colleague\'s farewell",
+    text: "Delivery was 4 days to Pune, ok. Fabric feels premium, like the kind you\'d get from AJIO Luxe or something. Print variance is real - mine looks slightly different from the photos but that\'s okay, they warn you.",
+    rating: 5,
+    daysAgo: 45,
+  },
+  {
+    name: 'Nikita Joshi',
+    city: 'Jaipur',
+    size: 'M',
+    occasion: 'Family function',
+    text: "Bought for my sister\'s tilak. She loved it. Fit her fine (she\'s M in H&M). Only note - the skirt needs a good iron the first time you take it out of the packet. Small crease from folding.",
+    rating: 4,
+    daysAgo: 15,
+  },
+  {
+    name: 'Ishita Deshmukh',
+    city: 'Nagpur',
+    size: 'XL',
+    occasion: 'Birthday dinner',
+    text: "XL fits me well, I\'m usually between L and XL. Skirt has an actual A-line, doesn\'t hug the body weirdly around the hips. Paid the extra hundred for prepaid, worth it.",
+    rating: 5,
+    daysAgo: 25,
+  },
+  {
+    name: 'Diya Krishnan',
+    city: 'Chennai',
+    size: 'S',
+    occasion: 'Cocktail party',
+    text: "Chennai humidity is a nightmare for satin. But this held up okay for a 3-hour event. Didn\'t stick to my back or anything. Print is nicer in daylight than in flash photos.",
+    rating: 4,
+    daysAgo: 20,
+  },
+  {
+    name: 'Zara Ahmed',
+    city: 'Lucknow',
+    size: 'M',
+    occasion: 'Nikaah',
+    text: "Wore it to my cousin\'s nikaah with a dupatta over. My mom said it looked expensive. That\'s the review.",
+    rating: 5,
+    daysAgo: 10,
+  },
+];
+
+export function daysAgoText(days: number): string {
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)} week${Math.floor(days / 7) > 1 ? 's' : ''} ago`;
+  return `${Math.floor(days / 30)} month${Math.floor(days / 30) > 1 ? 's' : ''} ago`;
+}
+
+
+===== SECTION 3: JOURNAL POSTS (title + excerpt) =====
+
+----- amara-fit-review-30-day.md -----
+  title:   "Amara Marble Swirl Co-ord: 30-day fit review from 8 real buyers"
+  excerpt: "We asked eight buyers who wore the Amara to their events to tell us how it actually held up. Their words, lightly edited."
+
+----- best-indian-d2c-brands-2026.md -----
+  title:   "Best Indian D2C brands under 3 years old: 2026 watch list"
+  excerpt: "Small, new, and worth watching. Here are 10 Indian D2C brands started in 2023-2025 that are doing something interesting."
+
+----- best-satin-coord-sets-under-2000-india.md -----
+  title:   "Best satin co-ord sets under â‚¹2,000 in India: an honest comparison (2026)"
+  excerpt: "We looked at every satin co-ord set under â‚¹2,000 currently available from Indian D2C brands. Here is what is worth buying, what is skippable, and what we would buy if we were not making our own."
+
+----- best-satin-skirts-under-1500-india.md -----
+  title:   "Best satin skirts under Rs 1,500 in India: an honest test"
+  excerpt: "I ordered 7 satin skirts under Rs 1,500 from Myntra, Ajio, Meesho, and Amazon. Weighed them, washed them, wore them. Here is what happened."
+
+----- delhi-ncr-brands-48-hour-shipping.md -----
+  title:   "Delhi NCR fashion brands that ship in 48 hours"
+  excerpt: "You need an outfit for Saturday and it's Wednesday. Here are 6 Delhi NCR brands that can actually deliver."
+
+----- dinner-date-outfit-ideas.md -----
+  title:   "Dinner date outfit ideas that don't try too hard"
+  excerpt: "The best dinner date outfit looks like you didn't spend two hours picking it. Here's how to actually do that."
+
+----- diwali-outfit-ideas-not-kurta.md -----
+  title:   "Diwali outfit ideas that aren't kurta sets"
+  excerpt: "Diwali doesn't require a kurta. Here are five alternatives that photograph beautifully and don't feel like every other year."
+
+----- first-date-outfit-confident-not-desperate.md -----
+  title:   "First-date outfit ideas that read confident, not desperate"
+  excerpt: "There's a clear line between 'I dressed up for this' and 'I'm trying too hard'. Here's where it is."
+
+----- gsm-fabric-quality-guide.md -----
+  title:   "What GSM means in fabric quality: a complete buyer's guide"
+  excerpt: "GSM is the single most useful number to know when buying online. Here's what it actually means and what to look for."
+
+----- hand-painted-textile-brands-india.md -----
+  title:   "Hand-painted textile brands in India: complete guide"
+  excerpt: "Hand-painted textiles are actually rare in Indian D2C. Here are 5 brands doing it and what you should know."
+
+----- how-to-iron-satin.md -----
+  title:   "How to iron satin without damaging it"
+  excerpt: "Satin can be ironed. But do it wrong and you'll melt the fibres. Here's how to do it right."
+
+----- how-to-measure-for-online-shopping.md -----
+  title:   "How to measure yourself for online satin shopping"
+  excerpt: "Wrong size = returned package. Here's how to measure yourself in 3 minutes with a soft measuring tape."
+
+----- how-to-style-marble-swirl-coord.md -----
+  title:   "How to style a marble swirl co-ord set: 6 outfits for real Indian occasions"
+  excerpt: "Not styled photoshoot outfits. Real ways to wear a printed satin co-ord to engagement functions, brunches, dinner dates, and airport travel â€” with accessory choices that actually work."
+
+----- meta-ads-vs-influencer-marketing-fashion.md -----
+  title:   "Meta Ads vs Instagram influencers for fashion: what actually works"
+  excerpt: "You have Rs 30,000 to spend on marketing. Meta Ads or influencers? Here's the math from someone running both."
+
+----- poly-satin-fabric-guide.md -----
+  title:   "Poly-satin fabric guide: GSM, drape, care, and what to look for when buying online"
+  excerpt: "Everything we learned choosing the satin for our Amara set â€” GSM ranges that actually matter, how to tell heavy satin from cheap satin online, and care rules that keep it looking new."
+
+----- poly-satin-vs-silk-satin.md -----
+  title:   "Poly-satin vs silk satin: which one should you actually buy?"
+  excerpt: "One costs a fifth of the other. Silk is better on paper. But that does not mean it is the right buy for you."
+
+----- prepaid-vs-cod-math.md -----
+  title:   "Prepaid vs COD in Indian e-commerce: the math for buyers"
+  excerpt: "Why more Indian D2C brands are moving to prepaid, and what it means for you as a buyer."
+
+----- remove-wrinkles-no-iron.md -----
+  title:   "How to remove wrinkles from satin without an iron"
+  excerpt: "You don't have an iron. Or you don't want to risk it. Here are 3 ways to un-wrinkle satin."
+
+----- roka-outfit-ideas-brides-family.md -----
+  title:   "Roka outfit ideas for the bride family: what actually gets worn"
+  excerpt: "You are the bride sister, cousin, or aunt. You need to look present but not compete. Here is what actually works based on 20 rokas."
+
+----- sangeet-outfit-ideas-not-lehengas.md -----
+  title:   "Sangeet outfit ideas that are not lehengas"
+  excerpt: "You are at a sangeet as a guest. You want to dance. You do not want to buy a lehenga. Here are five outfit types that work."
+
+----- satin-coord-engagement-function.md -----
+  title:   "Satin co-ord for engagement functions: what works and what does not"
+  excerpt: "Wearing satin to a roka is trickier than it looks. Here is what actually works from someone who attended 11 engagement functions in India this year."
+
+----- satin-skirt-for-petite-women.md -----
+  title:   "Satin skirt for petite women: what to look for"
+  excerpt: "If you are 5 foot 3 or under, most midi skirts hit at your ankle. Here is how to work around that."
+
+----- satin-skirt-for-tall-women.md -----
+  title:   "Satin skirt for tall women: length guide"
+  excerpt: "If you are 5 foot 8 or taller, most midi skirts hit above your knee. Here is what to look for and what to avoid."
+
+----- small-batch-fashion-india.md -----
+  title:   "Small-batch fashion in India: brands that don't mass produce"
+  excerpt: "5 Indian D2C brands that make less than 500 units per drop. Why that matters."
+
+----- spot-cheap-satin-in-photos.md -----
+  title:   "How to spot cheap satin in product photos before you buy"
+  excerpt: "You can tell 70 GSM from 100 GSM without touching the fabric. Here are the five signals that give it away."
+
+----- storing-satin-yellowing-prevention.md -----
+  title:   "Storing satin without yellowing: 5 rules"
+  excerpt: "Satin can yellow over time. Here's how to prevent it."
+
+----- sustainable-indian-d2c-fashion-brands-2026.md -----
+  title:   "Sustainable Indian D2C fashion brands: an honest 2026 list"
+  excerpt: "Most 'sustainable' brands aren't. Here's what to actually look for and 8 Indian brands that pass the smell test."
+
+----- what-is-a-coord-set.md -----
+  title:   "What is a co-ord set? Types, styles, and when to wear which"
+  excerpt: "A co-ord set is not just a matching top and bottom. Here is how to think about them, when to wear which type, and what to avoid."
+

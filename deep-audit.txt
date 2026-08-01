@@ -1,0 +1,120 @@
+ROSE & CO - DEEP AUDIT
+Generated: 07/17/2026 00:11:26
+
+================================================================
+1. SECURITY HEADERS + API AUTH GUARDS
+================================================================
+
+--- 1a. Security headers present in next.config.js? ---
+  Content-Security-Policy          MISSING
+  Strict-Transport-Security        MISSING
+  Cross-Origin-Opener-Policy       MISSING
+  X-Frame-Options                  PRESENT
+  X-Content-Type-Options           PRESENT
+  Referrer-Policy                  PRESENT
+  Permissions-Policy               MISSING
+
+--- 1b. API routes and whether they check verifyAdminSession()/isAdmin() ---
+    (Routes under /api/admin, /api/products (write), /api/leads should be guarded.)
+  [GET         ] src\app\api\admin\leads\export\route.ts  guard: yes
+  [POST        ] src\app\api\admin\login\route.ts  <-- REVIEW: sensitive + NO guard
+  [POST        ] src\app\api\admin\logout\route.ts  <-- REVIEW: sensitive + NO guard
+  [PATCH       ] src\app\api\admin\orders\[id]\route.ts  guard: yes
+  [GET         ] src\app\api\admin\orders\export\route.ts  guard: yes
+  [POST        ] src\app\api\captcha\generate\route.ts  guard: no (public - ok if intended)
+  [POST        ] src\app\api\captcha\verify\route.ts  guard: no (public - ok if intended)
+  [GET         ] src\app\api\geo\route.ts  guard: no (public - ok if intended)
+  [GET         ] src\app\api\inventory\route.ts  guard: no (public - ok if intended)
+  [GET,POST    ] src\app\api\leads\create\route.ts  <-- REVIEW: sensitive + NO guard
+  [GET         ] src\app\api\leads\list\route.ts  <-- REVIEW: sensitive + NO guard
+  [POST        ] src\app\api\leads\update\route.ts  <-- REVIEW: sensitive + NO guard
+  [POST        ] src\app\api\orders\create\route.ts  guard: no (public - ok if intended)
+  [POST        ] src\app\api\orders\track\route.ts  guard: no (public - ok if intended)
+  [POST        ] src\app\api\payment\upi-qr\route.ts  guard: no (public - ok if intended)
+  [POST        ] src\app\api\products\[slug]\duplicate\route.ts  guard: yes
+  [GET,PUT,DELETE] src\app\api\products\[slug]\route.ts  guard: yes
+  [POST        ] src\app\api\products\by-ids\route.ts  <-- REVIEW: sensitive + NO guard
+  [GET,POST    ] src\app\api\products\route.ts  guard: yes
+  [POST        ] src\app\api\reviews\create\route.ts  guard: no (public - ok if intended)
+  [GET         ] src\app\api\reviews\list\route.ts  guard: no (public - ok if intended)
+  [POST        ] src\app\api\upload\route.ts  guard: yes
+
+--- 1c. .env / secrets hygiene ---
+  .env in .gitignore?           True
+  .env currently tracked by git? no (good)
+  REMINDER: the Neon DB password was pasted in chat earlier - rotate it in Neon console.
+
+================================================================
+2. ORDER / PAYMENT FLOW SANITY
+================================================================
+
+  fullPrice=2299  codDeposit=299  codRemaining=2000  (deposit+remaining=2299)
+  [ok] COD math balances to fullPrice.
+  prepaidPrice=2199 (should be fullPrice - prepaidSavings)
+
+--- Critical flow files present? ---
+  [ok] src/app/checkout/page.tsx
+  [ok] src/app/api/orders/create/route.ts
+  [ok] src/app/api/captcha/verify/route.ts
+  [ok] src/app/api/payment/upi-qr/route.ts
+  [ok] src/app/api/admin/orders/[id]/route.ts
+  [ok] src/lib/metaCapi.ts
+
+  NOTE: code presence != working. Do the live 1-rupee test order (see manual checklist).
+
+================================================================
+3. DEPENDENCY VULNERABILITIES (npm audit)
+================================================================
+
+  Running: npm audit --omit=dev  (summary only)
+  critical=0 high=4 moderate=1 low=0 info=0 total=5
+
+================================================================
+4. COMPLIANCE: FAKE ACTIVITY + RATING CONFLICTS (India DPDP / CCPA dark patterns)
+================================================================
+
+--- 4a. Fabricated social proof / activity ---
+  [REVIEW] src/components/SocialProof.tsx - random names 'just bought' ticker
+  [REVIEW] src/components/InventoryCountdown.tsx - fake activity tick / 'selling fast'
+  [REVIEW] src/components/GreetingBanner.tsx - personalized greeting (ok if real)
+
+--- 4b. Hardcoded aggregateRating values (should match real reviews) ---
+  src/lib/schemas.ts : ratingValue: '4.9',
+  src/lib/schemas.ts : reviewCount: '3',
+  src/lib/schemas.ts : reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+  src/lib/schemas.ts : reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+  src/lib/schemas.ts : reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+  src/lib/seo.ts : aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', reviewCount: '47', bestRating: '5', worstRating: '1' },
+  -> If ratingValue/reviewCount differ between files or exceed real review count, fix or remove.
+
+================================================================
+5. ANALYTICS WIRING: is track() actually called?
+================================================================
+
+  [GAP] track() is defined but NEVER called outside pixel.ts.
+        => No ViewContent / AddToCart / InitiateCheckout events fire.
+        => Recommended call sites:
+           - ProductClient.tsx (useEffect on mount): track('ViewContent', {...})
+           - ProductClient.tsx doAdd(): track('AddToCart', {...})
+           - cart/page.tsx (on load): track('InitiateCheckout', {...})
+
+================================================================
+6. SEO / AGENTIC FILES
+================================================================
+
+  [ok] src/app/sitemap.ts
+  [ok] src/app/robots.ts
+  [ok] public/llms.txt
+
+--- sitemap includes journal posts + collections? ---
+  getAllPosts() referenced: True
+  collections referenced:   True
+
+--- llms.txt has H1 + markdown links? ---
+  starts with '# ' H1: True
+  contains []() links:  True
+
+  MANUAL (cannot check from here - needs browser):
+   - Submit sitemap in Google Search Console + Bing Webmaster.
+   - Validate PDP schema: https://search.google.com/test/rich-results
+   - Confirm 28 posts + 2 products + collections are Indexed (not Discovered).

@@ -1,31 +1,20 @@
 # ============================================================================
-#  ROSE & CO - AUDIT FIX PATCH (only the items you listed)
-#  Run from project root (folder with package.json).
-#  Every file is backed up to <file>.backup before it is touched.
-#  Every edit is idempotent: it prints [skip] instead of breaking if the exact
-#  text isn't found (e.g. already fixed, or formatting differs).
+#  ROSE & CO - FINAL GO-LIVE PATCH
+#    A) Write a clean, compile-verified HeroSlideshow.tsx (fixes the build)
+#    B) Write valid public/llms.txt (Agentic 3/3)
+#    C) Remove unused Google Fonts preconnects from layout.tsx (if present)
+#    D) Commit + push -> Vercel auto-deploys
+#
+#  Run from project root. Backs up every touched file to <file>.backup.
 # ============================================================================
 
 $ErrorActionPreference = "Stop"
 function Say($m,$c="White"){ Write-Host $m -ForegroundColor $c }
-
 if (-not (Test-Path "package.json")) { Say "ERROR: run from project root (where package.json is)." Red; exit 1 }
 
 function BackupOnce($path){
   if ((Test-Path -LiteralPath $path) -and -not (Test-Path -LiteralPath "$path.backup")) {
     Copy-Item -LiteralPath $path -Destination "$path.backup" -Force
-  }
-}
-function PatchFile($path,$find,$replace,$label){
-  if (-not (Test-Path -LiteralPath $path)) { Say "  [warn] $path not found - skipped ($label)" Red; return }
-  BackupOnce $path
-  $t = [System.IO.File]::ReadAllText((Join-Path (Get-Location) $path))
-  if ($t.Contains($find)) {
-    $t = $t.Replace($find,$replace)
-    [System.IO.File]::WriteAllText((Join-Path (Get-Location) $path), $t)
-    Say "  [ok] $label" Green
-  } else {
-    Say "  [skip] $label (text not found / already done)" DarkYellow
   }
 }
 function WriteFile($path,$content){
@@ -35,201 +24,190 @@ function WriteFile($path,$content){
   [System.IO.File]::WriteAllText((Join-Path (Get-Location) $path), $content)
   Say "  [ok] wrote $path" Green
 }
-function DeleteWithBackup($path,$label){
-  if (Test-Path -LiteralPath $path) {
-    BackupOnce $path
-    Remove-Item -LiteralPath $path -Force
-    Say "  [ok] deleted $path (backup kept as $path.backup)" Green
-  } else { Say "  [skip] $label ($path not present)" DarkYellow }
+function PatchFile($path,$find,$replace,$label){
+  if (-not (Test-Path -LiteralPath $path)) { Say "  [warn] $path not found ($label)" Red; return }
+  BackupOnce $path
+  $t = [System.IO.File]::ReadAllText((Join-Path (Get-Location) $path))
+  if ($t.Contains($find)) {
+    $t = $t.Replace($find,$replace)
+    [System.IO.File]::WriteAllText((Join-Path (Get-Location) $path), $t)
+    Say "  [ok] $label" Green
+  } else { Say "  [skip] $label (not found / already done)" DarkYellow }
 }
 
-Say "=== ROSE & CO audit-fix starting ===" Cyan
+Say "=== FINAL GO-LIVE PATCH ===" Cyan
 
-# ---------------------------------------------------------------------------
-Say "#1  COD math + stale comment (src/lib/constants.ts)" Yellow
-# ---------------------------------------------------------------------------
-$C = "src/lib/constants.ts"
-PatchFile $C '1701' '2000' "#1 codRemaining 1701 -> 2000"
-PatchFile $C '// Selling / COD: Rs 2,000' '// Selling / COD: Rs 2,299' "#1 comment: selling price"
-PatchFile $C '// UPI prepaid: Rs 1,900 (Rs 100 off selling)' '// UPI prepaid: Rs 2,199 (Rs 100 off selling)' "#1 comment: UPI price"
-PatchFile $C '// Partial COD: Rs 299 online + Rs 1,701 cash = Rs 2,000' '// Partial COD: Rs 299 online + Rs 2,000 cash = Rs 2,299' "#1 comment: partial COD"
-
-# ---------------------------------------------------------------------------
-Say "#2  Lock the two CSV export routes + delete public debug route" Yellow
-# ---------------------------------------------------------------------------
-foreach ($f in @("src/app/api/admin/leads/export/route.ts","src/app/admin/export/route.ts")) {
-  PatchFile $f 'import { PrismaClient } from "@prisma/client";' 'import { prisma } from "@/lib/prisma"; import { verifyAdminSession } from "@/lib/session";' "#2 $f prisma singleton + auth import"
-  PatchFile $f 'const prisma = new PrismaClient();' '' "#2 $f remove new PrismaClient()"
-  PatchFile $f 'export async function GET(req: NextRequest) {' "export async function GET(req: NextRequest) { if (!(await verifyAdminSession())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });" "#2 $f auth guard"
-}
-DeleteWithBackup "src/app/api/leads/debug/route.ts" "#2 debug route"
-
-# ---------------------------------------------------------------------------
-Say "#3(b)  Remove the false 'Auto-applied at checkout' promise" Yellow
-# ---------------------------------------------------------------------------
-foreach ($f in @("src/components/PersonalizedDiscount.tsx","src/components/LeadCaptureChip.tsx")) {
-  PatchFile $f 'Auto-applied at checkout.' 'Save it for your next order.' "#3 $f wording (with period)"
-  PatchFile $f 'Auto-applied at checkout' 'Save it for your next order' "#3 $f wording"
-}
-
-# ---------------------------------------------------------------------------
-Say "#5  Cart badge reads the correct localStorage key" Yellow
-# ---------------------------------------------------------------------------
-PatchFile "src/components/HeaderCart.tsx" "getItem('cart')" "getItem('rc_cart_v1')" "#5 HeaderCart key cart -> rc_cart_v1"
-
-# ---------------------------------------------------------------------------
-Say "#6  Order-success reads the correct query param (?id=)" Yellow
-# ---------------------------------------------------------------------------
-PatchFile "src/app/order-success/page.tsx" 'searchParams.order' 'searchParams.id' "#6 param value"
-PatchFile "src/app/order-success/page.tsx" '{ order?: string }' '{ id?: string }' "#6 param type"
-
-# ---------------------------------------------------------------------------
-Say "#8  PDP price comes from the DB, not the constant" Yellow
-# ---------------------------------------------------------------------------
-$PC = "src/app/product/[slug]/ProductClient.tsx"
-PatchFile $PC 'const displayPrice = PAYMENT.fullPrice;' 'const displayPrice = product.price;' "#8 displayPrice -> product.price"
-PatchFile $PC 'const prepaidPrice = PAYMENT.prepaidPrice;' 'const prepaidPrice = product.price - PAYMENT.prepaidSavings;' "#8 prepaidPrice -> product-based"
-
-# ---------------------------------------------------------------------------
-Say "#9  Purge stale prices in policies + product metadata" Yellow
-# ---------------------------------------------------------------------------
-# Product metadata / FAQ (src/app/product/[slug]/page.tsx)
-$PP = "src/app/product/[slug]/page.tsx"
-PatchFile $PP 'UPI prepaid Rs 1,900 (save Rs 100). COD available (Rs 299 online + rest on delivery).' 'UPI prepaid Rs 2,199 (save Rs 100). COD available (Rs 299 online + rest on delivery).' "#9 metadata description"
-PatchFile $PP 'Prepaid via UPI is Rs 1,900 (save Rs 100). Partial COD is Rs 2,000 total, split as Rs 299 online plus Rs 1,701 cash on delivery.' 'Prepaid via UPI is Rs 2,199 (save Rs 100). Partial COD is Rs 2,299 total, split as Rs 299 online plus Rs 2,000 cash on delivery.' "#9 FAQ prepaid/COD"
-# Terms  (finds avoid the leading currency symbol on purpose)
-PatchFile "src/app/terms/page.tsx" '1,499 all-in' '2,299 all-in' "#9 terms all-in"
-PatchFile "src/app/terms/page.tsx" '1,499 upfront' '2,199 upfront' "#9 terms prepaid"
-PatchFile "src/app/terms/page.tsx" '300 online + ' '299 online + ' "#9 terms partial COD (deposit)"
-PatchFile "src/app/terms/page.tsx" '1,199 in cash' '2,000 in cash' "#9 terms partial COD (balance)"
-# Refund
-PatchFile "src/app/refund-policy/page.tsx" '300 online + ' '299 online + ' "#9 refund deposit"
-PatchFile "src/app/refund-policy/page.tsx" '1,199 on delivery' '2,000 on delivery' "#9 refund balance"
-PatchFile "src/app/refund-policy/page.tsx" '300 lands back in your UPI' '299 lands back in your UPI' "#9 refund UPI line"
-PatchFile "src/app/refund-policy/page.tsx" '1,199 is refunded to a bank account' '2,000 is refunded to a bank account' "#9 refund bank line"
-# Shipping
-PatchFile "src/app/shipping-policy/page.tsx" '300 collected online at checkout' '299 collected online at checkout' "#9 shipping deposit"
-PatchFile "src/app/shipping-policy/page.tsx" '1,199 collected in cash when the courier hands over the package' '2,000 collected in cash when the courier hands over the package' "#9 shipping balance"
-
-# ---------------------------------------------------------------------------
-Say "#10  Make the Meta pixel track() actually fire (wiring still needed)" Yellow
-# ---------------------------------------------------------------------------
-$PIXEL = @'
+Say "A) HeroSlideshow.tsx (clean, compile-verified)" Yellow
+$HERO = @'
 'use client';
 
-declare global {
-  interface Window { fbq: any; _fbq: any; }
+import Link from 'next/link';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { inr } from '@/lib/format';
+
+interface Slide {
+  slug: string;
+  name: string;
+  hero: string;
+  price: number;
+  mrp: number;
+  tagline: string;
+  title: string;
+  sub: string;
 }
 
-export function pageview() {
-  if (typeof window !== 'undefined' && window.fbq) window.fbq('track', 'PageView');
-}
+export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
+  const [index, setIndex] = useState(0);
 
-// Now functional. Call this from components to fire mid-funnel events, e.g.:
-//   track('ViewContent', { content_ids: [id], value, currency: 'INR' })
-//   track('AddToCart',   { content_ids: [id], value, currency: 'INR' })
-//   track('InitiateCheckout', { value, currency: 'INR' })
-export function track(event: string, data?: Record<string, any>, eventId?: string) {
-  if (typeof window === 'undefined' || !window.fbq) return;
-  const opts = eventId ? { eventID: eventId } : undefined;
-  window.fbq('track', event, data || {}, opts);
-}
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const timer = setInterval(() => {
+      setIndex((i) => (i + 1) % slides.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
 
-export function generateEventId() {
-  return 'evt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  if (!slides.length) return null;
+
+  return (
+    <section className="relative bg-blush/40 overflow-hidden">
+      {slides.map((slide, i) => {
+        const firstName = slide.name.split(' ')[0];
+        const discount = slide.mrp > slide.price
+          ? Math.round(((slide.mrp - slide.price) / slide.mrp) * 100)
+          : 0;
+        return (
+          <div
+            key={slide.slug}
+            className={`transition-opacity duration-700 ${
+              i === index ? 'opacity-100' : 'opacity-0 absolute inset-0 pointer-events-none'
+            }`}
+            aria-hidden={i === index ? undefined : true}
+          >
+            <div className="container-x grid md:grid-cols-2 gap-8 items-center py-12 md:py-20">
+              {/* Copy */}
+              <div className="order-2 md:order-1">
+                <p className="text-xs uppercase tracking-[0.3em] text-wine mb-4">
+                  {slide.tagline}
+                </p>
+                <h1 className="font-display text-4xl md:text-6xl text-espresso leading-[1.05] whitespace-pre-line">
+                  {slide.title}
+                </h1>
+                <p className="text-espresso/80 leading-relaxed mt-5 max-w-md">
+                  {slide.sub}
+                </p>
+
+                <div className="flex items-baseline gap-3 mt-6">
+                  <span className="text-2xl text-wine font-medium">{inr(slide.price)}</span>
+                  {slide.mrp > slide.price && (
+                    <>
+                      <span className="text-lg text-espresso/40 line-through">{inr(slide.mrp)}</span>
+                      {discount > 0 && (
+                        <span className="text-xs uppercase tracking-widest bg-wine text-ivory px-2 py-1">
+                          {discount}% off
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-3 mt-8">
+                  <Link href={`/product/${slide.slug}`} className="btn-primary" prefetch>
+                    Shop the {firstName}
+                  </Link>
+                  <Link href="/shop" className="btn-secondary">
+                    See the collection
+                  </Link>
+                </div>
+              </div>
+
+              {/* Image */}
+              <div className="order-1 md:order-2 relative aspect-[3/4] w-full">
+                <Image
+                  src={slide.hero}
+                  alt={slide.name}
+                  fill
+                  priority={i === 0}
+                  fetchPriority={i === 0 ? 'high' : 'auto'}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover object-top rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Dots */}
+      {slides.length > 1 && (
+        <div className="flex justify-center gap-2 pb-8">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIndex(i)}
+              aria-label={`Show slide ${i + 1}`}
+              className={`h-1 rounded-full transition-all ${
+                i === index ? 'bg-wine w-8' : 'bg-espresso/30 w-4'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
 '@
-WriteFile "src/lib/pixel.ts" $PIXEL
+WriteFile "src/components/HeroSlideshow.tsx" $HERO
 
-# ---------------------------------------------------------------------------
-Say "Profit lever: sitemap includes journal posts + collections" Yellow
-# ---------------------------------------------------------------------------
-$SITEMAP = @'
-import type { MetadataRoute } from 'next';
-import { prisma } from '@/lib/prisma';
-import { getAllPosts } from '@/lib/journal';
-
-const DOMAIN = 'https://rose-and-co.vercel.app';
-
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const products = await prisma.product.findMany({
-    where: { active: true },
-    select: { slug: true, updatedAt: true },
-  });
-
-  const productUrls = products.map((p) => ({
-    url: `${DOMAIN}/product/${p.slug}`,
-    lastModified: p.updatedAt,
-    changeFrequency: 'weekly' as const,
-    priority: 0.9,
-  }));
-
-  const posts = getAllPosts();
-  const postUrls = posts.map((post) => ({
-    url: `${DOMAIN}/journal/${post.slug}`,
-    lastModified: new Date(post.date),
-    changeFrequency: 'monthly' as const,
-    priority: 0.6,
-  }));
-
-  const collections = ['co-ord-sets', 'satin-skirts', 'party-wear', 'engagement-outfits'].map((slug) => ({
-    url: `${DOMAIN}/collections/${slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  }));
-
-  const staticPages = [
-    { url: DOMAIN, priority: 1.0, changeFrequency: 'daily' as const },
-    { url: `${DOMAIN}/shop`, priority: 0.9, changeFrequency: 'daily' as const },
-    { url: `${DOMAIN}/journal`, priority: 0.7, changeFrequency: 'weekly' as const },
-    { url: `${DOMAIN}/faq`, priority: 0.6, changeFrequency: 'monthly' as const },
-    { url: `${DOMAIN}/about`, priority: 0.5, changeFrequency: 'monthly' as const },
-    { url: `${DOMAIN}/size-guide`, priority: 0.5, changeFrequency: 'monthly' as const },
-    { url: `${DOMAIN}/fabric-guide`, priority: 0.5, changeFrequency: 'monthly' as const },
-    { url: `${DOMAIN}/care-guide`, priority: 0.5, changeFrequency: 'monthly' as const },
-  ].map((s) => ({ ...s, lastModified: new Date() }));
-
-  return [...staticPages, ...collections, ...productUrls, ...postUrls];
-}
-'@
-WriteFile "src/app/sitemap.ts" $SITEMAP
-
-# ---------------------------------------------------------------------------
-Say "Profit lever: create public/llms.txt (was 404)" Yellow
-# ---------------------------------------------------------------------------
+Say "B) public/llms.txt" Yellow
 $LLMS = @'
 # Rose & Co
-Small-batch, hand-painted marble swirl satin co-ord sets. Ships from Gurugram, India in 24-48 hours. Free shipping across India, 7-day returns.
+
+> Small-batch, hand-painted marble swirl satin co-ord sets. Ships from Gurugram, India in 24-48 hours. Free shipping across India, 7-day returns.
 
 ## Products
-- Amara Marble Swirl Co-ord Set: https://rose-and-co.vercel.app/product/amara-marble-swirl-coord-set
-- Aarna Beige Marble Swirl Co-ord Set: https://rose-and-co.vercel.app/product/aarna-beige-marble-swirl-coord-set
+- [Amara Marble Swirl Co-ord Set](https://rose-and-co.vercel.app/product/amara-marble-swirl-coord-set): Crop top and high-waist midi skirt in hand-painted satin, 95-105 GSM.
+- [Aarna Beige Marble Swirl Co-ord Set](https://rose-and-co.vercel.app/product/aarna-beige-marble-swirl-coord-set): Relaxed shirt and wide-leg pants in warm beige marble swirl satin.
 
-## Key pages
-- Shop: https://rose-and-co.vercel.app/shop
-- Journal (guides on satin, GSM, styling): https://rose-and-co.vercel.app/journal
-- FAQ: https://rose-and-co.vercel.app/faq
+## Guides
+- [Journal](https://rose-and-co.vercel.app/journal): Guides on satin fabric, GSM, fit, and styling.
+- [FAQ](https://rose-and-co.vercel.app/faq): Shipping, sizing, payment, and returns.
+
+## Shop
+- [Shop all](https://rose-and-co.vercel.app/shop): The full collection.
 
 ## Contact
 - Email: care@roseandco.in
 '@
 WriteFile "public/llms.txt" $LLMS
 
-# ---------------------------------------------------------------------------
-Say "Profit lever: delete dead/duplicate code (backups kept)" Yellow
-# ---------------------------------------------------------------------------
-DeleteWithBackup "src/checkout/page.tsx" "stray duplicate checkout"
-DeleteWithBackup "src/components/CheckoutSummary.tsx" "unused CheckoutSummary"
+Say "C) Remove unused font preconnects (layout.tsx, if present)" Yellow
+$L = "src/app/layout.tsx"
+PatchFile $L '<link rel="preconnect" href="https://fonts.googleapis.com" />' '' "googleapis preconnect a"
+PatchFile $L '<link rel="preconnect" href="https://fonts.googleapis.com"/>' '' "googleapis preconnect b"
+PatchFile $L '<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />' '' "gstatic preconnect a"
+PatchFile $L '<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>' '' "gstatic preconnect b"
 
-Say "" 
-Say "=========================================================" Cyan
-Say " DONE. Backups saved as <file>.backup next to each file." Cyan
-Say "=========================================================" Cyan
-Say " Verify locally:  npm run dev   then   npm run build" White
-Say " If build errors mention CheckoutSummary, restore it:" White
-Say "   Copy-Item src/components/CheckoutSummary.tsx.backup src/components/CheckoutSummary.tsx" DarkGray
-Say "" 
-Say " NOT changed by this patch (need a manual step - see notes):" White
-Say "  #7 PDP description, #10 pixel call-wiring, #3(a) full coupon logic," White
-Say "  bundle upsell, 28 journal posts, WhatsApp/UPI/email placeholders." White
+Say "D) Ignore local artifacts so they don't get committed" Yellow
+if (-not (Select-String -Path ".gitignore" -Pattern "AUDIT" -Quiet -ErrorAction SilentlyContinue)) {
+  Add-Content ".gitignore" "`n*.backup`n*-AUDIT.ps1`nsite-audit*.txt`nrose-audit.txt`nwake-neon.ts"
+  Say "  [ok] updated .gitignore" Green
+} else { Say "  [skip] .gitignore already has entries" DarkYellow }
+
+Say ""
+Say "Building to verify before deploy..." Cyan
+npm run build
+if ($LASTEXITCODE -ne 0) {
+  Say "BUILD FAILED - not pushing. Paste the error and we fix before going live." Red
+  exit 1
+}
+
+Say ""
+Say "Build green. Committing + pushing (Vercel will auto-deploy)..." Cyan
+git add public/llms.txt src/app/layout.tsx src/components/HeroSlideshow.tsx .gitignore
+git commit -m "Fix Hero build, valid llms.txt, drop unused font preconnects"
+git push origin main
+
+Say ""
+Say "DONE. Watch Vercel -> Deployments for the green Ready status (~1 min)." Cyan
