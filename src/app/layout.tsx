@@ -12,6 +12,7 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import LeadCaptureChip from '@/components/LeadCaptureChip';
 import CartAbandonmentTracker from '@/components/CartAbandonmentTracker';
 import { localBusinessJsonLd, BRAND } from '@/lib/seo';
+import MetaPixel from '@/components/MetaPixel';
 
 export const metadata: Metadata = {
   metadataBase: new URL(BRAND.domain),
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://api.postalpincode.in" />
       </head>
       <body>
+      <MetaPixel />
         <a href="#main-content" className="skip-link">Skip to main content</a>
 
         <JsonLd data={localBusinessJsonLd()} />
