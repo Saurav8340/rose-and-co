@@ -6,6 +6,7 @@ import { articleSchema, breadcrumbSchema } from '@/lib/schemas';
 import { SITE } from '@/lib/constants';
 import JsonLd from '@/components/JsonLd';
 import type { Metadata } from 'next';
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export const revalidate = 3600;
 
@@ -78,7 +79,7 @@ export default function JournalPost({ params }: { params: { slug: string } }) {
           </div>
         )}
 
-        <div className="mt-10 max-w-none journal-content" dangerouslySetInnerHTML={{ __html: post.html }} />
+        <div className="mt-10 max-w-none journal-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.html) }} />
 
         <div className="mt-16 pt-8 border-t border-taupe/20">
           <div className="p-6 bg-blush/30 border border-taupe/20">

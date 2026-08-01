@@ -17,7 +17,7 @@ export async function POST(req: Request) {
         slug: p.slug,
         name: p.name,
         price: p.price,
-        image: imgs[0] || '/products/amara-front.png',
+        image: imgs[0] || '/products/amara-front.webp',
       };
     }),
   });

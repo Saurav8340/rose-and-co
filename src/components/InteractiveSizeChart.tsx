@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { sanitizeHtml } from "@/lib/sanitize";
 
 const CHART = [
   { size: 'XS',  bust: 81,  waist: 61, hip: 86,  skirt: 75, matches: 'Zara XS, H&amp;M XS, Fabindia S' },
@@ -50,7 +51,7 @@ export default function InteractiveSizeChart() {
         </div>
         <div className="mt-4 pt-3 border-t border-taupe/20">
           <div className="text-[10px] uppercase tracking-widest text-espresso/60">Matches</div>
-          <div className="text-sm text-espresso/80 mt-1" dangerouslySetInnerHTML={{ __html: current.matches }} />
+          <div className="text-sm text-espresso/80 mt-1" dangerouslySetInnerHTML={{ __html: sanitizeHtml(current.matches) }} />
         </div>
         <p className="mt-4 text-xs text-espresso/60">Measured flat, garment size. Add ~2 cm to each for comfortable body-fit. Satin does not stretch.</p>
       </div>

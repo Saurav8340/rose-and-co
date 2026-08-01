@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 export default function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0);
-  const safeImages = images.length > 0 ? images : ['/products/amara-front.png'];
+  const safeImages = images.length > 0 ? images : ['/products/amara-front.webp'];
 
   return (
     <div className="space-y-3">

@@ -26,7 +26,7 @@ export default async function NavShop() {
       name: p.name,
       price: p.price,
       compareAt: p.compareAt,
-      image: imgs[0] || '/products/amara-front.png',
+      image: imgs[0] || '/products/amara-front.webp',
       tagline: TAGLINES[p.slug] || 'One-of-a-kind. Handcrafted in India.',
     };
   });

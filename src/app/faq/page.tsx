@@ -1,4 +1,5 @@
 import { SITE } from '@/lib/constants';
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export const metadata = { title: 'Questions' };
 
@@ -66,10 +67,10 @@ export default function FAQ() {
               {sec.items.map(([q, a]) => (
                 <details key={q} className="border-b border-taupe/20 pb-4 pt-4 group">
                   <summary className="cursor-pointer font-medium text-espresso flex justify-between text-[15px]">
-                    <span dangerouslySetInnerHTML={{ __html: q }} />
+                    <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(q) }} />
                     <span className="group-open:rotate-45 transition ml-4 text-wine">+</span>
                   </summary>
-                  <p className="mt-3 text-sm text-espresso/70 leading-[1.8]" dangerouslySetInnerHTML={{ __html: a }} />
+                  <p className="mt-3 text-sm text-espresso/70 leading-[1.8]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(a) }} />
                 </details>
               ))}
             </div>

@@ -48,7 +48,7 @@ export default async function HomePage() {
     return {
       slug: p.slug,
       name: p.name,
-      hero: imgs[0] || '/products/amara-front.png',
+      hero: imgs[0] || '/products/amara-front.webp',
       price: p.price || PAYMENT.fullPrice,
       mrp: p.compareAt || PAYMENT.mrp,
       tagline: editorial.tagline,

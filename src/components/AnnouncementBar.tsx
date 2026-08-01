@@ -1,3 +1,4 @@
+import { sanitizeHtml } from "@/lib/sanitize";
 export default function AnnouncementBar() {
   const items = [
     'Free shipping across India',
@@ -9,10 +10,10 @@ export default function AnnouncementBar() {
     <div className="bg-espresso text-ivory text-[11px] sm:text-xs tracking-widest uppercase py-2 overflow-hidden">
       <div className="flex whitespace-nowrap animate-marquee">
         <div className="flex gap-12 px-6 shrink-0">
-          {items.map(t => <span key={t} dangerouslySetInnerHTML={{ __html: '&middot; ' + t }} />)}
+          {items.map(t => <span key={t} dangerouslySetInnerHTML={{ __html: sanitizeHtml('&middot; ' + t) }} />)}
         </div>
         <div className="flex gap-12 px-6 shrink-0" aria-hidden>
-          {items.map(t => <span key={t} dangerouslySetInnerHTML={{ __html: '&middot; ' + t }} />)}
+          {items.map(t => <span key={t} dangerouslySetInnerHTML={{ __html: sanitizeHtml('&middot; ' + t) }} />)}
         </div>
       </div>
     </div>

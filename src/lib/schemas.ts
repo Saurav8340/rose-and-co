@@ -8,7 +8,7 @@ export const organizationSchema = () => ({
   '@id': `${BASE}/#organization`,
   name: SITE.name,
   url: BASE,
-  logo: `${BASE}/products/amara-front.png`,
+  logo: `${BASE}/products/amara-front.webp`,
   description: 'Small-batch contemporary co-ord sets in hand-painted marble prints. Designed and shipped from Gurugram, India.',
   address: {
     '@type': 'PostalAddress',
@@ -142,7 +142,7 @@ export const articleSchema = (post: {
   '@type': 'Article',
   headline: post.title,
   description: post.excerpt,
-  image: post.coverImage ? `${BASE}${post.coverImage}` : `${BASE}/products/amara-front.png`,
+  image: post.coverImage ? `${BASE}${post.coverImage}` : `${BASE}/products/amara-front.webp`,
   datePublished: post.date,
   dateModified: post.date,
   author: { '@type': 'Organization', name: post.author || SITE.name, url: BASE },

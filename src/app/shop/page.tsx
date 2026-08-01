@@ -38,7 +38,7 @@ export default async function ShopPage() {
 
   const productForJsonLd = products.map((p) => {
     const imgs = JSON.parse(p.images) as string[];
-    return { slug: p.slug, name: p.name, price: p.price, image: imgs[0] || '/products/amara-front.png' };
+    return { slug: p.slug, name: p.name, price: p.price, image: imgs[0] || '/products/amara-front.webp' };
   });
 
   return (
