@@ -326,3 +326,75 @@ body {
   backface-visibility: hidden;
 }
 
+/* ================================================================
+   APPLE-FLUID ADDITIONS — append to the BOTTOM of src/app/globals.css
+   Typography (§15), Materials (§12), Reduced-motion/transparency (§14)
+   ================================================================ */
+
+/* ---- §15 Typography: tracking is SIZE-SPECIFIC, never one value ----
+   Large display serif reads too loose -> tighten it.
+   Body stays near 0. Apply these utility classes to your headings. */
+.font-display {
+  letter-spacing: -0.01em;      /* base for the serif display face */
+  text-wrap: balance;           /* avoid orphan words in headings */
+}
+.display-xl {                    /* hero / product title */
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1.05;            /* tight leading on big text */
+  letter-spacing: -0.02em;      /* negative tracking as it grows */
+}
+.display-lg {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+}
+/* Small all-caps labels are the ONE place you WIDEN tracking for legibility. */
+.label,
+.tracking-widest {
+  letter-spacing: 0.14em;
+}
+
+/* ---- §12 Materials: translucent chrome, content scrolls under ----
+   Used by StickyBuyBar. A floating functional layer, not an opaque strip. */
+.rc-material-bar {
+  background: rgba(250, 246, 240, 0.72);   /* ivory @ 72% */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 -8px 24px rgba(43, 24, 16, 0.08);
+}
+
+/* Bright top edge = light catching the glass (§12) */
+.rc-material-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* ---- §14 Reduced transparency: make glass solid & frosty ---- */
+@media (prefers-reduced-transparency: reduce) {
+  .rc-material-bar {
+    background: #FAF6F0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  header.sticky {
+    background: #FAF6F0 !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* ---- §14 High contrast: near-solid surfaces with a defined border ---- */
+@media (prefers-contrast: more) {
+  .rc-material-bar {
+    background: #FAF6F0;
+    border-top: 1px solid #2B1810;
+  }
+}
+
+/* Our gallery/press feedback is JS spring-driven (rAF), so the global
+   reduced-motion rule that zeroes CSS transitions does NOT fight it —
+   motion.ts checks prefers-reduced-motion itself and snaps instantly. */

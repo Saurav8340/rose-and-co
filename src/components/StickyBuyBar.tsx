@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { haptic } from '@/lib/motion';
 
 interface Props {
   price: number;
@@ -10,49 +11,78 @@ interface Props {
   productName?: string;
 }
 
+/**
+ * Sticky buy bar rebuilt for fluid feel:
+ * - Press feedback fires on pointer-DOWN, not release, so it never feels laggy (§1)
+ * - Haptic on the actual commit — same frame as the visual (§13)
+ * - Translucent material so page content shows through underneath (§12),
+ *   with a soft scroll-edge fade instead of a hard 1px divider (§12)
+ * - Respects the iOS home indicator via safe-area inset
+ * - Reduced-transparency users get a solid bar (handled in CSS, §14)
+ */
 export default function StickyBuyBar({ price, compareAt, onBuy, onBuyClick, productName }: Props) {
   const [show, setShow] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
   useEffect(() => {
-    // Show immediately on mobile — no scroll requirement
     const isMobile = window.innerWidth < 768;
     if (isMobile) {
       setShow(true);
       return;
     }
-
-    // On desktop, only show after scrolling
     const handleScroll = () => setShow(window.scrollY > 400);
-    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   if (!show) return null;
 
-  const handleClick = () => {
+  const commit = () => {
+    haptic(12); // meaningful commit — reserve haptics for moments like this (§13)
     if (onBuy) onBuy();
     else if (onBuyClick) onBuyClick();
   };
 
   return (
-    <div className="md:hidden fixed bottom-0 inset-x-0 bg-ivory border-t border-taupe/20 shadow-2xl z-40 p-3">
-      <div className="flex items-center justify-between gap-3">
+    <div
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 rc-material-bar"
+      style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+    >
+      {/* scroll-edge fade — only where the floating bar overlaps content (§12) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-5 inset-x-0 h-5"
+        style={{ background: 'linear-gradient(to top, rgba(250,246,240,0.9), rgba(250,246,240,0))' }}
+      />
+      <div className="flex items-center justify-between gap-3 px-3 pt-3">
         <div className="min-w-0 flex-1">
           {productName && (
             <div className="text-xs text-espresso/70 truncate">{productName}</div>
           )}
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-wine">Rs {price.toLocaleString('en-IN')}</span>
+            <span className="text-lg font-semibold text-wine tabular-nums">
+              ₹{price.toLocaleString('en-IN')}
+            </span>
             {compareAt && (
-              <span className="text-xs line-through text-espresso/40">
-                Rs {compareAt.toLocaleString('en-IN')}
+              <span className="text-xs line-through text-espresso/40 tabular-nums">
+                ₹{compareAt.toLocaleString('en-IN')}
               </span>
             )}
           </div>
         </div>
+
         <button
-          onClick={handleClick}
-          className="bg-wine text-ivory px-6 py-3 uppercase tracking-widest text-xs font-medium hover:bg-espresso transition flex-shrink-0"
+          onPointerDown={() => setPressed(true)}
+          onPointerUp={() => setPressed(false)}
+          onPointerCancel={() => setPressed(false)}
+          onPointerLeave={() => setPressed(false)}
+          onClick={commit}
+          style={{
+            transform: pressed ? 'scale(0.96)' : 'scale(1)',
+            transition: 'transform 100ms ease-out',
+          }}
+          className="flex-shrink-0 bg-wine text-ivory px-6 py-3 uppercase tracking-widest text-xs font-medium hover:bg-espresso rounded-xl"
         >
           Buy Now
         </button>
