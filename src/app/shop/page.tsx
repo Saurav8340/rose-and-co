@@ -80,7 +80,7 @@ export default async function ShopPage() {
                     className="object-cover object-top group-hover:scale-105 transition duration-700"
                   />
                   {discount > 0 && (
-                    <span className="absolute top-4 right-4 bg-ivory text-crimson text-xs font-semibold px-3 py-1 uppercase tracking-widest">
+                    <span className="absolute top-4 right-4 bg-ivory text-wine text-xs font-semibold px-3 py-1 uppercase tracking-widest">
                       {discount}% off
                     </span>
                   )}
@@ -110,6 +110,7 @@ export default async function ShopPage() {
     </>
   );
 }
+
 
 
 

@@ -101,7 +101,7 @@ export default async function HomePage() {
                   />
                   {discount > 0 && (
                     <span
-                      className="absolute top-4 right-4 bg-ivory text-crimson text-xs font-semibold px-3 py-1 uppercase tracking-widest"
+                      className="absolute top-4 right-4 bg-ivory text-wine text-xs font-semibold px-3 py-1 uppercase tracking-widest"
                       aria-label={`${discount} percent off`}
                     >
                       {discount}% off
@@ -224,6 +224,7 @@ export default async function HomePage() {
     </>
   );
 }
+
 
 
 

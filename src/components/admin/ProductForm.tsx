@@ -1,8 +1,4 @@
 "use client";
-// src/components/admin/ProductForm.tsx
-// ONE form used by BOTH "Create" and "Edit". Every box maps to a column in your
-// Product database table (slug, name, description, price, compareAt, images,
-// sizes, bulletPoints, videos, categoryId, active).
 
 import { useEffect, useMemo, useState } from "react";
 import { upload } from '@vercel/blob/client';
@@ -17,7 +13,6 @@ interface Category {
 
 type SizeStock = { size: string; stock: number };
 
-// Shape we pass in when editing an existing product.
 export type ProductFormValues = {
   slug?: string;
   name: string;
@@ -31,6 +26,14 @@ export type ProductFormValues = {
   categoryId?: string | null;
   active: boolean;
 };
+
+function moveItem<T>(arr: T[], index: number, direction: -1 | 1): T[] {
+  const target = index + direction;
+  if (target < 0 || target >= arr.length) return arr;
+  const next = [...arr];
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
 
 export default function ProductForm({
   initial,
@@ -55,10 +58,7 @@ export default function ProductForm({
     initial?.bulletPoints?.length ? initial.bulletPoints : [""]
   );
 
-  // Real uploaded video files, stored as Blob URLs once uploaded.
   const [videos, setVideos] = useState<string[]>(initial?.videos ?? []);
-  // Upload-in-progress state, so the admin sees a live progress bar
-  // instead of the page just sitting there for a large file.
   const [videoUploading, setVideoUploading] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
   const [videoError, setVideoError] = useState("");
@@ -104,7 +104,6 @@ export default function ProductForm({
     }
   }
 
-  // Upload one or more chosen files, compress via /api/upload, add to images.
   async function handleFiles(fileList: FileList | null) {
     if (!fileList || fileList.length === 0) return;
     setError("");
@@ -127,11 +126,6 @@ export default function ProductForm({
     }
   }
 
-  // NEW: handles a real video file upload. Uploads DIRECTLY from this
-  // browser to Vercel Blob storage — the file never passes through our
-  // own server, so there's no serverless request-size limit to worry
-  // about. /api/upload-video only issues the permission token; see that
-  // file's comments for the full explanation.
   async function handleVideoFiles(fileList: FileList | null) {
     if (!fileList || fileList.length === 0) return;
     setVideoError("");
@@ -169,8 +163,16 @@ export default function ProductForm({
     setVideos((prev) => prev.filter((_, j) => j !== index));
   }
 
+  function moveVideo(index: number, direction: -1 | 1) {
+    setVideos((prev) => moveItem(prev, index, direction));
+  }
+
   function removeImage(index: number) {
     setImages((prev) => prev.filter((_, j) => j !== index));
+  }
+
+  function moveImage(index: number, direction: -1 | 1) {
+    setImages((prev) => moveItem(prev, index, direction));
   }
 
   function updateBullet(index: number, value: string) {
@@ -217,7 +219,7 @@ export default function ProductForm({
       sizes,
       images: images.filter((i) => i.trim()),
       bulletPoints: bulletPoints.filter((b) => b.trim()),
-      videos, // already just an array of real Blob URLs, nothing to filter
+      videos,
       categoryId: categoryId || null,
       active: publish,
     };
@@ -254,9 +256,7 @@ export default function ProductForm({
           {mode === "create" ? "Product created" : "Changes saved"}
         </h1>
         <p className="my-4">
-          <a href={done.url} target="_blank" rel="noreferrer" className="text-crimson font-semibold underline hover:text-ivory transition">
-            {done.url}
-          </a>
+          {done.url}
         </p>
         <div className="flex items-center justify-center gap-3 mt-6">
           <button
@@ -265,12 +265,7 @@ export default function ProductForm({
           >
             Copy link
           </button>
-          <a
-            className="px-4 py-2 border border-taupe/40 rounded-lg text-ivory hover:border-wine transition"
-            href="/admin/products"
-          >
-            Back to products
-          </a>
+          /admin/products
         </div>
       </div>
     );
@@ -282,7 +277,6 @@ export default function ProductForm({
         {mode === "create" ? "Create a listing" : `Edit: ${initial?.name}`}
       </h1>
 
-      {/* ---- Basic details ---- */}
       <label className="label">Product name</label>
       <input
         className="input mb-1"
@@ -302,10 +296,9 @@ export default function ProductForm({
         className="input min-h-[100px]"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="Fitted red graphic crop top with a black spiral chest print. Built for layering under a harness or worn alone with plaid bottoms."
+        placeholder="Fitted red graphic crop top with a black spiral chest print."
       />
 
-      {/* ---- Category ---- */}
       <label className="label mt-4">Category</label>
       <div className="flex gap-2 items-start">
         <select
@@ -348,7 +341,6 @@ export default function ProductForm({
         New categories automatically get their own page at /collections/[name] — no code changes needed.
       </p>
 
-      {/* ---- Pricing ---- */}
       <div className="flex gap-3 mt-4">
         <div className="flex-1">
           <label className="label">Selling price (₹)</label>
@@ -372,15 +364,12 @@ export default function ProductForm({
         </div>
       </div>
       <p className="text-xs text-ivory/50 mt-1">
-        Leave MRP blank and one will be estimated automatically. Prepaid discount and COD split are calculated automatically from the selling price — no need to set those separately.
+        Leave MRP blank and one will be estimated automatically.
       </p>
 
-      {/* ---- Sizes + stock ---- */}
       <label className="label mt-4">Sizes & stock</label>
       <p className="text-xs text-ivory/50 mb-2">
         Click a size to enable it, then type how many units you actually have.
-        Leaving stock at 0 shows the size as sold out on the product page —
-        deselecting the size hides it entirely.
       </p>
       <div className="space-y-2 mb-2">
         {ALL_SIZES.map((s) => {
@@ -419,10 +408,9 @@ export default function ProductForm({
         })}
       </div>
 
-      {/* ---- Bullet points ---- */}
       <label className="label mt-4">Bullet points</label>
       <p className="text-xs text-ivory/50 mb-2">
-        Short feature lines shown on the product page, like &quot;Real steel boning&quot; or &quot;Adjustable lacing.&quot;
+        Short feature lines shown on the product page.
       </p>
       <div className="space-y-2">
         {bulletPoints.map((b, i) => (
@@ -452,11 +440,10 @@ export default function ProductForm({
         + Add bullet point
       </button>
 
-      {/* ---- Videos (REBUILT: real file upload, not just URL paste) ---- */}
       <label className="label mt-6">Product videos — optional</label>
       <p className="text-xs text-ivory/50 mb-2">
-        Upload a video file directly (MP4, WebM, or MOV, up to 100MB). It
-        shows in the gallery on the product page alongside your photos.
+        Upload a video file directly (MP4, WebM, or MOV, up to 100MB). Use the
+        arrows to control where it appears in the gallery, after your photos.
       </p>
 
       <label
@@ -488,87 +475,25 @@ export default function ProductForm({
       {videos.length > 0 && (
         <div className="space-y-2 my-3">
           {videos.map((v, i) => (
-            <div key={v} className="flex items-center gap-3 border border-taupe/30 rounded-lg p-2">
-              <video src={v} className="w-20 h-14 object-cover rounded bg-black" muted preload="metadata" />
-              <span className="text-xs text-ivory/70 flex-1 truncate">{v.split('/').pop()}</span>
-              <button
-                type="button"
-                onClick={() => removeVideoFile(i)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-wine text-ivory cursor-pointer text-xs shrink-0"
-                aria-label="Remove video"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ---- Images ---- */}
-      <label className="label mt-6">Product images</label>
-
-      <label
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
-        className="block border-2 border-dashed border-taupe/40 rounded-xl px-4 py-7 text-center cursor-pointer bg-blush/40 text-ivory hover:border-wine transition mb-2"
-      >
-        {uploading ? "Uploading & compressing…" : "Click to choose photos, or drag them here"}
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => handleFiles(e.target.files)}
-        />
-      </label>
-      <p className="text-xs text-ivory/50">JPG/PNG/HEIC up to 8 MB each. They&apos;re auto-shrunk to load fast.</p>
-
-      {images.filter((i) => i.trim()).length > 0 && (
-        <div className="flex flex-wrap gap-3 my-3">
-          {images.filter((i) => i.trim()).map((img, i) => (
-            <div key={i} className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={img}
-                alt={`Product image ${i + 1}`}
-                className="w-[90px] h-[90px] object-cover rounded-lg border border-taupe/30"
-              />
-              <button
-                type="button"
-                onClick={() => removeImage(i)}
-                className="absolute -top-2 -right-2 w-[22px] h-[22px] rounded-full bg-wine text-ivory cursor-pointer flex items-center justify-center text-xs leading-none"
-                aria-label="Remove image"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {error && <p className="text-crimson font-semibold mt-4">⚠ {error}</p>}
-
-      <div className="flex gap-3 mt-6">
-        <button
-          type="button"
-          disabled={saving}
-          onClick={() => save(false)}
-          className="px-5 py-3 border border-taupe/40 rounded-lg text-ivory hover:border-wine transition cursor-pointer disabled:opacity-50"
-        >
-          {saving ? "Saving…" : "Save as draft"}
-        </button>
-        <button
-          type="button"
-          disabled={saving}
-          onClick={() => save(true)}
-          className="px-5 py-3 bg-wine text-ivory rounded-lg hover:bg-wine/90 rc-glow-btn transition cursor-pointer disabled:opacity-50"
-        >
-          {saving ? "Saving…" : mode === "create" ? "Publish (go live)" : "Save & publish"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-
-
+            <div key={v} className="flex items-center gap-2 border border-taupe/30 rounded-lg p-2">
+              <div className="flex flex-col gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => moveVideo(i, -1)}
+                  disabled={i === 0}
+                  className="w-6 h-5 flex items-center justify-center text-ivory/60 hover:text-crimson disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer text-xs leading-none"
+                  aria-label="Move video earlier"
+                >
+                  &#9650;
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveVideo(i, 1)}
+                  disabled={i === videos.length - 1}
+                  className="w-6 h-5 flex items-center justify-center text-ivory/60 hover:text-crimson disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer text-xs leading-none"
+                  aria-label="Move video later"
+                >
+                  &#9660;
+                </button>
+              </div>
+              <span className="text-xs text-ivory
