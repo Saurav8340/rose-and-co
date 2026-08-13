@@ -25,6 +25,7 @@ type Product = {
   id: string; slug: string; name: string; description: string;
   price: number; compareAt: number | null;
   images: string[]; sizes: SizeOption[];
+  videos?: string[]; // NEW — see product/[slug]/page.tsx for where this is parsed
 };
 
 export default function ProductClient({ product }: { product: Product }) {
@@ -36,9 +37,6 @@ export default function ProductClient({ product }: { product: Product }) {
   const [bumpCart, setBumpCart] = useState(false);
 
   const displayPrice = product.price;
-  // Calculated FROM this product's own price using the shared rule in
-  // constants.ts — not a hardcoded number. Works correctly for any price
-  // you set on any product in admin.
   const prepaidPrice = getPrepaidPrice(product.price);
 
   const totalStock = useMemo(() => product.sizes.reduce((s, x) => s + x.stock, 0), [product.sizes]);
@@ -71,15 +69,14 @@ export default function ProductClient({ product }: { product: Product }) {
           <a href="/">Home</a> / <span className="text-ivory">{product.name}</span>
         </nav>
         <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-          <ProductGallery images={product.images} name={product.name} />
+          <ProductGallery images={product.images} name={product.name} videos={product.videos ?? []} />
           <div className="space-y-6">
             <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-wine">Rosé &amp; Co</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-wine">Rosé & Co</div>
               <h1 className="font-display text-3xl md:text-4xl text-ivory mt-2">{product.name}</h1>
               <RatingLine />
             </div>
 
-            {/* One clean pricing block. That's it. */}
             <div>
               <div className="flex items-baseline gap-3">
                 <div className="text-3xl font-semibold text-ivory">{inr(displayPrice)}</div>
@@ -92,7 +89,6 @@ export default function ProductClient({ product }: { product: Product }) {
               </div>
             </div>
 
-            {/* v34: Inventory countdown — replaces old "Only X left" line */}
             <InventoryCountdown productSlug={product.slug} totalStock={totalStock} />
 
             <ShipsInCounter />
@@ -101,7 +97,6 @@ export default function ProductClient({ product }: { product: Product }) {
               <div className="text-sm text-wine">This drop is sold out. Next drop in a few weeks.</div>
             )}
 
-            {/* v34: Size selector with modal size guide button */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="label">Size</div>
@@ -130,10 +125,6 @@ export default function ProductClient({ product }: { product: Product }) {
             <TrustBadges />
             <PincodeCheck />
 
-            {/* Product description now pulls from this product's own
-                database record — not hardcoded text. Whatever you type
-                into the admin panel's description field for a product
-                shows here automatically. */}
             <details open className="border-t border-taupe/20 pt-4">
               <summary className="cursor-pointer uppercase tracking-widest text-sm text-ivory">The piece</summary>
               <div className="mt-3 text-ivory/80 leading-[1.8] space-y-3 text-sm">
@@ -142,7 +133,7 @@ export default function ProductClient({ product }: { product: Product }) {
             </details>
 
             <details className="border-t border-taupe/20 pt-4">
-              <summary className="cursor-pointer uppercase tracking-widest text-sm text-ivory">Fit &amp; care</summary>
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-ivory">Fit & care</summary>
               <ul className="mt-3 space-y-2 text-ivory/80 text-sm leading-[1.8] list-disc pl-5">
                 <li>See the size chart below for exact measurements.</li>
                 <li>Corsets and hardware pieces: spot clean, keep metal dry.</li>
@@ -161,7 +152,7 @@ export default function ProductClient({ product }: { product: Product }) {
             </details>
 
             <details className="border-t border-taupe/20 pt-4">
-              <summary className="cursor-pointer uppercase tracking-widest text-sm text-ivory">Shipping &amp; returns</summary>
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-ivory">Shipping & returns</summary>
               <div className="mt-3 text-sm text-ivory/80 leading-[1.8] space-y-2">
                 <p>Free shipping anywhere in India via Delhivery. Metros in three to five working days. Smaller cities in five to seven.</p>
                 <p>Seven days to return from the day it arrives. Tags on, unworn, unwashed. We arrange the pickup. Refund lands in about a week.</p>
@@ -171,7 +162,6 @@ export default function ProductClient({ product }: { product: Product }) {
         </div>
       </div>
 
-      {/* v34: Reviews section — auto-loads from /api/reviews/list */}
       <ReviewsSection productSlug={product.slug} />
 
       <StickyBuyBar price={displayPrice} onBuy={doBuyNow} productName={product.name} />

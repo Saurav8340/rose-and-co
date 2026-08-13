@@ -3,17 +3,9 @@
 // ONE form used by BOTH "Create" and "Edit". Every box maps to a column in your
 // Product database table (slug, name, description, price, compareAt, images,
 // sizes, bulletPoints, videos, categoryId, active).
-//
-// FIX (permanent): sizes used to be saved as a flat list of strings, e.g.
-// ["S","M","L"], with no stock count anywhere. /api/inventory/route.ts
-// expects each size to be an object like {"size":"S","stock":10} so it can
-// sum up total stock for the "Only X left" countdown. Because the old form
-// never collected a stock number, every product created here saved stock
-// as effectively undefined -> 0, so every product showed "Only 0 left"
-// no matter what sizes were picked. Fixed by collecting a real stock number
-// per size below, and storing {size, stock} objects from the start.
 
 import { useEffect, useMemo, useState } from "react";
+import { upload } from '@vercel/blob/client';
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
@@ -52,7 +44,6 @@ export default function ProductForm({
   const [price, setPrice] = useState<number | "">(initial?.price ?? "");
   const [compareAt, setCompareAt] = useState<number | "">(initial?.compareAt ?? "");
 
-  // sizes is now an array of { size, stock } objects, not plain strings.
   const [sizes, setSizes] = useState<SizeStock[]>(
     initial?.sizes?.length ? initial.sizes : []
   );
@@ -63,9 +54,14 @@ export default function ProductForm({
   const [bulletPoints, setBulletPoints] = useState<string[]>(
     initial?.bulletPoints?.length ? initial.bulletPoints : [""]
   );
-  const [videos, setVideos] = useState<string[]>(
-    initial?.videos?.length ? initial.videos : [""]
-  );
+
+  // Real uploaded video files, stored as Blob URLs once uploaded.
+  const [videos, setVideos] = useState<string[]>(initial?.videos ?? []);
+  // Upload-in-progress state, so the admin sees a live progress bar
+  // instead of the page just sitting there for a large file.
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [videoError, setVideoError] = useState("");
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState<string>(initial?.categoryId ?? "");
@@ -123,13 +119,54 @@ export default function ProductForm({
         if (!res.ok) throw new Error(data.error || "Upload failed");
         added.push(data.url);
       }
-      // drop any empty placeholder boxes, then append the new images
       setImages((prev) => [...prev.filter((i) => i.trim()), ...added]);
     } catch (e: any) {
       setError(e.message);
     } finally {
       setUploading(false);
     }
+  }
+
+  // NEW: handles a real video file upload. Uploads DIRECTLY from this
+  // browser to Vercel Blob storage — the file never passes through our
+  // own server, so there's no serverless request-size limit to worry
+  // about. /api/upload-video only issues the permission token; see that
+  // file's comments for the full explanation.
+  async function handleVideoFiles(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return;
+    setVideoError("");
+    setVideoUploading(true);
+    setVideoProgress(0);
+    try {
+      for (const file of Array.from(fileList)) {
+        const allowed = ['video/mp4', 'video/webm', 'video/quicktime'];
+        if (!allowed.includes(file.type)) {
+          throw new Error(`${file.name}: only MP4, WebM, or MOV files are supported.`);
+        }
+        if (file.size > 100 * 1024 * 1024) {
+          throw new Error(`${file.name} is larger than 100MB. Compress it first.`);
+        }
+
+        const blob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload-video',
+          onUploadProgress: (progressEvent) => {
+            setVideoProgress(Math.round(progressEvent.percentage));
+          },
+        });
+
+        setVideos((prev) => [...prev, blob.url]);
+      }
+    } catch (e: any) {
+      setVideoError(e.message || 'Video upload failed.');
+    } finally {
+      setVideoUploading(false);
+      setVideoProgress(0);
+    }
+  }
+
+  function removeVideoFile(index: number) {
+    setVideos((prev) => prev.filter((_, j) => j !== index));
   }
 
   function removeImage(index: number) {
@@ -146,16 +183,6 @@ export default function ProductForm({
     setBulletPoints((prev) => prev.filter((_, j) => j !== index));
   }
 
-  function updateVideo(index: number, value: string) {
-    setVideos((prev) => prev.map((v, j) => (j === index ? value : v)));
-  }
-  function addVideo() {
-    setVideos((prev) => [...prev, ""]);
-  }
-  function removeVideo(index: number) {
-    setVideos((prev) => prev.filter((_, j) => j !== index));
-  }
-
   const previewSlug = useMemo(
     () =>
       (initial?.slug ??
@@ -163,9 +190,6 @@ export default function ProductForm({
     [name, initial?.slug]
   );
 
-  // Clicking a size toggles it in/out of the sizes array. Turning ON adds
-  // it with stock 0 (you then type the real number). Turning OFF removes
-  // it entirely, same as before.
   function toggleSize(s: string) {
     setSizes((prev) => {
       const exists = prev.find((x) => x.size === s);
@@ -193,7 +217,7 @@ export default function ProductForm({
       sizes,
       images: images.filter((i) => i.trim()),
       bulletPoints: bulletPoints.filter((b) => b.trim()),
-      videos: videos.filter((v) => v.trim()),
+      videos, // already just an array of real Blob URLs, nothing to filter
       categoryId: categoryId || null,
       active: publish,
     };
@@ -351,7 +375,7 @@ export default function ProductForm({
         Leave MRP blank and one will be estimated automatically. Prepaid discount and COD split are calculated automatically from the selling price — no need to set those separately.
       </p>
 
-      {/* ---- Sizes + stock (FIXED) ---- */}
+      {/* ---- Sizes + stock ---- */}
       <label className="label mt-4">Sizes & stock</label>
       <p className="text-xs text-ivory/50 mb-2">
         Click a size to enable it, then type how many units you actually have.
@@ -395,7 +419,7 @@ export default function ProductForm({
         })}
       </div>
 
-      {/* ---- Bullet points (Amazon-style feature list) ---- */}
+      {/* ---- Bullet points ---- */}
       <label className="label mt-4">Bullet points</label>
       <p className="text-xs text-ivory/50 mb-2">
         Short feature lines shown on the product page, like &quot;Real steel boning&quot; or &quot;Adjustable lacing.&quot;
@@ -428,38 +452,57 @@ export default function ProductForm({
         + Add bullet point
       </button>
 
-      {/* ---- Videos ---- */}
+      {/* ---- Videos (REBUILT: real file upload, not just URL paste) ---- */}
       <label className="label mt-6">Product videos — optional</label>
       <p className="text-xs text-ivory/50 mb-2">
-        Paste a video link (YouTube, Vimeo, or any hosted URL). Large video files should not be uploaded directly.
+        Upload a video file directly (MP4, WebM, or MOV, up to 100MB). It
+        shows in the gallery on the product page alongside your photos.
       </p>
-      <div className="space-y-2">
-        {videos.map((v, i) => (
-          <div key={i} className="flex gap-2">
-            <input
-              className="input flex-1"
-              value={v}
-              onChange={(e) => updateVideo(i, e.target.value)}
-              placeholder="https://youtube.com/watch?v=..."
-            />
-            <button
-              type="button"
-              onClick={() => removeVideo(i)}
-              className="w-11 h-11 flex items-center justify-center border border-taupe/40 rounded-lg text-ivory/60 hover:text-wine hover:border-wine transition cursor-pointer"
-              aria-label="Remove video"
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-      </div>
-      <button
-        type="button"
-        onClick={addVideo}
-        className="mt-2 text-sm text-wine hover:text-ivory underline transition cursor-pointer"
+
+      <label
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); handleVideoFiles(e.dataTransfer.files); }}
+        className="block border-2 border-dashed border-taupe/40 rounded-xl px-4 py-7 text-center cursor-pointer bg-blush/40 text-ivory hover:border-wine transition mb-2"
       >
-        + Add video link
-      </button>
+        {videoUploading ? `Uploading… ${videoProgress}%` : 'Click to choose a video, or drag it here'}
+        <input
+          type="file"
+          accept="video/mp4,video/webm,video/quicktime"
+          multiple
+          className="hidden"
+          onChange={(e) => handleVideoFiles(e.target.files)}
+        />
+      </label>
+
+      {videoUploading && (
+        <div className="w-full h-1.5 bg-taupe/20 rounded-full overflow-hidden mb-2">
+          <div
+            className="h-full bg-wine transition-all duration-200"
+            style={{ width: `${videoProgress}%` }}
+          />
+        </div>
+      )}
+
+      {videoError && <p className="text-wine text-xs mb-2">⚠ {videoError}</p>}
+
+      {videos.length > 0 && (
+        <div className="space-y-2 my-3">
+          {videos.map((v, i) => (
+            <div key={v} className="flex items-center gap-3 border border-taupe/30 rounded-lg p-2">
+              <video src={v} className="w-20 h-14 object-cover rounded bg-black" muted preload="metadata" />
+              <span className="text-xs text-ivory/70 flex-1 truncate">{v.split('/').pop()}</span>
+              <button
+                type="button"
+                onClick={() => removeVideoFile(i)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-wine text-ivory cursor-pointer text-xs shrink-0"
+                aria-label="Remove video"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ---- Images ---- */}
       <label className="label mt-6">Product images</label>

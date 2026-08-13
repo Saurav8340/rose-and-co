@@ -13,3 +13,5 @@ dev.db-journal
 site-audit*.txt
 rose-audit.txt
 wake-neon.ts
+.vercel
+.env*

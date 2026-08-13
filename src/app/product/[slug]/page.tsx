@@ -19,7 +19,7 @@ export async function generateStaticParams() {
     return products.map((p) => ({ slug: p.slug }));
   } catch (err) {
     console.warn('DB not reachable at build time, using empty params', err);
-    return []; // fallback — pages will still be generated on-demand
+    return [];
   }
 }
 
@@ -31,9 +31,6 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   });
   if (!p) return { title: 'Product' };
 
-  // All pricing calculated from THIS product's own price/compareAt using
-  // the shared rules in constants.ts — not hardcoded numbers. Correct for
-  // any product at any price, automatically.
   const mrp = getDisplayMrp(p.price, p.compareAt);
   const prepaidPrice = getPrepaidPrice(p.price);
   const codDeposit = getCodDeposit(p.price);
@@ -59,6 +56,18 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   const images: string[] = JSON.parse(p.images);
   const sizes = JSON.parse(p.sizes);
+
+  // FIX: `videos` was already saved correctly to the database by the admin
+  // form, but this page never read the field at all — so even a product
+  // with a real uploaded video showed nothing on the live PDP. Parsed
+  // here the same safe way as images/sizes, defaulting to an empty array
+  // if the field is missing/invalid rather than crashing the page.
+  let videos: string[] = [];
+  try {
+    videos = p.videos ? JSON.parse(p.videos) : [];
+  } catch {
+    videos = [];
+  }
 
   const mrp = getDisplayMrp(p.price, p.compareAt);
   const prepaidPrice = getPrepaidPrice(p.price);
@@ -86,7 +95,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       ]} />
       <ProductClient product={{
         id: p.id, slug: p.slug, name: p.name, description: p.description,
-        price: p.price, compareAt: p.compareAt, images, sizes,
+        price: p.price, compareAt: p.compareAt, images, sizes, videos,
       }} />
     </>
   );
