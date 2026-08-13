@@ -1,42 +1,9 @@
 // src/app/api/upload/route.ts
-// Receives an uploaded image, auto-compresses it with sharp, and now
-// uploads the compressed result to Vercel Blob storage instead of
-// returning it as an inline base64 data URL.
-//
-// FIX (major performance issue found via PageSpeed Insights): this route
-// used to return `data:image/webp;base64,...` — a giant text string that
-// got saved directly into Product.images in the database, then rendered
-// straight into the page's HTML. That meant the browser had to download
-// the ENTIRE page response (5,000+ KB on the Blood Ritual Set page)
-// before it could show a single image, since the image data was stuck
-// INSIDE the HTML/RSC payload rather than being its own separate
-// resource the browser can fetch in parallel. This measured as a 23.8
-// SECOND Largest Contentful Paint on mobile. A real image URL lets the
-// browser start downloading it immediately, in parallel with everything
-// else — this is the single biggest lever on real-world page speed for
-// this entire site.
-//
-// No changes needed in ProductForm.tsx — it already just does
-// `fetch('/api/upload', ...)` and uses whatever `url` comes back. That
-// used to be a base64 string; now it's a real Blob URL. Everything
-// downstream (Product.images, ProductGallery.tsx) already just treats
-// it as a plain image src string either way.
-//
-// IMPORTANT: existing products (e.g. Blood Ritual Set) already have
-// their 7 images saved as base64 in the database from BEFORE this fix.
-// This fix only applies to NEW uploads going forward — to get the
-// speed benefit on existing products, re-upload their images through
-// the admin edit page after this change is live.
-
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { put } from "@vercel/blob";
 import { isAdmin } from "@/lib/adminAuth";
 
-// Vercel's default serverless function body size limit is around 4.5MB.
-// Lowered from the old 8MB cap so an oversized upload fails with OUR
-// clear error message below, instead of a generic 413 from the
-// platform itself before this code even runs.
 const MAX_BYTES = 4 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
@@ -56,14 +23,32 @@ export async function POST(req: NextRequest) {
 
     const inputBuffer = Buffer.from(await file.arrayBuffer());
 
-    // Resize to max 1000px wide, convert to webp ~72% quality (small + sharp-looking).
+    // FIX (PageSpeed Insights — "Improve image delivery", ~123 KiB
+    // wasted on the product page): images were being resized to 1000px
+    // wide on upload, but the product gallery only ever displays a photo
+    // at roughly 380-570px on real devices, even accounting for
+    // high-density phone screens. Every visitor was downloading close to
+    // 2x the pixel data actually needed for what's shown on screen.
+    //
+    // 828px is one of the exact breakpoints already listed in
+    // next.config.js's `images.deviceSizes` — this means Next.js's
+    // built-in image optimizer can serve this size directly without any
+    // upscaling artifacts, while still looking fully sharp on retina/
+    // high-DPI phones at the gallery's actual display width. This is a
+    // ONE-TIME change to the resize step: every photo uploaded through
+    // the admin form from now on, for every product, gets this smaller,
+    // still-sharp size automatically — no per-product action needed.
+    //
+    // NOTE: this only affects photos uploaded AFTER this change ships.
+    // Any product's existing photos (already sitting in Blob storage at
+    // the old 1000px size) need to be manually removed and re-uploaded
+    // in the admin edit page to pick up this saving retroactively.
     const output = await sharp(inputBuffer)
-      .rotate() // respect phone photo orientation
-      .resize({ width: 1000, withoutEnlargement: true })
+      .rotate()
+      .resize({ width: 828, withoutEnlargement: true })
       .webp({ quality: 72 })
       .toBuffer();
 
-    // Upload the COMPRESSED result to Blob storage (not the database).
     const blob = await put(
       `products/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`,
       output,
@@ -79,7 +64,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not process image." }, { status: 500 });
   }
 }
-
-
-
-
