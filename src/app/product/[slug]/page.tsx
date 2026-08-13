@@ -4,7 +4,8 @@ import ProductClient from './ProductClient';
 import JsonLd from '@/components/JsonLd';
 import { productSchema, breadcrumbSchema, faqSchema } from '@/lib/schemas';
 import type { Metadata } from 'next';
-import { SITE } from '@/lib/constants';
+import { SITE, getPrepaidPrice, getCodDeposit, getCodRemaining, getDisplayMrp } from '@/lib/constants';
+import { inr } from '@/lib/format';
 
 export const revalidate = 300;
 
@@ -18,7 +19,7 @@ export async function generateStaticParams() {
     return products.map((p) => ({ slug: p.slug }));
   } catch (err) {
     console.warn('DB not reachable at build time, using empty params', err);
-    return []; // fallback â€” pages will still be generated on-demand
+    return []; // fallback — pages will still be generated on-demand
   }
 }
 
@@ -29,10 +30,19 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     select: { name: true, description: true, price: true, compareAt: true, images: true, slug: true },
   });
   if (!p) return { title: 'Product' };
+
+  // All pricing calculated from THIS product's own price/compareAt using
+  // the shared rules in constants.ts — not hardcoded numbers. Correct for
+  // any product at any price, automatically.
+  const mrp = getDisplayMrp(p.price, p.compareAt);
+  const prepaidPrice = getPrepaidPrice(p.price);
+  const codDeposit = getCodDeposit(p.price);
+  const codRemaining = getCodRemaining(p.price);
+
   return {
-    title: `${p.name} - Rs ${p.price} (MRP Rs ${p.compareAt || 3499}) - Hand-painted marble swirl satin`,
-    description: `${p.description} MRP Rs ${p.compareAt || 3499}, selling at Rs ${p.price}. Free shipping across India, ships from Delhi NCR in 24-48 hours. UPI prepaid Rs 2,199 (save Rs 100). COD available (Rs 299 online + rest on delivery).`,
-    keywords: ['satin co-ord set', 'marble print co-ord set', 'poly-satin midi', 'indian D2C fashion', 'satin shirt and pants set', 'engagement outfit', 'party wear india', p.name.toLowerCase()],
+    title: `${p.name} - ${inr(p.price)} (MRP ${inr(mrp)}) | ${SITE.name}`,
+    description: `${p.description} MRP ${inr(mrp)}, selling at ${inr(p.price)}. Free shipping across India, ships from Gurugram in 24-48 hours. UPI prepaid ${inr(prepaidPrice)}. COD available (${inr(codDeposit)} online + ${inr(codRemaining)} on delivery).`,
+    keywords: ['gothic clothing India', 'alt fashion India', 'corset top India', 'punk streetwear India', 'mesh fishnet fashion', p.name.toLowerCase()],
     openGraph: {
       title: p.name, description: p.description,
       images: JSON.parse(p.images).slice(0, 1).map((i: string) => ({ url: `${SITE.url}${i}` })),
@@ -50,14 +60,18 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const images: string[] = JSON.parse(p.images);
   const sizes = JSON.parse(p.sizes);
 
+  const mrp = getDisplayMrp(p.price, p.compareAt);
+  const prepaidPrice = getPrepaidPrice(p.price);
+  const codDeposit = getCodDeposit(p.price);
+  const codRemaining = getCodRemaining(p.price);
+
   const productFaqs = [
-    { q: 'What is the fabric?', a: 'Poly-satin blend, around 90 to 100 GSM. Has weight, falls with drape. Not the thin shiny kind you see in Rs 500 satin.' },
-    { q: 'Is the print really hand-painted?', a: 'Yes. Each panel is hand-painted before the fabric is cut. Your swirl pattern will look slightly different from the one in the photos.' },
-    { q: 'How does the sizing run?', a: 'True to size for most women. Between sizes, size down for the top and up for the skirt.' },
-    { q: 'How long does delivery take?', a: 'Ships from Delhi NCR within 24 to 48 hours of payment confirmation. Delivered in 3 to 5 business days to metros, 5 to 7 to smaller cities.' },
-    { q: 'Can I wear the top separately?', a: 'Yes. Works with jeans, tailored trousers, or a plain skirt.' },
-    { q: 'What is the difference between prepaid and COD?', a: 'Prepaid via UPI is Rs 2,199 (save Rs 100). Partial COD is Rs 2,299 total, split as Rs 299 online plus Rs 2,000 cash on delivery.' },
-    { q: 'What is the MRP?', a: 'MRP is Rs 3,499. We sell at Rs 2,000 - Rs 1,499 off - because we go direct to buyer and skip the retail markup.' },
+    { q: 'Is the hardware actually metal?', a: 'Yes. Real D-rings, buckles, or chain depending on the piece — not a graphic printed on. Check the product description above for what this specific piece uses.' },
+    { q: 'How does the sizing run?', a: 'True to size for most. Between sizes, check the size chart below — corsets and structured pieces fit differently from mesh and jersey.' },
+    { q: 'How long does delivery take?', a: 'Ships from Gurugram within 24 to 48 hours of payment confirmation. Delivered in 3 to 5 business days to metros, 5 to 7 to smaller cities.' },
+    { q: 'Can I style this with other pieces?', a: 'Yes — see the styling notes in the description above for what this piece pairs well with.' },
+    { q: 'What is the difference between prepaid and COD?', a: `Prepaid via UPI is ${inr(prepaidPrice)}. Partial COD is ${inr(p.price)} total, split as ${inr(codDeposit)} online plus ${inr(codRemaining)} cash on delivery.` },
+    { q: 'What is the MRP?', a: `MRP is ${inr(mrp)}. We sell at ${inr(p.price)} because we go direct to buyer and skip the retail markup.` },
   ];
 
   return (
@@ -65,7 +79,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       <JsonLd data={[
         productSchema({ id: p.id, slug: p.slug, name: p.name, description: p.description, price: p.price, images, sizes }),
         breadcrumbSchema([
-          { name: 'Home', url: '/' }, { name: 'Shop', url: '/' },
+          { name: 'Home', url: '/' }, { name: 'Shop', url: '/shop' },
           { name: p.name, url: `/product/${p.slug}` },
         ]),
         faqSchema(productFaqs),

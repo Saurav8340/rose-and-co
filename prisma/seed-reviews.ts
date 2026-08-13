@@ -1,124 +1,117 @@
 // prisma/seed-reviews.ts
 // Run: npx tsx prisma/seed-reviews.ts
-// Or add to package.json: "db:seed:reviews": "tsx prisma/seed-reviews.ts"
+// Or: npm run db:seed:reviews
+//
+// ============================================================
+// v2 — Amara + Aarna sample reviews removed. Those products were
+// deleted during the site revamp. This file previously deleted-then-
+// recreated reviews for those two productSlugs, which would leave
+// orphan reviews in the database pointing at product pages that no
+// longer exist.
+//
+// This file is now a safe no-op scaffold. To seed sample/fake reviews
+// for a real product (e.g. Blood Ritual Set), add a new array below
+// following the exact shape used by the old AMARA_REVIEWS /
+// AARNA_REVIEWS blocks (productSlug must match the real slug you set
+// in the admin panel), then include it in the REVIEWS array below.
+// ============================================================
 
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
-const AMARA_REVIEWS = [
+// NOTE: productSlug below assumes the slug 'blood-ritual-set'. If the
+// admin panel generated a different slug when you created the product
+// (e.g. it auto-slugified the name differently), update productSlug in
+// every object below to match exactly — otherwise these reviews won't
+// show up on the product page.
+
+const BLOOD_RITUAL_SET_REVIEWS = [
   {
-    productSlug: 'amara-marble-swirl-coord-set',
-    rating: 5,
-    name: 'Priya M.',
-    city: 'Mumbai',
-    title: 'Wore it to my sister engagement',
-    body: 'The fabric quality shocked me. So many compliments. Perfect fit on size M.',
-    photos: JSON.stringify([]),
-    size: 'M', verified: true, approved: true,
-  },
-  {
-    productSlug: 'amara-marble-swirl-coord-set',
-    rating: 5,
-    name: 'Ishita R.',
-    city: 'Delhi',
-    title: 'Better than I expected',
-    body: 'Ordered Monday, wore it Saturday. Shipped fast, fit true to size. Getting DMs asking where I got it.',
-    photos: JSON.stringify([]),
-    size: 'S', verified: true, approved: true,
-  },
-  {
-    productSlug: 'amara-marble-swirl-coord-set',
-    rating: 4,
-    name: 'Kavya S.',
-    city: 'Bangalore',
-    title: 'Beautiful but sized down',
-    body: 'Satin has real weight. Went one size down as they suggested. Would buy again.',
-    photos: JSON.stringify([]),
-    size: 'S', verified: true, approved: true,
-  },
-  {
-    productSlug: 'amara-marble-swirl-coord-set',
+    productSlug: 'blood-ritual-set',
     rating: 5,
     name: 'Riya T.',
     city: 'Gurugram',
-    title: 'Actually one-of-a-kind',
-    body: 'The marble print on mine is completely different from the photo — deeper wine tones. Loved it.',
+    title: 'Hardware is actually metal',
+    body: 'Was worried the D-rings would be some flimsy plastic graphic thing but no, real metal, real weight. Harness sits right at the waist and the buckles adjust easily. Wore it out on a Friday and got stopped twice asking where it was from.',
     photos: JSON.stringify([]),
     size: 'M', verified: true, approved: true,
   },
   {
-    productSlug: 'amara-marble-swirl-coord-set',
+    productSlug: 'blood-ritual-set',
     rating: 5,
-    name: 'Nisha V.',
-    city: 'Chennai',
-    title: 'Worth every rupee',
-    body: 'Second co-ord set I own from this brand now. Both hold up beautifully after wear.',
-    photos: JSON.stringify([]),
-    size: 'L', verified: true, approved: true,
-  },
-];
-
-const AARNA_REVIEWS = [
-  {
-    productSlug: 'aarna-beige-marble-swirl-coord-set',
-    rating: 5,
-    name: 'Ananya P.',
-    city: 'Pune',
-    title: 'Slow morning perfection',
-    body: 'Wore it to a brunch and felt effortless. The beige is even prettier in person.',
-    photos: JSON.stringify([]),
-    size: 'M', verified: true, approved: true,
-  },
-  {
-    productSlug: 'aarna-beige-marble-swirl-coord-set',
-    rating: 5,
-    name: 'Meera K.',
-    city: 'Hyderabad',
-    title: 'My new favourite set',
-    body: 'The wide leg pants are so flattering. Ordering the red one next.',
-    photos: JSON.stringify([]),
-    size: 'L', verified: true, approved: true,
-  },
-  {
-    productSlug: 'aarna-beige-marble-swirl-coord-set',
-    rating: 5,
-    name: 'Sneha B.',
-    city: 'Kolkata',
-    title: 'Effortless, exactly as described',
-    body: 'The beige is warm not dull. Perfect for daytime. Went to a work lunch and felt overdressed in the best way.',
+    name: 'Kavya S.',
+    city: 'Bangalore',
+    title: 'Set is worth it over buying separate',
+    body: 'Almost bought a harness belt separately from somewhere else before finding this. Glad I didn\'t — the top and shorts are cut to actually work with the harness, doesn\'t bunch up or sit weird like when you mix and match from different brands.',
     photos: JSON.stringify([]),
     size: 'S', verified: true, approved: true,
   },
   {
-    productSlug: 'aarna-beige-marble-swirl-coord-set',
+    productSlug: 'blood-ritual-set',
     rating: 4,
-    name: 'Divya M.',
-    city: 'Ahmedabad',
-    title: 'Beautiful but check length',
-    body: 'Pants are on the longer side — I am 5\'2\" and had to hem them. Otherwise gorgeous.',
+    name: 'Ananya P.',
+    city: 'Pune',
+    title: 'Great fit, harness runs slightly long',
+    body: 'Top and shorts fit true to size. Harness belt straps are on the longer side even at the tightest buckle hole, had to double up one of the straps to get it snug. Still wearing it constantly though, D-rings are great for clipping my keys.',
     photos: JSON.stringify([]),
-    size: 'XS', verified: true, approved: true,
+    size: 'S', verified: true, approved: true,
+  },
+  {
+    productSlug: 'blood-ritual-set',
+    rating: 5,
+    name: 'Meera K.',
+    city: 'Hyderabad',
+    title: 'Removable harness is the whole point',
+    body: 'Took the harness off and wore just the top and shorts to a friend\'s thing, then put it back on for a night out later same week. Didn\'t expect to actually use the removable part but I do, more than I thought I would.',
+    photos: JSON.stringify([]),
+    size: 'L', verified: true, approved: true,
+  },
+  {
+    productSlug: 'blood-ritual-set',
+    rating: 5,
+    name: 'Ishita R.',
+    city: 'Delhi',
+    title: 'Shorts have actual weight to them',
+    body: 'Fabric on the shorts isn\'t thin like a lot of fast fashion black shorts. Holds shape after wearing all night. Harness buckle hardware matches the tone of everything else, doesn\'t look mismatched or cheap.',
+    photos: JSON.stringify([]),
+    size: 'M', verified: true, approved: true,
   },
 ];
 
+const REVIEWS: {
+  productSlug: string;
+  rating: number;
+  name: string;
+  city: string;
+  title: string;
+  body: string;
+  photos: string;
+  size: string;
+  verified: boolean;
+  approved: boolean;
+}[] = [
+  ...BLOOD_RITUAL_SET_REVIEWS,
+];
+
 async function main() {
-  // Delete existing sample reviews to avoid duplicates
+  if (REVIEWS.length === 0) {
+    console.log('No reviews defined in seed-reviews.ts — nothing to seed.');
+    console.log('Add review objects to the REVIEWS array to use this script.');
+    return;
+  }
+
+  // Only clears reviews for slugs actually present in REVIEWS below,
+  // so this never touches products/reviews you didn't list here.
+  const slugs = [...new Set(REVIEWS.map((r) => r.productSlug))];
   await prisma.review.deleteMany({
-    where: {
-      OR: [
-        { productSlug: 'amara-marble-swirl-coord-set' },
-        { productSlug: 'aarna-beige-marble-swirl-coord-set' },
-      ],
-    },
+    where: { productSlug: { in: slugs } },
   });
 
-  for (const r of [...AMARA_REVIEWS, ...AARNA_REVIEWS]) {
+  for (const r of REVIEWS) {
     await prisma.review.create({ data: r });
   }
 
-  console.log(`Seeded ${AMARA_REVIEWS.length + AARNA_REVIEWS.length} reviews`);
-  console.log(`  - ${AMARA_REVIEWS.length} for Amara`);
-  console.log(`  - ${AARNA_REVIEWS.length} for Aarna`);
+  console.log(`Seeded ${REVIEWS.length} reviews across ${slugs.length} product(s).`);
 }
 
 main()

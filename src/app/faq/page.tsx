@@ -28,11 +28,11 @@ const sections: { title: string; items: [string, string][] }[] = [
   {
     title: 'Product and fit',
     items: [
-      ['Tell me about the fabric.', 'Poly-satin, around a hundred grams per square metre. It has weight. It falls without clinging.'],
-      ['Is it really hand-painted?', 'Yes. Every panel is painted before the cloth is cut. Yours will look a little different from the photos. Same three tones, different arrangement.'],
-      ['How does the sizing run?', 'True to Zara and H&amp;M. Between sizes, we usually say down for the top and up for the skirt.'],
-      ['How do I take care of it?', 'Dry clean is safest. Hand-wash cold works too. Never tumble dry. Never wring. Iron on the reverse, low heat, if needed.'],
-      ['Will the print fade?', 'The pigment sits inside the fibre. Wash cold, skip the bleach, and it stays true.'],
+      ['Is the hardware actually metal?', 'Yes. Real D-rings, buckles, and chain — not a graphic printed on. It has weight, and it holds.'],
+      ['Are the corsets actually boned?', 'Yes. Steel boning, not a soft shell pretending to have structure. Lace it how you like — snug or loose.'],
+      ['How does the sizing run?', 'True to Zara and H&amp;M. Between sizes, check the specific notes on each product page &mdash; corsets and mesh fit differently.'],
+      ['How do I take care of it?', 'Hand-wash cold for mesh and fishnet. Spot-clean hardware, don\'t submerge it. Never tumble dry. Full details on the care guide.'],
+      ['Will the hardware tarnish?', 'Not with normal wear. Keep it dry and it holds its finish.'],
     ],
   },
   {
@@ -57,20 +57,20 @@ export default function FAQ() {
   return (
     <div className="container-x py-16 max-w-2xl">
       <div className="text-xs uppercase tracking-[0.3em] text-wine">Help</div>
-      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3">A few common questions.</h1>
+      <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">A few common questions.</h1>
 
       <div className="mt-12 space-y-12">
         {sections.map(sec => (
           <div key={sec.title}>
-            <h2 className="font-display text-2xl text-espresso mb-4">{sec.title}</h2>
+            <h2 className="font-display text-2xl text-ivory mb-4">{sec.title}</h2>
             <div className="space-y-3">
               {sec.items.map(([q, a]) => (
                 <details key={q} className="border-b border-taupe/20 pb-4 pt-4 group">
-                  <summary className="cursor-pointer font-medium text-espresso flex justify-between text-[15px]">
+                  <summary className="cursor-pointer font-medium text-ivory flex justify-between text-[15px]">
                     <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(q) }} />
                     <span className="group-open:rotate-45 transition ml-4 text-wine">+</span>
                   </summary>
-                  <p className="mt-3 text-sm text-espresso/70 leading-[1.8]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(a) }} />
+                  <p className="mt-3 text-sm text-ivory/70 leading-[1.8]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(a) }} />
                 </details>
               ))}
             </div>
@@ -79,7 +79,7 @@ export default function FAQ() {
       </div>
 
       <div className="mt-16 p-6 border border-taupe/20 text-center">
-        <p className="text-sm text-espresso/80">Anything else? Write to us.</p>
+        <p className="text-sm text-ivory/80">Anything else? Write to us.</p>
         <a className="mt-2 inline-block underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a>
       </div>
     </div>

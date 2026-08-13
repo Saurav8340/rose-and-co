@@ -39,21 +39,21 @@ export default function PincodeCheck() {
 
   return (
     <div className="border-t border-taupe/20 pt-4">
-      <div className="text-xs uppercase tracking-widest text-espresso mb-2">Check delivery date</div>
+      <div className="text-xs uppercase tracking-widest text-ivory mb-2">Check delivery date</div>
       <div className="flex gap-2">
         <input inputMode="numeric" maxLength={6} value={pin}
           onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
           placeholder="Enter PIN code" className="input flex-1" />
-        <button onClick={check} disabled={loading} className="btn-secondary px-4">
+        <button onClick={check} disabled={loading} className="btn-secondary px-4 cursor-pointer">
           {loading ? '…' : 'Check'}
         </button>
       </div>
       {err && <div className="mt-2 text-xs text-wine">{err}</div>}
       {result && (
-        <div className="mt-3 p-3 bg-blush/30 border-l-2 border-wine text-sm text-espresso">
+        <div className="mt-3 p-3 bg-blush/40 border-l-2 border-wine text-sm text-ivory rounded">
           <div>Delivering to <b>{result.city}, {result.state}</b></div>
           <div className="mt-1">Arrives by <b>{result.from} – {result.to}</b> ({result.days})</div>
-          <div className="mt-1 text-xs text-espresso/60">Free shipping. Ships from Delhi NCR in 24–48 hours.</div>
+          <div className="mt-1 text-xs text-ivory/60">Free shipping. Ships from Gurugram in 24–48 hours.</div>
         </div>
       )}
     </div>

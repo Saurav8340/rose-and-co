@@ -1,41 +1,41 @@
 // src/app/api/products/[slug]/route.ts
-// NEW FILE. Get one / EDIT (PUT) / DELETE a product. (c) Edit uses PUT.
-// (a) Protected by isAdmin().
-
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/adminAuth";
 import { prisma } from "@/lib/prisma";
-// import prisma from "@/lib/db";
+import { verifyAdminSession } from "@/lib/session";
 
-type Ctx = { params: { slug: string } };
-
-// GET one product (used to pre-fill the Edit form). Admin-only.
-export async function GET(_req: NextRequest, { params }: Ctx) {
-  if (!(await isAdmin()))
+export async function GET(_req: NextRequest, { params }: { params: { slug: string } }) {
+  if (!(await verifyAdminSession()))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const product = await prisma.product.findUnique({ where: { slug: params.slug } });
+  const product = await prisma.product.findUnique({
+    where: { slug: params.slug },
+    include: { category: true },
+  });
   if (!product) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(product);
 }
 
-// EDIT. Note: slug/URL stays the same so existing ad links keep working.
-export async function PUT(req: NextRequest, { params }: Ctx) {
-  if (!(await isAdmin()))
+export async function PUT(req: NextRequest, { params }: { params: { slug: string } }) {
+  if (!(await verifyAdminSession()))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const body = await req.json();
+
   try {
-    const body = await req.json();
     const product = await prisma.product.update({
       where: { slug: params.slug },
       data: {
         name: body.name,
-        description: body.description ?? "",
+        description: body.description,
         price: body.price,
         compareAt: body.compareAt ?? null,
         images: JSON.stringify(body.images ?? []),
         sizes: JSON.stringify(body.sizes ?? []),
-        active: body.active ?? false,
+        bulletPoints: JSON.stringify(body.bulletPoints ?? []),
+        videos: JSON.stringify(body.videos ?? []),
+        attributes: JSON.stringify(body.attributes ?? {}),
+        categoryId: body.categoryId || null,
+        active: body.active,
       },
     });
     return NextResponse.json({ product, url: `/product/${product.slug}` });
@@ -45,14 +45,23 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: Ctx) {
-  if (!(await isAdmin()))
+export async function DELETE(_req: NextRequest, { params }: { params: { slug: string } }) {
+  if (!(await verifyAdminSession()))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     await prisma.product.delete({ where: { slug: params.slug } });
     return NextResponse.json({ ok: true });
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.code === "P2003") {
+      return NextResponse.json(
+        {
+          error:
+            "This product has order history and can't be deleted. Set it to inactive instead, or remove its order items first.",
+        },
+        { status: 409 }
+      );
+    }
     return NextResponse.json({ error: "Could not delete." }, { status: 500 });
   }
 }

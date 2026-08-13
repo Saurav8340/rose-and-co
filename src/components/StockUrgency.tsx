@@ -8,8 +8,8 @@ interface Props {
 export default function StockUrgency({ stock, size }: Props) {
   if (stock === 0) {
     return (
-      <div className="mt-3 inline-flex items-center gap-2 text-red-700 text-sm">
-        <span className="w-2 h-2 rounded-full bg-red-600" />
+      <div className="mt-3 inline-flex items-center gap-2 text-wine text-sm">
+        <span className="w-2 h-2 rounded-full bg-wine" />
         Sold out {size && `in ${size}`}
       </div>
     );
@@ -26,8 +26,8 @@ export default function StockUrgency({ stock, size }: Props) {
 
   if (stock <= 8) {
     return (
-      <div className="mt-3 inline-flex items-center gap-2 text-espresso/70 text-sm">
-        <span className="w-2 h-2 rounded-full bg-green-500" />
+      <div className="mt-3 inline-flex items-center gap-2 text-ivory/70 text-sm">
+        <span className="w-2 h-2 rounded-full bg-ivory/50" />
         In stock {size && `in ${size}`}
       </div>
     );

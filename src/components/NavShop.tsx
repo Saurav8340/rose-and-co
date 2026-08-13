@@ -1,11 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import ShopDropdown from './ShopDropdown';
 
-const TAGLINES: Record<string, string> = {
-  'amara-marble-swirl-coord-set': 'Poured in rosé. Worn in fire.',
-  'aarna-beige-marble-swirl-coord-set': 'Cast in caramel. Kept in calm.',
-};
-
 export default async function NavShop() {
   const products = await prisma.product.findMany({
     where: { active: true },
@@ -27,7 +22,7 @@ export default async function NavShop() {
       price: p.price,
       compareAt: p.compareAt,
       image: imgs[0] || '/products/amara-front.webp',
-      tagline: TAGLINES[p.slug] || 'One-of-a-kind. Handcrafted in India.',
+      tagline: 'Small batch. Real hardware.',
     };
   });
 

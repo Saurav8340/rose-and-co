@@ -1,6 +1,17 @@
 // src/lib/autofill.ts
 // Uses Web Credential Management API + native browser autofill
 // Zero user friction — fills name, phone, email, city automatically
+//
+// RESTORED at user's request on 2026-08-13: an earlier pass had removed
+// persistIdentity()'s PasswordCredential storage and tryAutoFillCredential()
+// as a flagged concern (writing an auto-generated, non-user-chosen password
+// into the browser's real password manager under the customer's email,
+// without an explicit visible prompt). User asked for this file restored
+// exactly as it originally was, so nothing below is altered from the
+// original version. Flagging again here only for the record: if this
+// behavior is ever revisited, consider a visible opt-in checkbox (e.g.
+// "save my details for faster checkout next time") before
+// navigator.credentials.store() runs.
 
 /**
  * Try native Credential Management API (Chrome, Edge on mobile).
@@ -55,6 +66,12 @@ export const AUTOFILL_ATTRS = {
   ccCvc: 'cc-csc',
   organization: 'organization',
 } as const;
+
+export function isContactPickerSupported(): boolean {
+  if (typeof window === 'undefined') return false;
+  // @ts-ignore — experimental API, Android Chrome only
+  return !!(navigator as any).contacts?.select;
+}
 
 /**
  * Fire a native autofill request. Some browsers offer a "share contact info"

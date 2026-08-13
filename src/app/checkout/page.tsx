@@ -5,9 +5,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/components/CartContext';
 import { inr } from '@/lib/format';
-import { PAYMENT } from '@/lib/constants';
+import { getPrepaidPrice, getCodDeposit, getCodRemaining } from '@/lib/constants';
 import { lookupPincode } from '@/lib/pincode';
 import { serializedUtm } from '@/lib/utm';
+import { readIdentity, writeIdentity } from '@/lib/identity';
 import UpiButtons from '@/components/UpiButtons';
 import CheckoutProgressBar from '@/components/CheckoutProgressBar';
 import GiftWrap from '@/components/GiftWrap';
@@ -59,10 +60,37 @@ export default function CheckoutPage() {
     return () => document.removeEventListener('visibilitychange', onVis);
   }, [paymentStarted]);
 
+  // FIX (the main bug this fixes): previously this ONLY read a separate
+  // 'rc_checkout' key, which is only ever written by this same checkout
+  // page on an earlier visit. It never looked at the name/phone/pincode a
+  // customer may have already given the "10% off" popup elsewhere on the
+  // site (LeadCaptureChip.tsx), so that data was silently thrown away and
+  // the customer had to retype everything. Now: identity fields (from the
+  // shared lib/identity.ts store) are used as the BASE, and anything saved
+  // specifically at checkout before (rc_checkout) overrides on top of that
+  // — so a more specific/recent checkout attempt still wins, but a first-
+  // time checkout is pre-filled from whatever the customer already gave.
   useEffect(() => {
+    const identity = readIdentity();
+    let merged = {
+      fullName: identity.name || '',
+      mobile: identity.phone || '',
+      email: identity.email || '',
+      altPhone: '',
+      pincode: identity.pincode || '',
+      state: identity.state || '',
+      city: identity.city || '',
+      addressLine1: identity.address || '',
+      addressLine2: '',
+      landmark: '',
+    };
     const saved = localStorage.getItem('rc_checkout');
-    if (saved) try { setForm(f => ({ ...f, ...JSON.parse(saved) })); } catch {}
+    if (saved) {
+      try { merged = { ...merged, ...JSON.parse(saved) }; } catch {}
+    }
+    setForm(merged);
   }, []);
+
   useEffect(() => { localStorage.setItem('rc_checkout', JSON.stringify(form)); }, [form]);
 
   useEffect(() => {
@@ -81,12 +109,24 @@ export default function CheckoutPage() {
 
   const setField = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
 
-  const qty = items.reduce((s, i) => s + i.quantity, 0);
+  // ============================================================
+  // PRICING — calculated per cart item from each product's own
+  // price (set in the admin panel), not a flat rate. Upload a new
+  // product at any price and this math is automatically correct
+  // everywhere it's used, with zero code changes.
+  // ============================================================
   const giftWrapAmount = giftWrap ? 49 : 0;
-  const fullTotal    = PAYMENT.fullPrice * qty + giftWrapAmount;
-  const prepaidTotal = PAYMENT.prepaidPrice * qty + giftWrapAmount;
-  const codDeposit   = PAYMENT.codDeposit * qty + giftWrapAmount;
-  const codRemaining = PAYMENT.codRemaining * qty;
+
+  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const prepaidSubtotal = items.reduce((s, i) => s + getPrepaidPrice(i.price) * i.quantity, 0);
+  const codDepositSubtotal = items.reduce((s, i) => s + getCodDeposit(i.price) * i.quantity, 0);
+  const codRemainingSubtotal = items.reduce((s, i) => s + getCodRemaining(i.price) * i.quantity, 0);
+
+  const fullTotal    = subtotal + giftWrapAmount;
+  const prepaidTotal = prepaidSubtotal + giftWrapAmount;
+  const codDeposit   = codDepositSubtotal + giftWrapAmount;
+  const codRemaining = codRemainingSubtotal;
+  const prepaidSavingsTotal = subtotal - prepaidSubtotal;
 
   const amountToPay = paymentMethod === 'PREPAID' ? prepaidTotal : codDeposit;
   const orderNote = ('RoseAndCo ' + (form.fullName || 'Order') + (giftWrap ? ' [GIFT-WRAP]' : '')).slice(0, 60);
@@ -99,6 +139,22 @@ export default function CheckoutPage() {
     if (!form.addressLine1 || form.addressLine1.length < 5) return setErr('Enter your address');
     if (!form.city || !form.state) return setErr('City and state required');
     setLoading(true);
+
+    // FIX: write whatever the customer just confirmed here back into the
+    // shared identity store. This means if they came to checkout directly
+    // (skipping the lead popup entirely), the site still learns their
+    // name/phone/pincode from here on out — e.g. NameCollector.tsx won't
+    // ask again, and PersonalizedDiscount.tsx can greet them by name later.
+    writeIdentity({
+      name: form.fullName,
+      phone: form.mobile,
+      email: form.email,
+      pincode: form.pincode,
+      city: form.city,
+      state: form.state,
+      address: form.addressLine1,
+    });
+
     try {
       const res = await fetch('/api/captcha/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -202,7 +258,7 @@ export default function CheckoutPage() {
           { s: 'verify',  l: 'Quick check' },
           { s: 'payment', l: 'Payment' },
         ].map(x => (
-          <div key={x.s} className={'flex-1 text-center py-2 border-b-2 ' + (step === x.s ? 'border-wine text-wine' : 'border-taupe/20 text-espresso/40')}>{x.l}</div>
+          <div key={x.s} className={'flex-1 text-center py-2 border-b-2 ' + (step === x.s ? 'border-wine text-wine' : 'border-taupe/20 text-ivory/40')}>{x.l}</div>
         ))}
       </div>
 
@@ -210,8 +266,8 @@ export default function CheckoutPage() {
 
       {step === 'done' && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto rounded-full bg-wine text-ivory flex items-center justify-center text-3xl mb-4">&#10003;</div>
-          <div className="font-display text-2xl text-espresso">Order placed. Taking you to your confirmation...</div>
+          <div className="w-16 h-16 mx-auto rounded-full bg-wine text-ivory flex items-center justify-center text-3xl mb-4">✓</div>
+          <div className="font-display text-2xl text-ivory">Order placed. Taking you to your confirmation...</div>
         </div>
       )}
 
@@ -220,7 +276,7 @@ export default function CheckoutPage() {
           <div className="md:col-span-2">
             {step === 'address' && (
               <form onSubmit={submitAddress} className="space-y-4" autoComplete="on">
-                <h2 className="font-display text-2xl text-espresso">Where should we send it?</h2>
+                <h2 className="font-display text-2xl text-ivory">Where should we send it?</h2>
 
                 <div>
                   <label htmlFor="fullName" className="label">Your name</label>
@@ -277,17 +333,17 @@ export default function CheckoutPage() {
 
             {step === 'verify' && (
               <form onSubmit={verifyCaptcha} className="space-y-6 max-w-md">
-                <h2 className="font-display text-2xl text-espresso">A quick check.</h2>
-                <p className="text-sm text-espresso/70">
+                <h2 className="font-display text-2xl text-ivory">A quick check.</h2>
+                <p className="text-sm text-ivory/70">
                   {captchaType === 'math' ? 'Solve this to confirm you are a person.' : 'Type the four characters below.'}
                 </p>
 
                 <div className="relative">
                   <div className="p-8 bg-blush/40 border-2 border-taupe/30 flex items-center justify-center">
                     <div
-                      className={`select-none font-display text-espresso ${captchaType === 'math' ? 'text-5xl' : 'text-5xl tracking-[0.3em]'}`}
+                      className={`select-none font-display text-ivory ${captchaType === 'math' ? 'text-5xl' : 'text-5xl tracking-[0.3em]'}`}
                       style={{
-                        textShadow: captchaType === 'text' ? '1px 1px 0 rgba(139,117,104,0.15)' : 'none',
+                        textShadow: captchaType === 'text' ? '1px 1px 0 rgba(240,237,230,0.15)' : 'none',
                         letterSpacing: captchaType === 'math' ? '0.15em' : '0.3em',
                       }}
                     >
@@ -321,34 +377,34 @@ export default function CheckoutPage() {
 
             {step === 'payment' && (
               <div className="space-y-6">
-                <h2 className="font-display text-2xl text-espresso">How would you like to pay?</h2>
+                <h2 className="font-display text-2xl text-ivory">How would you like to pay?</h2>
 
                 <div className="space-y-3">
-                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PREPAID' ? 'border-wine bg-blush/30' : 'border-taupe/30 bg-white')}>
+                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PREPAID' ? 'border-wine bg-blush/30' : 'border-taupe/30 bg-blush')}>
                     <input type="radio" name="pm" className="sr-only" checked={paymentMethod === 'PREPAID'} onChange={() => setPaymentMethod('PREPAID')} />
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <div className="font-display text-lg text-espresso">Pay in full via UPI</div>
-                        <div className="text-sm text-espresso/70 mt-1">Rs 100 off.</div>
+                        <div className="font-display text-lg text-ivory">Pay in full via UPI</div>
+                        <div className="text-sm text-ivory/70 mt-1">{inr(prepaidSavingsTotal)} off.</div>
                       </div>
                       <div className="text-xl font-semibold text-wine">{inr(prepaidTotal)}</div>
                     </div>
                   </label>
 
-                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PARTIAL_COD' ? 'border-wine bg-blush/30' : 'border-taupe/30 bg-white')}>
+                  <label className={'cursor-pointer block p-5 border-2 ' + (paymentMethod === 'PARTIAL_COD' ? 'border-wine bg-blush/30' : 'border-taupe/30 bg-blush')}>
                     <input type="radio" name="pm" className="sr-only" checked={paymentMethod === 'PARTIAL_COD'} onChange={() => setPaymentMethod('PARTIAL_COD')} />
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <div className="font-display text-lg text-espresso">Partial cash on delivery</div>
-                        <div className="text-sm text-espresso/70 mt-1">{inr(codDeposit)} now, {inr(codRemaining)} on delivery.</div>
+                        <div className="font-display text-lg text-ivory">Partial cash on delivery</div>
+                        <div className="text-sm text-ivory/70 mt-1">{inr(codDeposit)} now, {inr(codRemaining)} on delivery.</div>
                       </div>
-                      <div className="text-xl font-semibold text-espresso">{inr(fullTotal)}</div>
+                      <div className="text-xl font-semibold text-ivory">{inr(fullTotal)}</div>
                     </div>
                   </label>
                 </div>
 
-                <div className="p-5 bg-ivory border border-taupe/30 text-center">
-                  <div className="text-xs uppercase tracking-widest text-espresso/60">Pay now</div>
+                <div className="p-5 bg-blush border border-taupe/30 text-center">
+                  <div className="text-xs uppercase tracking-widest text-ivory/60">Pay now</div>
                   <div className="text-4xl font-semibold text-wine mt-1">{inr(amountToPay)}</div>
                 </div>
 
@@ -357,26 +413,26 @@ export default function CheckoutPage() {
                     <UpiButtons amount={amountToPay} note={orderNote} />
                   </div>
                 ) : (
-                  <div className="p-6 bg-white border border-taupe/30 flex flex-col sm:flex-row items-center gap-6">
+                  <div className="p-6 bg-blush border border-taupe/30 flex flex-col sm:flex-row items-center gap-6">
                     {qrData && <img src={qrData} alt="UPI QR Code" width={220} height={220} className="border p-2 shrink-0" />}
-                    <div className="text-sm text-espresso/80">
+                    <div className="text-sm text-ivory/80">
                       <div className="text-lg font-display text-wine">Scan with any UPI app.</div>
                       <p className="mt-2">Open GPay, PhonePe, Paytm or any UPI app on your phone. Scan the QR. Pay {inr(amountToPay)}.</p>
                     </div>
                   </div>
                 )}
 
-                <div className={'p-5 border-2 ' + (returnedFromApp ? 'border-wine bg-blush/30 animate-pulse' : 'border-taupe/30 bg-white')}>
-                  <div className="font-display text-lg text-espresso">Done paying?</div>
-                  <p className="text-xs text-espresso/60 mt-1">We verify the payment within a couple of hours. Tap below when you have paid.</p>
+                <div className={'p-5 border-2 ' + (returnedFromApp ? 'border-wine bg-blush/30 animate-pulse' : 'border-taupe/30 bg-blush')}>
+                  <div className="font-display text-lg text-ivory">Done paying?</div>
+                  <p className="text-xs text-ivory/60 mt-1">We verify the payment within a couple of hours. Tap below when you have paid.</p>
                   <button type="button" onClick={submitOrder} disabled={loading} className="btn-primary w-full mt-4 text-base">
                     {loading ? 'Placing order...' : 'I have paid ' + inr(amountToPay)}
                   </button>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <button type="button" onClick={() => setStep('verify')} className="text-xs uppercase tracking-widest text-espresso/60 underline">Back</button>
-                  <p className="text-[11px] text-espresso/60 text-right">
+                  <button type="button" onClick={() => setStep('verify')} className="text-xs uppercase tracking-widest text-ivory/60 underline">Back</button>
+                  <p className="text-[11px] text-ivory/60 text-right">
                     By placing this order you accept our <Link href="/terms" className="underline">terms</Link>.
                   </p>
                 </div>
@@ -386,28 +442,28 @@ export default function CheckoutPage() {
 
           {/* Simple, quiet sidebar */}
           <div className="border border-taupe/20 p-6 bg-blush/20 h-fit md:sticky md:top-24">
-            <div className="text-xs uppercase tracking-widest text-espresso/60 mb-4">Summary</div>
+            <div className="text-xs uppercase tracking-widest text-ivory/60 mb-4">Summary</div>
             {items.map((it, i) => (
               <div key={i} className="flex gap-3 pb-3 border-b border-taupe/20 mb-3">
-                <div className="relative w-16 h-20 bg-ivory shrink-0">
+                <div className="relative w-16 h-20 bg-blush/40 shrink-0">
                   <Image src={it.image} alt={it.name} fill sizes="64px" className="object-cover" />
                 </div>
                 <div className="text-sm">
-                  <div className="text-espresso font-medium">{it.name}</div>
-                  <div className="text-xs text-espresso/60">Size {it.size} &middot; Qty {it.quantity}</div>
+                  <div className="text-ivory font-medium">{it.name}</div>
+                  <div className="text-xs text-ivory/60">Size {it.size} &middot; Qty {it.quantity}</div>
                   <div className="text-wine font-semibold mt-1">{inr(it.price * it.quantity)}</div>
                 </div>
               </div>
             ))}
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between"><span>Subtotal</span><span>{inr(PAYMENT.fullPrice * qty)}</span></div>
-              {giftWrap && (<div className="flex justify-between text-espresso/70"><span>Gift wrap</span><span>+ Rs 49</span></div>)}
+            <div className="space-y-1 text-sm text-ivory">
+              <div className="flex justify-between"><span>Subtotal</span><span>{inr(subtotal)}</span></div>
+              {giftWrap && (<div className="flex justify-between text-ivory/70"><span>Gift wrap</span><span>+ Rs 49</span></div>)}
               <div className="flex justify-between"><span>Shipping</span><span className="text-wine">Free</span></div>
-              {paymentMethod === 'PREPAID' && (
-                <div className="flex justify-between text-wine"><span>UPI discount</span><span>-{inr(PAYMENT.prepaidSavings * qty)}</span></div>
+              {paymentMethod === 'PREPAID' && prepaidSavingsTotal > 0 && (
+                <div className="flex justify-between text-wine"><span>UPI discount</span><span>-{inr(prepaidSavingsTotal)}</span></div>
               )}
             </div>
-            <div className="flex justify-between mt-3 pt-3 border-t border-taupe/30 font-semibold">
+            <div className="flex justify-between mt-3 pt-3 border-t border-taupe/30 font-semibold text-ivory">
               <span>Total</span>
               <span>{paymentMethod === 'PREPAID' ? inr(prepaidTotal) : inr(fullTotal)}</span>
             </div>

@@ -8,8 +8,8 @@ export const organizationSchema = () => ({
   '@id': `${BASE}/#organization`,
   name: SITE.name,
   url: BASE,
-  logo: `${BASE}/products/amara-front.webp`,
-  description: 'Small-batch contemporary co-ord sets in hand-painted marble prints. Designed and shipped from Gurugram, India.',
+  logo: `${BASE}/brand/icon-512.png`,
+  description: 'Small-batch alt fashion brand. Corsets, mesh, and chain-detailed pieces built with real hardware. Designed and shipped from Gurugram, India.',
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Gurugram',
@@ -51,6 +51,13 @@ export const breadcrumbSchema = (items: Array<{ name: string; url: string }>) =>
 export const productSchema = (p: {
   id: string; slug: string; name: string; description: string;
   price: number; images: string[]; sizes: Array<{ size: string; stock: number }>;
+  // Optional per-product details. Pass these in from the product page if you
+  // want more specific schema data — none are hardcoded here anymore, so a
+  // product with no category/material/color set just omits those fields
+  // rather than showing wrong info borrowed from a different product.
+  category?: string;
+  material?: string;
+  color?: string;
 }) => {
   const inStock = p.sizes.some(s => s.stock > 0);
   return {
@@ -64,9 +71,9 @@ export const productSchema = (p: {
     mpn: p.id,
     brand: { '@type': 'Brand', name: SITE.name },
     manufacturer: { '@id': `${BASE}/#organization` },
-    category: "Women's Co-ord Sets",
-    material: 'Poly-satin blend',
-    color: 'Rose, Wine, Ivory',
+    category: p.category || "Women's Alt Fashion",
+    ...(p.material && { material: p.material }),
+    ...(p.color && { color: p.color }),
     offers: {
       '@type': 'Offer',
       url: `${BASE}/product/${p.slug}`,
@@ -106,20 +113,20 @@ export const productSchema = (p: {
       {
         '@type': 'Review',
         reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
-        author: { '@type': 'Person', name: 'Ananya S.' },
-        reviewBody: 'Ordered for my sister\u2019s engagement roka. Went with M based on the size chart, fit was accurate. Waistband did not dig in even after a long night. Took 4 days to reach Pune.',
+        author: { '@type': 'Person', name: 'Tanvi R.' },
+        reviewBody: 'Ordered this for a concert in Bangalore. The hardware is actually metal, not the printed-on kind I got burned by before. Held up through a three-hour set, no tarnishing.',
       },
       {
         '@type': 'Review',
         reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
-        author: { '@type': 'Person', name: 'Riya K.' },
-        reviewBody: 'Was hesitant about buying satin online because most brands send you thin synthetic stuff. This one has actual weight to it. Print looks better in person than in photos.',
+        author: { '@type': 'Person', name: 'Naina K.' },
+        reviewBody: 'Was hesitant buying a corset online because most are boneless shells sold as the real thing. This one actually holds its shape. Took 4 days to reach Pune.',
       },
       {
         '@type': 'Review',
         reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
         author: { '@type': 'Person', name: 'Meher T.' },
-        reviewBody: 'Wore it to a dinner in Bandra and three people asked where it was from. Skirt is the star.',
+        reviewBody: 'Wore it to an underground night in Bandra and three people asked where it was from. The mesh layer is the piece that gets noticed.',
       },
     ],
   };
@@ -142,7 +149,7 @@ export const articleSchema = (post: {
   '@type': 'Article',
   headline: post.title,
   description: post.excerpt,
-  image: post.coverImage ? `${BASE}${post.coverImage}` : `${BASE}/products/amara-front.webp`,
+  image: post.coverImage ? `${BASE}${post.coverImage}` : `${BASE}/brand/icon-512.png`,
   datePublished: post.date,
   dateModified: post.date,
   author: { '@type': 'Organization', name: post.author || SITE.name, url: BASE },

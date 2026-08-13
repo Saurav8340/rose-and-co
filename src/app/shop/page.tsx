@@ -9,14 +9,14 @@ import { collectionJsonLd, breadcrumbJsonLd, BRAND } from '@/lib/seo';
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: 'Shop the Collection | Rosé & Co',
-  description: 'Two hand-painted marble swirl co-ord sets. Poured in rosé. Cast in caramel. Premium satin. Free shipping across India. Ships from Gurugram in 24-48 hours.',
+  title: 'New Arrivals | Rosé & Co',
+  description: 'Corsets, mesh, chains, raw silhouettes. Small drops, no restock. Free shipping across India. Ships from Gurugram in 24-48 hours.',
   alternates: { canonical: `${BRAND.domain}/shop` },
   openGraph: {
     type: 'website',
     url: `${BRAND.domain}/shop`,
     title: 'The Rosé & Co Collection',
-    description: 'Hand-painted marble swirl co-ord sets. Two hundred pieces per drop.',
+    description: 'Small drops. Once it\'s gone, it\'s gone.',
     siteName: BRAND.name,
     locale: 'en_IN',
   },
@@ -55,12 +55,12 @@ export default async function ShopPage() {
 
       <section className="container-x py-16 md:py-24">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine">The collection</div>
-          <h1 className="font-display text-4xl md:text-6xl mt-3 text-espresso">
-            Two hundred sets. Then we begin again.
+          <div className="text-xs uppercase tracking-[0.3em] text-wine">New Arrivals</div>
+          <h1 className="font-display text-4xl md:text-6xl mt-3 text-ivory">
+            Small drops. Then we vanish.
           </h1>
-          <p className="mt-6 text-espresso/70 leading-relaxed">
-            Every piece hand-painted, one panel at a time. Ships from Gurugram in twenty-four to forty-eight hours. Free anywhere in India.
+          <p className="mt-6 text-ivory/70 leading-relaxed">
+            Once it&apos;s gone, it&apos;s gone. Ships from Gurugram in twenty-four to forty-eight hours. Free anywhere in India.
           </p>
         </div>
 
@@ -86,20 +86,20 @@ export default async function ShopPage() {
                   )}
                 </div>
                 <div className="mt-6">
-                  <h2 className="font-display text-2xl md:text-3xl text-espresso group-hover:text-wine transition">
+                  <h2 className="font-display text-2xl md:text-3xl text-ivory group-hover:text-wine transition">
                     {p.name}
                   </h2>
                   <div className="mt-3 flex items-baseline gap-3">
                     <span className="text-xl font-semibold text-wine">{inr(p.price)}</span>
                     {p.compareAt && (
-                      <span className="text-sm line-through text-espresso/40">{inr(p.compareAt)}</span>
+                      <span className="text-sm line-through text-ivory/40">{inr(p.compareAt)}</span>
                     )}
                   </div>
-                  <p className="mt-4 text-sm text-espresso/70 leading-relaxed line-clamp-3">
+                  <p className="mt-4 text-sm text-ivory/70 leading-relaxed line-clamp-3">
                     {p.description}
                   </p>
-                  <span className="mt-4 inline-block text-sm underline text-espresso group-hover:text-wine transition">
-                    See the set
+                  <span className="mt-4 inline-block text-sm underline text-ivory group-hover:text-wine transition">
+                    See the piece
                   </span>
                 </div>
               </Link>

@@ -23,7 +23,7 @@ export default function ShareButton({ title, url }: { title: string; url: string
       type="button"
       onClick={share}
       aria-label="Share this product"
-      className="flex items-center justify-center w-11 h-11 bg-white border border-taupe/40 text-espresso hover:border-wine hover:text-wine transition"
+      className="flex items-center justify-center w-11 h-11 bg-blush border border-taupe/40 text-ivory hover:border-wine hover:text-wine transition cursor-pointer"
     >
       {copied ? (
         <span className="text-xs">Copied</span>

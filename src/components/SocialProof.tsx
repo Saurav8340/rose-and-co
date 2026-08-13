@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 const NAMES = ['Priya', 'Aarushi', 'Kavya', 'Ishita', 'Ananya', 'Meera', 'Riya', 'Nisha', 'Sneha', 'Divya'];
 const CITIES = ['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Hyderabad', 'Chennai', 'Gurugram', 'Kolkata', 'Jaipur', 'Ahmedabad'];
-const PRODUCTS = ['Amara', 'Aarna'];
+const PRODUCTS = ['Blood Spiral', 'Chained Reckoning', 'Fiendish Mesh', 'Obsidian Wraith', 'Cemetery Chain'];
 const ACTIONS = ['just bought', 'added to cart', 'is viewing'];
 
 export default function SocialProof() {

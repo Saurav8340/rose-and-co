@@ -13,7 +13,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
 
   return (
     <div className="container-x py-10">
-      <h1 className="font-display text-3xl md:text-4xl text-espresso">Search</h1>
+      <h1 className="font-display text-3xl md:text-4xl text-ivory">Search</h1>
       <form className="mt-6 max-w-md" method="GET">
         <input name="q" defaultValue={q} placeholder="Search products…" className="input" />
       </form>
@@ -22,14 +22,14 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
           const img = (JSON.parse(p.images)[0]) as string;
           return (
             <Link key={p.id} href={`/product/${p.slug}`} className="group">
-              <div className="relative aspect-[3/4] bg-blush/20"><Image src={img} alt={p.name} fill sizes="300px" className="object-cover group-hover:scale-105 transition" /></div>
-              <div className="mt-3 text-sm text-espresso font-medium">{p.name}</div>
+              <div className="relative aspect-[3/4] bg-blush/20 rounded overflow-hidden"><Image src={img} alt={p.name} fill sizes="300px" className="object-cover group-hover:scale-105 transition" /></div>
+              <div className="mt-3 text-sm text-ivory font-medium">{p.name}</div>
               <div className="text-wine">{inr(p.price)}</div>
             </Link>
           );
         })}
       </div>
-      {products.length === 0 && <p className="text-espresso/60 mt-8">No products found.</p>}
+      {products.length === 0 && <p className="text-ivory/60 mt-8">No products found.</p>}
     </div>
   );
 }

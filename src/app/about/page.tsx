@@ -10,33 +10,33 @@ export default function AboutPage() {
   return (
     <div className="container-x py-16 max-w-2xl">
       <div className="text-xs uppercase tracking-[0.3em] text-wine">About</div>
-      <h1 className="font-display text-4xl md:text-5xl text-espresso mt-3 mb-10 leading-tight">
-        Small studio.<br/>One thing at a time.
+      <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3 mb-10 leading-tight">
+        Small studio.<br/>One drop at a time.
       </h1>
 
-      <div className="text-espresso/85 leading-[1.9] space-y-6 text-[17px]">
+      <div className="text-ivory/85 leading-[1.9] space-y-6 text-[17px]">
         <p>
-          We began in the spring of 2026, in a two-bedroom flat in Sector 47, Gurugram. There was one founder, one product, and one long conversation with a mill in Surat about the difference between good satin and satin that only photographs well.
+          We began in the spring of 2026, in a two-bedroom flat in Sector 47, Gurugram. There was one founder, one rack of samples, and a lot of frustration with what alt fashion actually looked like online in India.
         </p>
 
         <p>
-          The problem we set out to solve was small and specific. Satin co-ords under two thousand rupees were almost always too thin, or printed in a way that flattened everything, or shipped from resellers who took three weeks. Satin co-ords above three thousand were the same three brands you already knew. Between them was nothing.
+          The problem was small and specific. Corsets under two thousand rupees were almost always boneless — a shell with no real structure, sold as the real thing. Chain details were printed on, not hardware. Everything imported and genuine cost three times what it should, and everything local was a Meesho reseller with the same five stock photos.
         </p>
 
         <p>
-          So we made the thing that should have been there. A poly-satin heavy enough to fall properly. A marble print painted by hand, one panel at a time, before the cloth was ever cut. A satin shirt and wide-leg pants, stitched at a small unit near Karol Bagh, packed and shipped from our own address by Delhivery.
+          So we made the thing that should have been there. Steel-boned corsets that actually hold their shape. Real metal D-rings and buckles, not a chain graphic screen-printed onto polyester. Mesh with enough weight that it doesn&apos;t go see-through the first time it stretches. Stitched at a small unit near Karol Bagh, packed and shipped from our own address by Delhivery.
         </p>
 
         <p>
-          We do this in batches of two hundred. When the sizes are gone, we wait four to six weeks and begin again. Every set is looked at before it leaves the studio. A loose thread, a print that ran, a missing tag &mdash; we catch it, or we don&apos;t ship it.
+          We do this in small batches. When the sizes are gone, we wait a few weeks and begin again. Every piece is checked before it leaves the studio. A loose thread, a hook that doesn&apos;t sit right, hardware that doesn&apos;t match the sample &mdash; we catch it, or we don&apos;t ship it.
         </p>
 
         <div className="pt-4">
-          <p className="text-espresso font-medium">A few things we don&apos;t do.</p>
+          <p className="text-ivory font-medium">A few things we don&apos;t do.</p>
         </div>
 
         <p>
-          We don&apos;t invent discounts. The retail markup on a piece like this is real, and our MRP reflects it. We sell direct, and that is the whole reason the price is what it is.
+          We don&apos;t invent discounts. The markup on real hardware and boned construction is real, and our MRP reflects it. We sell direct, and that is the whole reason the price is what it is.
         </p>
 
         <p>
@@ -48,14 +48,14 @@ export default function AboutPage() {
         </p>
 
         <div className="pt-4">
-          <p className="text-espresso font-medium">When something goes wrong.</p>
+          <p className="text-ivory font-medium">When something goes wrong.</p>
         </div>
 
         <p>
-          Because sometimes it does. This is a new brand made by one person. If your set arrives damaged, if the size chart was off, if Delhivery loses the package &mdash; please write to me at <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a>. Not a form, not a ticket. My inbox. I answer within a few hours during studio time.
+          Because sometimes it does. This is a new brand made by one person. If your piece arrives damaged, if the size chart was off, if Delhivery loses the package &mdash; write to me at <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a>. Not a form, not a ticket. My inbox. I answer within a few hours during studio time.
         </p>
 
-        <p className="text-espresso/70 italic">
+        <p className="text-ivory/70 italic">
           That&apos;s all.
         </p>
       </div>
@@ -64,4 +64,3 @@ export default function AboutPage() {
     </div>
   );
 }
-

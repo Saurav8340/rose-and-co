@@ -39,13 +39,13 @@ export default function SizeSelector({
                 onChange(s.size);
               }}
               className={clsx(
-                'py-3 text-sm uppercase tracking-widest border rounded-lg relative',
+                'py-3 text-sm uppercase tracking-widest border rounded-lg relative cursor-pointer',
                 'transition-transform duration-100 active:scale-[0.95]',
                 active
                   ? 'bg-wine text-ivory border-wine'
                   : outOfStock
-                    ? 'bg-ivory text-taupe/40 border-taupe/20 line-through cursor-not-allowed'
-                    : 'bg-white text-espresso border-taupe/40 hover:border-wine',
+                    ? 'bg-blush/30 text-taupe line-through cursor-not-allowed border-taupe/20'
+                    : 'bg-blush text-ivory border-taupe/40 hover:border-wine',
               )}
               aria-label={outOfStock ? `Size ${s.size} out of stock` : `Size ${s.size}`}
               aria-pressed={active}

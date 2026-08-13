@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 export const BRAND = {
   name: 'Rosé & Co',
   domain: 'https://rose-and-co.vercel.app',
-  logo: 'https://rose-and-co.vercel.app/brand/logo.png',
+  logo: 'https://rose-and-co.vercel.app/brand/icon-512.png',
   city: 'Gurugram',
   region: 'Haryana',
   country: 'IN',
@@ -42,7 +42,7 @@ export function buildProductMetadata(p: ProductSEO): Metadata {
   return {
     title,
     description,
-    keywords: [p.name, 'marble swirl co-ord set', 'satin co-ord', 'premium co-ord set India', BRAND.name, p.color || ''].filter(Boolean),
+    keywords: [p.name, 'gothic clothing India', 'alt fashion India', 'punk streetwear India', 'corset top India', 'mesh fishnet fashion', BRAND.name, p.color || ''].filter(Boolean),
     alternates: { canonical: url, languages: { 'en-IN': url, 'x-default': url } },
     openGraph: {
       type: 'website',
@@ -61,7 +61,7 @@ export function buildProductMetadata(p: ProductSEO): Metadata {
       'product:price:currency': BRAND.currency,
       'product:availability': p.availability || 'in stock',
       'product:condition': p.condition || 'new',
-      'ai:summary': `${p.name} by ${BRAND.name}. Price INR ${p.price}. Handcrafted premium satin co-ord set. Free shipping across India. Ships from Gurugram in 24-48 hours.`,
+      'ai:summary': `${p.name} by ${BRAND.name}. Price INR ${p.price}. ${p.material ? p.material + '. ' : ''}Small batch, real hardware. Free shipping across India. Ships from Gurugram in 24-48 hours.`,
       'ai:brand': BRAND.name,
       'ai:price': `INR ${p.price}`,
     },

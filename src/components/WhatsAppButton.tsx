@@ -1,7 +1,7 @@
 'use client';
 
 const WHATSAPP_NUMBER = '9198765 43210'; // Replace with your number
-const MESSAGE = 'Hi Rosé & Co, I have a question about your co-ord sets.';
+const MESSAGE = 'Hi Rosé & Co, I have a question about a piece.';
 
 export default function WhatsAppButton() {
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(MESSAGE)}`;

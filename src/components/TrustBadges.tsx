@@ -10,8 +10,8 @@ export default function TrustBadges() {
       {items.map(x => (
         <div key={x.title} className="text-center">
           <div className="text-[10px] font-bold text-wine tracking-wider">{x.icon}</div>
-          <div className="text-xs font-medium text-espresso mt-1 leading-tight">{x.title}</div>
-          <div className="text-[10px] text-espresso/60 mt-0.5">{x.sub}</div>
+          <div className="text-xs font-medium text-ivory mt-1 leading-tight">{x.title}</div>
+          <div className="text-[10px] text-ivory/60 mt-0.5">{x.sub}</div>
         </div>
       ))}
     </div>

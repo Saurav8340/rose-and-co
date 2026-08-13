@@ -69,24 +69,24 @@ export default async function AdminDashboard({ searchParams }: { searchParams: {
     <div className="container-x py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-display text-3xl text-espresso">Admin dashboard</h1>
-          <p className="text-sm text-espresso/60">Rosé & Co · Order management</p>
+          <h1 className="font-display text-3xl text-ivory">Admin dashboard</h1>
+          <p className="text-sm text-ivory/60">Rosé & Co · Order management</p>
         </div>
         <div className="flex gap-3">
           <Link href="/admin/waitlist" className="btn-secondary">Waitlist {waitlistCount > 0 && <span className="ml-2 badge bg-wine text-ivory">{waitlistCount}</span>}</Link>
           <Link href="/admin/products" className="btn-secondary">Products</Link>
           <Link href="/api/admin/orders/export" className="btn-secondary">Export CSV</Link>
-          <form action="/api/admin/logout" method="POST"><button className="text-xs uppercase tracking-widest text-espresso/60 hover:text-wine">Logout</button></form>
+          <form action="/api/admin/logout" method="POST"><button className="text-xs uppercase tracking-widest text-ivory/60 hover:text-wine transition cursor-pointer">Logout</button></form>
         </div>
       </div>
 
       {/* Today */}
-      <div className="mb-6 p-4 bg-blush/30 border-l-4 border-wine">
+      <div className="mb-6 p-4 bg-blush/40 border-l-4 border-wine rounded">
         <div className="text-xs uppercase tracking-widest text-wine">Today</div>
-        <div className="mt-2 flex flex-wrap gap-6 text-sm">
-          <div><b className="text-espresso text-lg">{todayCount}</b> orders</div>
-          <div><b className="text-espresso text-lg">{inr(todayVerifiedRevAgg._sum.paidAmount || 0)}</b> verified revenue</div>
-          <div>Top city (30d): <b className="text-espresso">{topCity}</b></div>
+        <div className="mt-2 flex flex-wrap gap-6 text-sm text-ivory">
+          <div><b className="text-ivory text-lg">{todayCount}</b> orders</div>
+          <div><b className="text-ivory text-lg">{inr(todayVerifiedRevAgg._sum.paidAmount || 0)}</b> verified revenue</div>
+          <div>Top city (30d): <b className="text-ivory">{topCity}</b></div>
         </div>
       </div>
 
@@ -99,48 +99,48 @@ export default async function AdminDashboard({ searchParams }: { searchParams: {
       </div>
 
       {/* AD SPEND EFFICIENCY (30-day) */}
-      <div className="mb-8 p-5 border-2 border-green-700/40 bg-green-50/50">
-        <div className="text-xs uppercase tracking-widest text-green-800 font-semibold mb-3">Ad-spend efficiency (30 days)</div>
+      <div className="mb-8 p-5 border-2 border-wine/40 bg-wine/10 rounded-lg">
+        <div className="text-xs uppercase tracking-widest text-wine font-semibold mb-3">Ad-spend efficiency (30 days)</div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <div className="text-xs text-espresso/60 uppercase tracking-widest">Prepaid share</div>
-            <div className="text-2xl font-display text-espresso mt-1">{prepaidRate}%</div>
-            <div className="text-xs text-espresso/50 mt-1">Target: 55%+</div>
+            <div className="text-xs text-ivory/60 uppercase tracking-widest">Prepaid share</div>
+            <div className="text-2xl font-display text-ivory mt-1">{prepaidRate}%</div>
+            <div className="text-xs text-ivory/50 mt-1">Target: 55%+</div>
           </div>
           <div>
-            <div className="text-xs text-espresso/60 uppercase tracking-widest">Prepaid verified</div>
-            <div className="text-2xl font-display text-espresso mt-1">{prepaidVerified}</div>
-            <div className="text-xs text-espresso/50 mt-1">of {prepaidAll} total</div>
+            <div className="text-xs text-ivory/60 uppercase tracking-widest">Prepaid verified</div>
+            <div className="text-2xl font-display text-ivory mt-1">{prepaidVerified}</div>
+            <div className="text-xs text-ivory/50 mt-1">of {prepaidAll} total</div>
           </div>
           <div>
-            <div className="text-xs text-espresso/60 uppercase tracking-widest">COD delivered</div>
-            <div className="text-2xl font-display text-espresso mt-1">{codDeliveryRate !== null ? `${codDeliveryRate}%` : '—'}</div>
-            <div className="text-xs text-espresso/50 mt-1">Target: 85%+</div>
+            <div className="text-xs text-ivory/60 uppercase tracking-widest">COD delivered</div>
+            <div className="text-2xl font-display text-ivory mt-1">{codDeliveryRate !== null ? `${codDeliveryRate}%` : '—'}</div>
+            <div className="text-xs text-ivory/50 mt-1">Target: 85%+</div>
           </div>
           <div>
-            <div className="text-xs text-espresso/60 uppercase tracking-widest">COD RTO (30d)</div>
-            <div className="text-2xl font-display text-espresso mt-1">{rtoCount}</div>
-            <div className="text-xs text-espresso/50 mt-1">Cancelled after dispatch</div>
+            <div className="text-xs text-ivory/60 uppercase tracking-widest">COD RTO (30d)</div>
+            <div className="text-2xl font-display text-ivory mt-1">{rtoCount}</div>
+            <div className="text-xs text-ivory/50 mt-1">Cancelled after dispatch</div>
           </div>
         </div>
-        <p className="mt-4 text-xs text-espresso/60 leading-relaxed">
+        <p className="mt-4 text-xs text-ivory/60 leading-relaxed">
           Meta CAPI fires only when money is in the bank. Prepaid: on payment VERIFIED. COD: on DELIVERED + VERIFIED. This keeps your Meta ROAS clean.
         </p>
       </div>
 
       <form className="flex flex-wrap gap-3 mb-4" method="GET">
         <input name="q" defaultValue={searchParams.q} placeholder="Search order/mobile/name" className="input flex-1 max-w-sm" />
-        <select name="status" defaultValue={searchParams.status || ''} className="input max-w-xs">
+        <select name="status" defaultValue={searchParams.status || ''} className="input max-w-xs cursor-pointer">
           <option value="">All statuses</option>
           <option>PLACED</option><option>CONFIRMED</option><option>PACKED</option>
           <option>SHIPPED</option><option>DELIVERED</option><option>CANCELLED</option>
         </select>
-        <button className="btn-primary">Filter</button>
+        <button className="btn-primary cursor-pointer">Filter</button>
       </form>
 
-      <div className="overflow-x-auto border border-taupe/20">
+      <div className="overflow-x-auto border border-taupe/20 rounded-lg">
         <table className="w-full text-sm">
-          <thead className="bg-blush/40 text-xs uppercase tracking-widest">
+          <thead className="bg-blush/60 text-xs uppercase tracking-widest text-ivory">
             <tr>
               <th className="p-3 text-left">Order</th>
               <th className="p-3 text-left">Customer</th>
@@ -154,22 +154,22 @@ export default async function AdminDashboard({ searchParams }: { searchParams: {
           </thead>
           <tbody>
             {orders.map(o => (
-              <tr key={o.id} className="border-t border-taupe/20 hover:bg-blush/10">
-                <td className="p-3 font-mono">{o.orderNumber}</td>
-                <td className="p-3">{o.fullName}<br/><span className="text-xs text-espresso/60">{o.mobile}</span></td>
-                <td className="p-3 text-xs">{o.items.map(i => `${i.productName} · ${i.size} × ${i.quantity}`).join(', ')}</td>
+              <tr key={o.id} className="border-t border-taupe/20 hover:bg-blush/20 transition">
+                <td className="p-3 font-mono text-ivory">{o.orderNumber}</td>
+                <td className="p-3 text-ivory">{o.fullName}<br/><span className="text-xs text-ivory/60">{o.mobile}</span></td>
+                <td className="p-3 text-xs text-ivory/80">{o.items.map(i => `${i.productName} · ${i.size} × ${i.quantity}`).join(', ')}</td>
                 <td className="p-3">
-                  <div>{inr(o.paidAmount)} <span className={`text-xs ${o.paymentMethod === 'PREPAID' ? 'text-green-800 font-medium' : 'text-espresso/60'}`}>{o.paymentMethod === 'PREPAID' ? 'Prepaid' : 'COD'}</span></div>
-                  <div className={`text-xs ${o.paymentStatus === 'VERIFIED' ? 'text-green-700' : o.paymentStatus === 'FAILED' ? 'text-red-700' : 'text-wine'}`}>{o.paymentStatus}</div>
-                  {o.utr && <div className="text-[10px] text-espresso/50 font-mono">UTR: {o.utr}</div>}
+                  <div className="text-ivory">{inr(o.paidAmount)} <span className={`text-xs ${o.paymentMethod === 'PREPAID' ? 'text-wine font-medium' : 'text-ivory/60'}`}>{o.paymentMethod === 'PREPAID' ? 'Prepaid' : 'COD'}</span></div>
+                  <div className={`text-xs ${o.paymentStatus === 'VERIFIED' ? 'text-wine' : o.paymentStatus === 'FAILED' ? 'text-glow' : 'text-ivory/60'}`}>{o.paymentStatus}</div>
+                  {o.utr && <div className="text-[10px] text-ivory/50 font-mono">UTR: {o.utr}</div>}
                 </td>
-                <td className="p-3"><span className="badge bg-espresso text-ivory">{o.orderStatus}</span></td>
-                <td className="p-3 text-xs">{o.capiFired ? <span className="text-green-700">✓ Sent</span> : <span className="text-espresso/40">—</span>}</td>
-                <td className="p-3 text-xs">{new Date(o.createdAt).toLocaleString('en-IN')}</td>
-                <td className="p-3"><Link href={`/admin/orders/${o.id}`} className="text-wine underline text-xs">View</Link></td>
+                <td className="p-3"><span className="badge bg-espresso text-ivory border border-taupe/30">{o.orderStatus}</span></td>
+                <td className="p-3 text-xs">{o.capiFired ? <span className="text-wine">✓ Sent</span> : <span className="text-ivory/40">—</span>}</td>
+                <td className="p-3 text-xs text-ivory/70">{new Date(o.createdAt).toLocaleString('en-IN')}</td>
+                <td className="p-3"><Link href={`/admin/orders/${o.id}`} className="text-wine underline text-xs hover:text-ivory transition">View</Link></td>
               </tr>
             ))}
-            {orders.length === 0 && <tr><td colSpan={8} className="p-10 text-center text-espresso/60">No orders yet.</td></tr>}
+            {orders.length === 0 && <tr><td colSpan={8} className="p-10 text-center text-ivory/60">No orders yet.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -179,9 +179,9 @@ export default async function AdminDashboard({ searchParams }: { searchParams: {
 
 function StatCard({ title, value, highlight }: { title: string; value: string; highlight?: boolean }) {
   return (
-    <div className={`p-5 border ${highlight ? 'border-wine bg-blush/30' : 'border-taupe/20 bg-white'}`}>
-      <div className="text-xs uppercase tracking-widest text-espresso/60">{title}</div>
-      <div className="text-2xl font-display text-espresso mt-1">{value}</div>
+    <div className={`p-5 border rounded-lg ${highlight ? 'border-wine bg-blush/40' : 'border-taupe/20 bg-blush'}`}>
+      <div className="text-xs uppercase tracking-widest text-ivory/60">{title}</div>
+      <div className="text-2xl font-display text-ivory mt-1">{value}</div>
     </div>
   );
 }

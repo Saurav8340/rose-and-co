@@ -25,12 +25,12 @@ export default function AdminLogin() {
 
   return (
     <div className="container-x py-24 max-w-md">
-      <h1 className="font-display text-4xl text-espresso text-center">Admin Login</h1>
+      <h1 className="font-display text-4xl text-ivory text-center">Admin Login</h1>
       <form onSubmit={submit} className="mt-8 space-y-4">
         <div><label className="label">Email</label><input required autoFocus type="email" className="input" value={email} onChange={e => setEmail(e.target.value)} /></div>
         <div><label className="label">Password</label><input required type="password" className="input" value={password} onChange={e => setPassword(e.target.value)} /></div>
-        {err && <div className="p-3 bg-wine/10 text-wine text-sm border border-wine/30">{err}</div>}
-        <button disabled={loading} className="btn-primary w-full">{loading ? 'Signing in…' : 'Sign In'}</button>
+        {err && <div className="p-3 bg-wine/10 text-wine text-sm border border-wine/30 rounded">{err}</div>}
+        <button disabled={loading} className="btn-primary w-full cursor-pointer">{loading ? 'Signing in…' : 'Sign In'}</button>
       </form>
     </div>
   );

@@ -52,7 +52,7 @@ export default function ReviewsSection({ productSlug }: Props) {
         <div className="flex items-start justify-between flex-wrap gap-4 mb-8">
           <div>
             <div className="text-xs uppercase tracking-[0.3em] text-wine">What they said</div>
-            <h2 id="reviews-heading" className="font-display text-3xl md:text-4xl mt-2 text-espresso">
+            <h2 id="reviews-heading" className="font-display text-3xl md:text-4xl mt-2 text-ivory">
               {reviews.length} verified reviews
             </h2>
           </div>
@@ -65,9 +65,9 @@ export default function ReviewsSection({ productSlug }: Props) {
                   </span>
                 ))}
               </div>
-              <span className="text-lg font-semibold">{avgRating.toFixed(1)}</span>
+              <span className="text-lg font-semibold text-ivory">{avgRating.toFixed(1)}</span>
             </div>
-            <div className="text-xs text-espresso/70 mt-1">
+            <div className="text-xs text-ivory/70 mt-1">
               Based on {reviews.length} verified {reviews.length === 1 ? 'buyer' : 'buyers'}
             </div>
           </div>
@@ -76,12 +76,12 @@ export default function ReviewsSection({ productSlug }: Props) {
         {/* Photo strip */}
         {withPhotos.length > 0 && (
           <div className="mb-8">
-            <div className="text-xs uppercase tracking-widest text-espresso/70 mb-3">
+            <div className="text-xs uppercase tracking-widest text-ivory/70 mb-3">
               Photos from buyers
             </div>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
               {withPhotos.slice(0, 6).flatMap((r) => r.photos.slice(0, 1)).map((src, i) => (
-                <div key={i} className="relative aspect-square bg-blush/20 overflow-hidden">
+                <div key={i} className="relative aspect-square bg-blush/20 overflow-hidden rounded">
                   <Image src={src} alt={`Customer photo ${i + 1}`} fill sizes="150px" className="object-cover" />
                 </div>
               ))}
@@ -102,30 +102,30 @@ export default function ReviewsSection({ productSlug }: Props) {
                       ))}
                     </div>
                     {r.verified && (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5">
+                      <span className="text-xs bg-wine/15 text-wine border border-wine/30 px-2 py-0.5 rounded">
                         ✓ Verified purchase
                       </span>
                     )}
                   </div>
-                  <h3 className="font-display text-lg text-espresso mt-2">{r.title}</h3>
+                  <h3 className="font-display text-lg text-ivory mt-2">{r.title}</h3>
                 </div>
-                <div className="text-xs text-espresso/60 text-right">
+                <div className="text-xs text-ivory/60 text-right">
                   <div>{r.name}</div>
                   {r.city && <div>{r.city}</div>}
                   {r.size && <div className="mt-1">Size: {r.size}</div>}
                 </div>
               </div>
-              <p className="text-sm text-espresso/80 leading-relaxed">{r.body}</p>
+              <p className="text-sm text-ivory/80 leading-relaxed">{r.body}</p>
               {r.photos && r.photos.length > 0 && (
                 <div className="mt-3 flex gap-2 flex-wrap">
                   {r.photos.map((src, i) => (
-                    <div key={i} className="relative w-20 h-20 bg-blush/20 overflow-hidden">
+                    <div key={i} className="relative w-20 h-20 bg-blush/20 overflow-hidden rounded">
                       <Image src={src} alt={`Review photo ${i + 1}`} fill sizes="80px" className="object-cover" />
                     </div>
                   ))}
                 </div>
               )}
-              <div className="text-[10px] text-espresso/50 mt-2">
+              <div className="text-[10px] text-ivory/50 mt-2">
                 {new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function ReviewsSection({ productSlug }: Props) {
         </div>
 
         {reviews.length === 0 && (
-          <div className="text-center py-12 text-espresso/60 bg-blush/10">
+          <div className="text-center py-12 text-ivory/60 bg-blush/20 rounded-lg">
             <p className="mb-2">Be the first to review this piece.</p>
             <p className="text-xs">We send review requests via WhatsApp seven days after delivery.</p>
           </div>
@@ -143,7 +143,7 @@ export default function ReviewsSection({ productSlug }: Props) {
           <div className="text-center mt-6">
             <button
               onClick={() => setShowAll(true)}
-              className="text-sm underline text-wine hover:text-espresso"
+              className="text-sm underline text-wine hover:text-ivory cursor-pointer transition"
             >
               Read all {reviews.length} reviews
             </button>

@@ -25,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  const collections = ['co-ord-sets', 'satin-skirts', 'party-wear', 'engagement-outfits'].map((slug) => ({
+  const collections = ['corsets', 'mesh-fishnet', 'hardware', 'bottoms'].map((slug) => ({
     url: `${DOMAIN}/collections/${slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,

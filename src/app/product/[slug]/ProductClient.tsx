@@ -16,7 +16,7 @@ import RatingLine from '@/components/RatingLine';
 import { addRecentlyViewed } from '@/lib/recentlyViewed';
 import { useCart } from '@/components/CartContext';
 import { inr } from '@/lib/format';
-import { PAYMENT, SITE } from '@/lib/constants';
+import { getPrepaidPrice, SITE } from '@/lib/constants';
 import ReviewsSection from '@/components/ReviewsSection';
 import InventoryCountdown from '@/components/InventoryCountdown';
 import SizeGuideModal from '@/components/SizeGuideModal';
@@ -36,7 +36,10 @@ export default function ProductClient({ product }: { product: Product }) {
   const [bumpCart, setBumpCart] = useState(false);
 
   const displayPrice = product.price;
-  const prepaidPrice = product.price - PAYMENT.prepaidSavings;
+  // Calculated FROM this product's own price using the shared rule in
+  // constants.ts — not a hardcoded number. Works correctly for any price
+  // you set on any product in admin.
+  const prepaidPrice = getPrepaidPrice(product.price);
 
   const totalStock = useMemo(() => product.sizes.reduce((s, x) => s + x.stock, 0), [product.sizes]);
 
@@ -64,38 +67,38 @@ export default function ProductClient({ product }: { product: Product }) {
   return (
     <>
       <div className="container-x py-6 md:py-10">
-        <nav className="text-xs uppercase tracking-widest text-espresso/60 mb-6" aria-label="Breadcrumb">
-          <a href="/">Home</a> / <span className="text-espresso">{product.name}</span>
+        <nav className="text-xs uppercase tracking-widest text-ivory/60 mb-6" aria-label="Breadcrumb">
+          <a href="/">Home</a> / <span className="text-ivory">{product.name}</span>
         </nav>
         <div className="grid md:grid-cols-2 gap-8 md:gap-12">
           <ProductGallery images={product.images} name={product.name} />
           <div className="space-y-6">
             <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-wine">Rose &amp; Co</div>
-              <h1 className="font-display text-3xl md:text-4xl text-espresso mt-2">{product.name}</h1>
+              <div className="text-xs uppercase tracking-[0.3em] text-wine">Rosé &amp; Co</div>
+              <h1 className="font-display text-3xl md:text-4xl text-ivory mt-2">{product.name}</h1>
               <RatingLine />
             </div>
 
             {/* One clean pricing block. That's it. */}
             <div>
               <div className="flex items-baseline gap-3">
-                <div className="text-3xl font-semibold text-espresso">{inr(displayPrice)}</div>
+                <div className="text-3xl font-semibold text-ivory">{inr(displayPrice)}</div>
                 {product.compareAt && product.compareAt > displayPrice && (
-                  <div className="text-base line-through text-espresso/40">{inr(product.compareAt)}</div>
+                  <div className="text-base line-through text-ivory/40">{inr(product.compareAt)}</div>
                 )}
               </div>
-              <div className="text-xs text-espresso/60 mt-2">
+              <div className="text-xs text-ivory/60 mt-2">
                 Free shipping. Prepaid via UPI is {inr(prepaidPrice)}. Cash on delivery available.
               </div>
             </div>
 
-            {/* v34: Inventory countdown â€” replaces old "Only X left" line */}
+            {/* v34: Inventory countdown — replaces old "Only X left" line */}
             <InventoryCountdown productSlug={product.slug} totalStock={totalStock} />
 
             <ShipsInCounter />
 
             {totalStock === 0 && (
-              <div className="text-sm text-wine">This drop is sold out. Next drop in four to six weeks.</div>
+              <div className="text-sm text-wine">This drop is sold out. Next drop in a few weeks.</div>
             )}
 
             {/* v34: Size selector with modal size guide button */}
@@ -109,7 +112,7 @@ export default function ProductClient({ product }: { product: Product }) {
 
             <div>
               <div className="label">Quantity</div>
-              <div className="inline-flex items-center border border-taupe/40">
+              <div className="inline-flex items-center border border-taupe/40 text-ivory">
                 <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-4 py-2 text-lg" aria-label="Decrease quantity">-</button>
                 <span className="px-4 py-2 border-x border-taupe/40 min-w-[3rem] text-center">{qty}</span>
                 <button onClick={() => setQty(q => Math.min(5, q + 1))} className="px-4 py-2 text-lg" aria-label="Increase quantity">+</button>
@@ -127,37 +130,39 @@ export default function ProductClient({ product }: { product: Product }) {
             <TrustBadges />
             <PincodeCheck />
 
+            {/* Product description now pulls from this product's own
+                database record — not hardcoded text. Whatever you type
+                into the admin panel's description field for a product
+                shows here automatically. */}
             <details open className="border-t border-taupe/20 pt-4">
-              <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">The set</summary>
-              <div className="mt-3 text-espresso/80 leading-[1.8] space-y-3 text-sm">
-                <p>A relaxed satin button-down shirt and high-waisted wide-leg pants. Hand-painted marble swirl in warm tones â€” beige, caramel and soft brown &mdash; deep rose, wine, warm ivory.</p>
-                <p>Every set is painted before the cloth is cut, so no two look the same. If that isn&apos;t what you want, this may not be the piece.</p>
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-ivory">The piece</summary>
+              <div className="mt-3 text-ivory/80 leading-[1.8] space-y-3 text-sm">
+                <p>{product.description}</p>
               </div>
             </details>
 
             <details className="border-t border-taupe/20 pt-4">
-              <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">Fabric &amp; fit</summary>
-              <ul className="mt-3 space-y-2 text-espresso/80 text-sm leading-[1.8] list-disc pl-5">
-                <li>Poly-satin, around a hundred grams per square metre.</li>
-                <li>Relaxed shirt with a camp collar. Wide-leg pants, full length on a 5'7" frame â€” size with heels or hem if you're 5'3" or under.</li>
-                <li>Model is 5&apos;7&quot; in size S.</li>
-                <li>Dry clean, or hand-wash cold. Never tumble dry.</li>
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-ivory">Fit &amp; care</summary>
+              <ul className="mt-3 space-y-2 text-ivory/80 text-sm leading-[1.8] list-disc pl-5">
+                <li>See the size chart below for exact measurements.</li>
+                <li>Corsets and hardware pieces: spot clean, keep metal dry.</li>
+                <li>Mesh and jersey pieces: hand-wash cold, air dry only.</li>
               </ul>
             </details>
 
             <details className="border-t border-taupe/20 pt-4">
-              <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">Size chart</summary>
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-ivory">Size chart</summary>
               <div className="mt-3"><InteractiveSizeChart /></div>
             </details>
 
             <details className="border-t border-taupe/20 pt-4">
-              <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">How the Amara compares</summary>
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-ivory">How this compares</summary>
               <ComparisonTable />
             </details>
 
             <details className="border-t border-taupe/20 pt-4">
-              <summary className="cursor-pointer uppercase tracking-widest text-sm text-espresso">Shipping &amp; returns</summary>
-              <div className="mt-3 text-sm text-espresso/80 leading-[1.8] space-y-2">
+              <summary className="cursor-pointer uppercase tracking-widest text-sm text-ivory">Shipping &amp; returns</summary>
+              <div className="mt-3 text-sm text-ivory/80 leading-[1.8] space-y-2">
                 <p>Free shipping anywhere in India via Delhivery. Metros in three to five working days. Smaller cities in five to seven.</p>
                 <p>Seven days to return from the day it arrives. Tags on, unworn, unwashed. We arrange the pickup. Refund lands in about a week.</p>
               </div>
@@ -166,7 +171,7 @@ export default function ProductClient({ product }: { product: Product }) {
         </div>
       </div>
 
-      {/* v34: Reviews section â€” auto-loads from /api/reviews/list */}
+      {/* v34: Reviews section — auto-loads from /api/reviews/list */}
       <ReviewsSection productSlug={product.slug} />
 
       <StickyBuyBar price={displayPrice} onBuy={doBuyNow} productName={product.name} />

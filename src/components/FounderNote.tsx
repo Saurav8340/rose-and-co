@@ -9,15 +9,15 @@ export default function FounderNote() {
         </div>
         <div className="md:col-span-3 space-y-4">
           <div className="text-xs uppercase tracking-[0.3em] text-wine">A note</div>
-          <div className="text-espresso/85 leading-[1.9] italic text-[17px]">
+          <div className="text-ivory/85 leading-[1.9] italic text-[17px]">
             <p>
-              Hi. I&apos;m Aditi. I&apos;m twenty-three, and this is my first attempt at making clothes.
+              Hi. I&apos;m Aditi. The first corset I ever bought online turned out to be a boneless shell with a chain graphic printed on the front &mdash; sold as the real thing, at a price that should have gotten me actual hardware. That&apos;s the moment this started.
             </p>
             <p className="mt-3">
-              Some things will go wrong. When they do, please write to me before you write about me anywhere else. I read every note, and I fix what I can.
+              Some things will still go wrong here. When they do, please write to me before you write about me anywhere else. I read every note, and I fix what I can.
             </p>
           </div>
-          <div className="pt-2 text-sm text-espresso/60">
+          <div className="pt-2 text-sm text-ivory/60">
             &mdash; A, Gurugram
           </div>
         </div>

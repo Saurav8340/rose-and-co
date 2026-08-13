@@ -2,11 +2,11 @@ import Link from 'next/link';
 
 const FOOTER_LINKS = {
   Shop: [
-    { label: 'All products', href: '/shop' },
-    { label: 'Co-ord sets', href: '/collections/co-ord-sets' },
-    { label: 'Satin skirts', href: '/collections/satin-skirts' },
-    { label: 'Party wear', href: '/collections/party-wear' },
-    { label: 'Engagement outfits', href: '/collections/engagement-outfits' },
+    { label: 'New Arrivals', href: '/shop' },
+    { label: 'Corsets & Bodices', href: '/collections/corsets' },
+    { label: 'Mesh & Fishnet', href: '/collections/mesh-fishnet' },
+    { label: 'Chains & Hardware', href: '/collections/hardware' },
+    { label: 'Plaid & Bottoms', href: '/collections/bottoms' },
     { label: 'Gift cards', href: '/gift-cards' },
   ],
   Learn: [
@@ -20,7 +20,7 @@ const FOOTER_LINKS = {
   Help: [
     { label: 'Contact us', href: '/contact' },
     { label: 'Track your order', href: '/track' },
-    { label: 'Shipping policy', href: '/shipping-policy' },
+    { label: 'Delivery & Returns', href: '/shipping-policy' },
     { label: 'Refund policy', href: '/refund-policy' },
     { label: 'Cancellation policy', href: '/cancellation-policy' },
     { label: 'Search', href: '/search' },
@@ -50,7 +50,7 @@ export default function Footer() {
               Rosé &amp; Co
             </Link>
             <p className="mt-4 text-sm text-ivory/70 leading-relaxed max-w-xs">
-              Hand-painted marble swirl satin. Two hundred sets per drop. Ships from Gurugram in twenty-four to forty-eight hours.
+              Clothing for the weirdos and the unbothered. Small drops. Ships from Gurugram in twenty-four to forty-eight hours.
             </p>
 
             {/* Social links */}
@@ -144,7 +144,7 @@ export default function Footer() {
             © {year} Rosé &amp; Co. All rights reserved.
           </div>
           <div className="text-center md:text-right">
-            Handcrafted in Gurugram, Haryana · India
+            Gurugram, Haryana · India
           </div>
         </div>
       </div>

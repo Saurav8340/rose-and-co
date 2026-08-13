@@ -7,19 +7,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================================
+// NEW: Category is now real data, not hardcoded page files.
+// Creating a category in the admin panel automatically gets it
+// a working page at /collections/[slug], a nav dropdown entry,
+// a footer link, and a sitemap entry — no new files needed.
+// ============================================================
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  image       String? // optional hero/banner image for the category page
+  sortOrder   Int       @default(0) // controls display order in nav/footer
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@index([active])
+  @@index([sortOrder])
+}
+
 model Product {
-  id          String      @id @default(cuid())
-  slug        String      @unique
+  id          String   @id @default(cuid())
+  slug        String   @unique
   name        String
   description String
   price       Int
   compareAt   Int?
-  images      String
-  sizes       String
-  active      Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  orderItems  OrderItem[]
+  images      String // JSON array of image URLs, same pattern as before
+  sizes       String // JSON array of { size, stock }, same pattern as before
+
+  // ---------------- NEW FIELDS ----------------
+  // Bullet points: Amazon-style short feature lines. Stored as a JSON
+  // array of strings, e.g. ["Real steel boning", "Adjustable lacing", ...]
+  bulletPoints String @default("[]")
+
+  // Videos: JSON array of video URLs. See note in the admin form about
+  // how these get uploaded/hosted — large video files should NOT be
+  // stored as base64 in the database the way images currently are.
+  videos String @default("[]")
+
+  // Optional structured attributes for anything else you want to show
+  // on the product page as a spec table (material, fit notes, etc.)
+  // Stored as a JSON object, e.g. {"Material": "Steel-boned cotton twill"}
+  attributes String @default("{}")
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  active     Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@index([active])
 }
 
 model Order {

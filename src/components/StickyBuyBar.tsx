@@ -49,23 +49,24 @@ export default function StickyBuyBar({ price, compareAt, onBuy, onBuyClick, prod
       className="md:hidden fixed bottom-0 inset-x-0 z-40 rc-material-bar"
       style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
     >
-      {/* scroll-edge fade — only where the floating bar overlaps content (§12) */}
+      {/* scroll-edge fade — only where the floating bar overlaps content (§12).
+          Fades into the page's near-black background, not the old light theme. */}
       <div
         aria-hidden
         className="pointer-events-none absolute -top-5 inset-x-0 h-5"
-        style={{ background: 'linear-gradient(to top, rgba(250,246,240,0.9), rgba(250,246,240,0))' }}
+        style={{ background: 'linear-gradient(to top, rgba(10,10,10,0.9), rgba(10,10,10,0))' }}
       />
       <div className="flex items-center justify-between gap-3 px-3 pt-3">
         <div className="min-w-0 flex-1">
           {productName && (
-            <div className="text-xs text-espresso/70 truncate">{productName}</div>
+            <div className="text-xs text-ivory/70 truncate">{productName}</div>
           )}
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-semibold text-wine tabular-nums">
               ₹{price.toLocaleString('en-IN')}
             </span>
             {compareAt && (
-              <span className="text-xs line-through text-espresso/40 tabular-nums">
+              <span className="text-xs line-through text-ivory/40 tabular-nums">
                 ₹{compareAt.toLocaleString('en-IN')}
               </span>
             )}

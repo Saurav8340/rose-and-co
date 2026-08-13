@@ -48,14 +48,14 @@ export default function UpdateOrderForm({ order }: { order: Order }) {
       <div className="grid md:grid-cols-2 gap-4">
         <div>
           <label className="label">Order status</label>
-          <select className="input" value={orderStatus} onChange={e => setOrderStatus(e.target.value)}>
+          <select className="input cursor-pointer" value={orderStatus} onChange={e => setOrderStatus(e.target.value)}>
             <option>PLACED</option><option>CONFIRMED</option><option>PACKED</option>
             <option>SHIPPED</option><option>DELIVERED</option><option>CANCELLED</option>
           </select>
         </div>
         <div>
           <label className="label">Payment status</label>
-          <select className="input" value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)}>
+          <select className="input cursor-pointer" value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)}>
             <option>PENDING</option><option>VERIFIED</option><option>FAILED</option>
           </select>
         </div>
@@ -69,30 +69,31 @@ export default function UpdateOrderForm({ order }: { order: Order }) {
         <textarea className="input min-h-[80px]" value={notes} onChange={e => setNotes(e.target.value)} />
       </div>
 
-      {/* CAPI PREVIEW */}
-      <div className={`p-4 border-2 ${willFireCapi ? 'border-green-600 bg-green-50' : order.capiFired ? 'border-green-800 bg-green-100' : 'border-taupe/30 bg-white'}`}>
-        <div className="text-xs uppercase tracking-widest text-espresso/70">Meta CAPI status</div>
+      {/* CAPI PREVIEW — colors mapped to brand tokens instead of generic
+          Tailwind green, so this matches the rest of the admin panel. */}
+      <div className={`p-4 border-2 rounded-lg ${willFireCapi ? 'border-wine bg-wine/10' : order.capiFired ? 'border-wine/60 bg-wine/20' : 'border-taupe/30 bg-blush'}`}>
+        <div className="text-xs uppercase tracking-widest text-ivory/70">Meta CAPI status</div>
         {order.capiFired ? (
-          <div className="mt-1 text-sm text-green-800 font-medium">✓ Purchase event already sent to Meta.</div>
+          <div className="mt-1 text-sm text-wine font-medium">✓ Purchase event already sent to Meta.</div>
         ) : willFireCapi ? (
-          <div className="mt-1 text-sm text-green-800 font-medium">
+          <div className="mt-1 text-sm text-wine font-medium">
             → Saving this will fire Meta CAPI Purchase event now.
-            <div className="text-xs mt-1 text-espresso/70">
+            <div className="text-xs mt-1 text-ivory/70">
               Only do this when money is actually in your bank account.
             </div>
           </div>
         ) : (
-          <div className="mt-1 text-sm text-espresso/70">
+          <div className="mt-1 text-sm text-ivory/70">
             CAPI will fire when: {isPrepaid ? 'Payment status = VERIFIED' : 'Order status = DELIVERED AND Payment status = VERIFIED'}
           </div>
         )}
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={save} disabled={loading} className="btn-primary">
+        <button onClick={save} disabled={loading} className="btn-primary cursor-pointer">
           {loading ? 'Saving…' : willFireCapi ? 'Save & fire Meta event' : 'Save changes'}
         </button>
-        {msg && <span className="text-sm text-green-800">{msg}</span>}
+        {msg && <span className="text-sm text-wine">{msg}</span>}
       </div>
     </div>
   );

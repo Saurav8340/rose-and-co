@@ -54,15 +54,15 @@ export default function JournalPost({ params }: { params: { slug: string } }) {
       ]} />
 
       <article className="container-x py-10 md:py-16 max-w-3xl">
-        <nav className="text-xs uppercase tracking-widest text-espresso/60 mb-6">
+        <nav className="text-xs uppercase tracking-widest text-ivory/60 mb-6">
           <Link href="/">Home</Link> / <Link href="/journal">Journal</Link>
         </nav>
 
-        <div className="text-xs uppercase tracking-widest text-espresso/60">
+        <div className="text-xs uppercase tracking-widest text-ivory/60">
           {new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} &middot; {post.readingTime}
         </div>
-        <h1 className="font-display text-3xl md:text-5xl text-espresso mt-3 leading-tight">{post.title}</h1>
-        <p className="mt-4 text-lg text-espresso/70 leading-relaxed">{post.excerpt}</p>
+        <h1 className="font-display text-3xl md:text-5xl text-ivory mt-3 leading-tight">{post.title}</h1>
+        <p className="mt-4 text-lg text-ivory/70 leading-relaxed">{post.excerpt}</p>
 
         {post.cover && (
           <div className="mt-8 relative aspect-[16/9] bg-blush/20">
@@ -83,12 +83,12 @@ export default function JournalPost({ params }: { params: { slug: string } }) {
 
         <div className="mt-16 pt-8 border-t border-taupe/20">
           <div className="p-6 bg-blush/30 border border-taupe/20">
-            <div className="text-xs uppercase tracking-[0.3em] text-wine">The product</div>
-            <h3 className="font-display text-2xl text-espresso mt-2">Amara Marble Swirl Co-ord Set</h3>
-            <p className="mt-2 text-sm text-espresso/70">
-              What this journal is really about. Hand-painted marble print on soft-drape satin. Rs 1,499. Ships from Delhi NCR in 24-48 hours.
+            <div className="text-xs uppercase tracking-[0.3em] text-wine">New drop</div>
+            <h3 className="font-display text-2xl text-ivory mt-2">Join the coven</h3>
+            <p className="mt-2 text-sm text-ivory/70">
+              Small pieces, real hardware. Once it&apos;s gone, it&apos;s gone.
             </p>
-            <Link href="/product/amara-marble-swirl-coord-set" prefetch className="btn-primary mt-4">See the set &rarr;</Link>
+            <Link href="/shop" prefetch className="btn-primary mt-4">See the drop &rarr;</Link>
           </div>
         </div>
 

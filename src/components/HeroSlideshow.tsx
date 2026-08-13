@@ -30,9 +30,8 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
   if (!slides.length) return null;
 
   return (
-    <section className="relative bg-blush/40 overflow-hidden">
+    <section className="relative bg-blush-depth overflow-hidden">
       {slides.map((slide, i) => {
-        const firstName = slide.name.split(' ')[0];
         const discount = slide.mrp > slide.price
           ? Math.round(((slide.mrp - slide.price) / slide.mrp) * 100)
           : 0;
@@ -50,10 +49,10 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
                 <p className="text-xs uppercase tracking-[0.3em] text-wine mb-4">
                   {slide.tagline}
                 </p>
-                <h1 className="font-display text-4xl md:text-6xl text-espresso leading-[1.05] whitespace-pre-line">
+                <h1 className="font-display text-4xl md:text-6xl text-ivory leading-[1.05] whitespace-pre-line">
                   {slide.title}
                 </h1>
-                <p className="text-espresso/80 leading-relaxed mt-5 max-w-md">
+                <p className="text-ivory/80 leading-relaxed mt-5 max-w-md">
                   {slide.sub}
                 </p>
 
@@ -61,7 +60,7 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
                   <span className="text-2xl text-wine font-medium">{inr(slide.price)}</span>
                   {slide.mrp > slide.price && (
                     <>
-                      <span className="text-lg text-espresso/40 line-through">{inr(slide.mrp)}</span>
+                      <span className="text-lg text-ivory/40 line-through">{inr(slide.mrp)}</span>
                       {discount > 0 && (
                         <span className="text-xs uppercase tracking-widest bg-wine text-ivory px-2 py-1">
                           {discount}% off
@@ -72,17 +71,20 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
                 </div>
 
                 <div className="flex flex-wrap gap-3 mt-8">
-                  <Link href={`/product/${slide.slug}`} className="btn-primary" prefetch>
-                    Shop the {firstName}
+                  <Link href={`/product/${slide.slug}`} className="btn-primary rc-glow-btn cursor-pointer" prefetch>
+                    Shop this piece
                   </Link>
-                  <Link href="/shop" className="btn-secondary">
-                    See the collection
+                  <Link href="/shop" className="btn-secondary cursor-pointer">
+                    See the drop
                   </Link>
                 </div>
               </div>
 
-              {/* Image */}
-              <div className="order-1 md:order-2 relative aspect-[3/4] w-full">
+              {/* Image — given real visual weight since this is the primary
+                  hero element per the Hero-Centric pattern. A flat rounded
+                  rectangle with no depth undersells the single most
+                  important image on the page. */}
+              <div className="order-1 md:order-2 relative aspect-[3/4] w-full rounded-lg overflow-hidden shadow-card ring-1 ring-white/[0.06]">
                 <Image
                   src={slide.hero}
                   alt={slide.name}
@@ -90,7 +92,14 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
                   priority={i === 0}
                   fetchPriority={i === 0 ? 'high' : 'auto'}
                   sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover object-top rounded-lg"
+                  className="object-cover object-top"
+                />
+                {/* Subtle bottom gradient so the image edge doesn't cut
+                    hard against the section background */}
+                <div
+                  className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
+                  style={{ background: 'linear-gradient(to top, rgba(10,10,10,0.35), transparent)' }}
+                  aria-hidden="true"
                 />
               </div>
             </div>
@@ -106,8 +115,8 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
               key={i}
               onClick={() => setIndex(i)}
               aria-label={`Show slide ${i + 1}`}
-              className={`h-1 rounded-full transition-all ${
-                i === index ? 'bg-wine w-8' : 'bg-espresso/30 w-4'
+              className={`h-1 rounded-full transition-all cursor-pointer ${
+                i === index ? 'bg-wine w-8' : 'bg-ivory/25 w-4 hover:bg-ivory/40'
               }`}
             />
           ))}

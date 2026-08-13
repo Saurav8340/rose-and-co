@@ -34,16 +34,15 @@ export default function InventoryCountdown({ productSlug, totalStock }: Props) {
   if (remaining === null || remaining > 100) return null;
 
   const isUrgent = remaining <= 20;
-  const percent = totalStock ? (remaining / totalStock) * 100 : 100;
 
   return (
-    <div className={`inline-flex items-center gap-2 text-sm ${isUrgent ? 'text-wine' : 'text-espresso'}`}>
-      <span className={`w-2 h-2 rounded-full ${isUrgent ? 'bg-wine' : 'bg-green-600'} ${ticking ? 'animate-pulse' : ''}`} />
+    <div className={`inline-flex items-center gap-2 text-sm ${isUrgent ? 'text-wine' : 'text-ivory'}`}>
+      <span className={`w-2 h-2 rounded-full ${isUrgent ? 'bg-wine' : 'bg-ivory/50'} ${ticking ? 'animate-pulse' : ''}`} />
       <span className={isUrgent ? 'font-semibold' : ''}>
         Only {remaining} left in this drop
       </span>
       {isUrgent && (
-        <span className="text-xs text-espresso/60">· Selling fast</span>
+        <span className="text-xs text-ivory/60">· Selling fast</span>
       )}
     </div>
   );

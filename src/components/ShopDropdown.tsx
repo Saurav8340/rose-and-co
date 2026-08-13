@@ -48,7 +48,7 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
         onClick={() => setOpen(!open)}
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex items-center gap-1 text-sm uppercase tracking-widest text-espresso hover:text-wine transition"
+        className="flex items-center gap-1 text-sm uppercase tracking-widest text-ivory hover:text-wine transition"
       >
         Shop
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform ${open ? 'rotate-180' : ''}`}>
@@ -58,11 +58,11 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
 
       {open && (
 <div
-  className="absolute left-0 top-full mt-3 w-[min(92vw,640px)] bg-ivory shadow-2xl border border-taupe/10 z-50"
+  className="absolute left-0 top-full mt-3 w-[min(92vw,640px)] bg-blush shadow-2xl border border-taupe/30 z-50"
   role="menu"
 >          <div className="absolute -top-3 left-0 right-0 h-3" />
           <div className="p-6">
-            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-4">The collection</div>
+            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-4">New Arrivals</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {products.map((p) => {
                 const discount = p.compareAt ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100) : 0;
@@ -72,9 +72,9 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
                     href={`/product/${p.slug}`}
                     prefetch
                     onClick={() => setOpen(false)}
-                    className="group flex gap-4 p-3 hover:bg-blush/20 transition rounded"
+                    className="group flex gap-4 p-3 hover:bg-taupe/20 transition rounded"
                   >
-                    <div className="relative w-24 h-32 flex-shrink-0 overflow-hidden bg-blush/20">
+                    <div className="relative w-24 h-32 flex-shrink-0 overflow-hidden bg-blush/40">
                       <Image
                         src={p.image}
                         alt={p.name}
@@ -89,16 +89,16 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-display text-lg text-espresso group-hover:text-wine transition truncate">
-                        {p.name.split(' ')[0]}
+                      <div className="font-display text-lg text-ivory group-hover:text-wine transition truncate">
+                        {p.name}
                       </div>
-                      <div className="text-xs text-espresso/60 mt-1 line-clamp-2">{p.tagline}</div>
+                      <div className="text-xs text-ivory/60 mt-1 line-clamp-2">{p.tagline}</div>
                       <div className="flex items-baseline gap-2 mt-2">
                         <span className="text-sm font-semibold text-wine">
                           Rs {p.price.toLocaleString('en-IN')}
                         </span>
                         {p.compareAt && (
-                          <span className="text-xs line-through text-espresso/40">
+                          <span className="text-xs line-through text-ivory/40">
                             Rs {p.compareAt.toLocaleString('en-IN')}
                           </span>
                         )}
@@ -108,11 +108,11 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
                 );
               })}
             </div>
-            <div className="border-t border-taupe/10 mt-4 pt-4 flex items-center justify-between text-xs">
+            <div className="border-t border-taupe/30 mt-4 pt-4 flex items-center justify-between text-xs">
               <Link href="/shop" onClick={() => setOpen(false)} className="text-wine underline uppercase tracking-widest">
                 View all
               </Link>
-              <div className="text-espresso/60">Free shipping - 7-day returns</div>
+              <div className="text-ivory/60">Free shipping - 7-day returns</div>
             </div>
           </div>
         </div>

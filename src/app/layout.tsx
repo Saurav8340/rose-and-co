@@ -17,17 +17,17 @@ import MetaPixel from '@/components/MetaPixel';
 export const metadata: Metadata = {
   metadataBase: new URL(BRAND.domain),
   title: {
-    default: 'Rosé & Co - Hand-painted Marble Swirl Co-ord Sets',
+    default: 'Rosé & Co — In Goth We Wear',
     template: '%s | Rosé & Co',
   },
-  description: 'Hand-painted marble swirl satin co-ord sets. Ships from Gurugram in 24-48 hours. Free shipping across India.',
+  description: 'Alt fashion for the unbothered. Corsets, mesh, chains, and raw silhouettes. Ships from Gurugram in 24-48 hours. Join the coven.',
   openGraph: {
     type: 'website',
     locale: 'en_IN',
     url: BRAND.domain,
     siteName: BRAND.name,
-    title: 'Rosé & Co - Hand-painted Marble Swirl Co-ord Sets',
-    description: 'Two hundred sets. Then we begin again.',
+    title: 'Rosé & Co — In Goth We Wear',
+    description: 'Small drops. Once it\'s gone, it\'s gone.',
     images: [{ url: `${BRAND.domain}/og-cover.jpg`, width: 1200, height: 630, alt: BRAND.name }],
   },
   twitter: { card: 'summary_large_image' },

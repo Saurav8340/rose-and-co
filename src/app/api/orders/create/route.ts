@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { orderSchema } from '@/lib/validate';
 import { generateOrderNumber } from '@/lib/orderNumber';
 import { rateLimit, getIp } from '@/lib/rateLimit';
-import { PAYMENT } from '@/lib/constants';
+import { getPrepaidPrice, getCodDeposit, getCodRemaining } from '@/lib/constants';
 import { isBotUA, isDisposableEmail } from '@/lib/blocklists';
 
 function isSuspiciousMobile(m: string): boolean {
@@ -100,10 +100,22 @@ export async function POST(req: Request) {
   const qty = d.quantity;
   const isPrepaid = d.paymentMethod === 'PREPAID';
 
-  const totalAmount    = PAYMENT.fullPrice * qty;
-  const paidAmount     = isPrepaid ? (PAYMENT.prepaidPrice * qty) : (PAYMENT.codDeposit * qty);
-  const codAmount      = isPrepaid ? 0 : (PAYMENT.codRemaining * qty);
-  const discountAmount = isPrepaid ? ((PAYMENT.fullPrice - PAYMENT.prepaidPrice) * qty) : 0;
+  // ============================================================
+  // PRICING — calculated from THIS product's own price (fetched
+  // above from the database), not a hardcoded flat rate. This is
+  // the actual money-charging logic, so it must always reflect
+  // whatever price is set on the product in admin — a product
+  // priced at ₹399 is now correctly charged at ₹399-based math,
+  // not the old flat ₹2,299 rate.
+  // ============================================================
+  const unitPrepaidPrice = getPrepaidPrice(product.price);
+  const unitCodDeposit   = getCodDeposit(product.price);
+  const unitCodRemaining = getCodRemaining(product.price);
+
+  const totalAmount    = product.price * qty;
+  const paidAmount     = isPrepaid ? (unitPrepaidPrice * qty) : (unitCodDeposit * qty);
+  const codAmount      = isPrepaid ? 0 : (unitCodRemaining * qty);
+  const discountAmount = isPrepaid ? ((product.price - unitPrepaidPrice) * qty) : 0;
 
   const orderNumber = generateOrderNumber();
 
@@ -137,7 +149,7 @@ export async function POST(req: Request) {
     await tx.orderItem.create({
       data: {
         orderId: o.id, productId: product.id, productName: product.name,
-        size: d.size, quantity: qty, price: PAYMENT.fullPrice,
+        size: d.size, quantity: qty, price: product.price,
       },
     });
     const newSizes = sizes.map(s => s.size === d.size ? { ...s, stock: s.stock - qty } : s);

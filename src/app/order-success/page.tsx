@@ -11,7 +11,7 @@ export default async function OrderSuccessPage({
 }) {
   const orderId = searchParams.id;
 
-  // Get another product to upsell
+  // Get other products to upsell
   const otherProducts = await prisma.product.findMany({
     where: { active: true },
     orderBy: { createdAt: 'desc' },
@@ -22,37 +22,37 @@ export default async function OrderSuccessPage({
   return (
     <main className="container-x py-12 md:py-16">
       <div className="max-w-3xl mx-auto text-center">
-        <div className="text-6xl mb-4">🌹</div>
+        <div className="text-6xl mb-4">🖤</div>
         <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">Order confirmed</div>
-        <h1 className="font-display text-4xl md:text-5xl text-espresso mb-4">
+        <h1 className="font-display text-4xl md:text-5xl text-ivory mb-4">
           Thank you.
         </h1>
-        <p className="text-espresso/70 max-w-md mx-auto mb-2">
+        <p className="text-ivory/70 max-w-md mx-auto mb-2">
           Your order is being prepared. We ship from Gurugram in twenty-four to forty-eight hours.
         </p>
         {orderId && (
-          <p className="text-xs text-espresso/60 font-mono">
+          <p className="text-xs text-ivory/60 font-mono">
             Order ID: {orderId}
           </p>
         )}
 
         {/* What happens next */}
         <div className="mt-12 grid md:grid-cols-3 gap-6 text-left">
-          <div className="bg-blush/20 p-6">
+          <div className="bg-blush/40 p-6">
             <div className="text-xs uppercase tracking-widest text-wine mb-2">1 · Today</div>
-            <p className="text-sm text-espresso">
+            <p className="text-sm text-ivory">
               Confirmation on WhatsApp with order details.
             </p>
           </div>
-          <div className="bg-blush/20 p-6">
+          <div className="bg-blush/40 p-6">
             <div className="text-xs uppercase tracking-widest text-wine mb-2">2 · 24-48 hrs</div>
-            <p className="text-sm text-espresso">
+            <p className="text-sm text-ivory">
               Tracking link once we hand it to Delhivery.
             </p>
           </div>
-          <div className="bg-blush/20 p-6">
+          <div className="bg-blush/40 p-6">
             <div className="text-xs uppercase tracking-widest text-wine mb-2">3 · 3-7 days</div>
-            <p className="text-sm text-espresso">
+            <p className="text-sm text-ivory">
               At your door. Reply with a photo if you love it.
             </p>
           </div>
@@ -63,7 +63,7 @@ export default async function OrderSuccessPage({
           <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2 text-center">
             While you wait
           </div>
-          <h2 className="font-display text-2xl md:text-3xl text-espresso mb-8 text-center">
+          <h2 className="font-display text-2xl md:text-3xl text-ivory mb-8 text-center">
             Something else to love.
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -86,8 +86,8 @@ export default async function OrderSuccessPage({
                     />
                   </div>
                   <div className="mt-2">
-                    <h3 className="text-sm font-medium text-espresso group-hover:text-wine">
-                      {p.name.split(' ')[0]}
+                    <h3 className="text-sm font-medium text-ivory group-hover:text-wine truncate">
+                      {p.name}
                     </h3>
                     <p className="text-xs text-wine mt-0.5">
                       Rs {p.price.toLocaleString('en-IN')}
@@ -105,7 +105,7 @@ export default async function OrderSuccessPage({
             Give Rs 200, get Rs 200
           </div>
           <h2 className="font-display text-2xl md:text-3xl mb-3">
-            A friend deserves this too.
+            Someone in your coven deserves this too.
           </h2>
           <p className="text-ivory/70 text-sm max-w-md mx-auto mb-6">
             Share your code. When they buy, you both get Rs 200 off your next order.

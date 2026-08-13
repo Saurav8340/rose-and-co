@@ -64,16 +64,13 @@ export default function AddressAutocomplete({ onChange, initial = {} }: Props) {
     (async () => {
       try {
         const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
-        const data = await res.json();
-        if (data[0]?.Status === 'Success' && data[0].PostOffice?.[0]) {
-          const office = data[0].PostOffice[0];
-          const next = {
-            ...data,
-            city: office.District || office.Block || '',
-            state: office.State || '',
-          };
-          setData((prev) => ({ ...prev, city: office.District || office.Block || '', state: office.State || '' }));
-          onChange({ ...data, city: office.District || office.Block || '', state: office.State || '' });
+        const json = await res.json();
+        if (json[0]?.Status === 'Success' && json[0].PostOffice?.[0]) {
+          const office = json[0].PostOffice[0];
+          const city = office.District || office.Block || '';
+          const state = office.State || '';
+          setData((prev) => ({ ...prev, city, state }));
+          onChange({ ...data, city, state });
           setPincodeStatus('ok');
         } else {
           setPincodeStatus('invalid');
@@ -89,23 +86,23 @@ export default function AddressAutocomplete({ onChange, initial = {} }: Props) {
     <div className="space-y-4">
       <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">Full name</label>
+          <label className="block text-xs uppercase tracking-widest text-ivory/70 mb-1">Full name</label>
           <input
             type="text"
             value={data.name}
             onChange={(e) => updateField('name', e.target.value)}
-            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
-            placeholder="Aarna Sharma"
+            className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2 focus:border-wine focus:outline-none rounded"
+            placeholder="Your full name"
             autoComplete="name"
           />
         </div>
         <div>
-          <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">Phone</label>
+          <label className="block text-xs uppercase tracking-widest text-ivory/70 mb-1">Phone</label>
           <input
             type="tel"
             value={data.phone}
             onChange={(e) => updateField('phone', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
-            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+            className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2 focus:border-wine focus:outline-none rounded"
             placeholder="10-digit mobile"
             autoComplete="tel"
             maxLength={10}
@@ -114,17 +111,17 @@ export default function AddressAutocomplete({ onChange, initial = {} }: Props) {
       </div>
 
       <div>
-        <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">
+        <label className="block text-xs uppercase tracking-widest text-ivory/70 mb-1">
           PIN code
-          {pincodeStatus === 'loading' && <span className="ml-2 text-espresso/50">checking...</span>}
-          {pincodeStatus === 'ok' && <span className="ml-2 text-green-700">✓ found</span>}
-          {pincodeStatus === 'invalid' && <span className="ml-2 text-red-700">not found</span>}
+          {pincodeStatus === 'loading' && <span className="ml-2 text-ivory/50">checking...</span>}
+          {pincodeStatus === 'ok' && <span className="ml-2 text-wine">✓ found</span>}
+          {pincodeStatus === 'invalid' && <span className="ml-2 text-glow">not found</span>}
         </label>
         <input
           type="text"
           value={data.pincode}
           onChange={(e) => updateField('pincode', e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
-          className="w-full md:w-48 border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+          className="w-full md:w-48 border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2 focus:border-wine focus:outline-none rounded"
           placeholder="6-digit PIN"
           autoComplete="postal-code"
           maxLength={6}
@@ -133,23 +130,23 @@ export default function AddressAutocomplete({ onChange, initial = {} }: Props) {
 
       <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">City</label>
+          <label className="block text-xs uppercase tracking-widest text-ivory/70 mb-1">City</label>
           <input
             type="text"
             value={data.city}
             onChange={(e) => updateField('city', e.target.value)}
-            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+            className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2 focus:border-wine focus:outline-none rounded"
             placeholder="Auto-filled from PIN"
             autoComplete="address-level2"
           />
         </div>
         <div>
-          <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">State</label>
+          <label className="block text-xs uppercase tracking-widest text-ivory/70 mb-1">State</label>
           <input
             type="text"
             value={data.state}
             onChange={(e) => updateField('state', e.target.value)}
-            className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+            className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2 focus:border-wine focus:outline-none rounded"
             placeholder="Auto-filled from PIN"
             autoComplete="address-level1"
           />
@@ -157,24 +154,24 @@ export default function AddressAutocomplete({ onChange, initial = {} }: Props) {
       </div>
 
       <div>
-        <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">Address</label>
+        <label className="block text-xs uppercase tracking-widest text-ivory/70 mb-1">Address</label>
         <textarea
           value={data.address}
           onChange={(e) => updateField('address', e.target.value)}
           rows={3}
-          className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+          className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2 focus:border-wine focus:outline-none rounded"
           placeholder="House no., street, area"
           autoComplete="street-address"
         />
       </div>
 
       <div>
-        <label className="block text-xs uppercase tracking-widest text-espresso/70 mb-1">Landmark (optional)</label>
+        <label className="block text-xs uppercase tracking-widest text-ivory/70 mb-1">Landmark (optional)</label>
         <input
           type="text"
           value={data.landmark}
           onChange={(e) => updateField('landmark', e.target.value)}
-          className="w-full border border-taupe/30 px-3 py-2 focus:border-wine focus:outline-none"
+          className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2 focus:border-wine focus:outline-none rounded"
           placeholder="Near..."
         />
       </div>

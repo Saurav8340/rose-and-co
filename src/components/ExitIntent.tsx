@@ -52,14 +52,14 @@ export default function ExitIntent() {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4" onClick={() => setShow(false)}>
+    <div className="fixed inset-0 bg-espresso/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setShow(false)}>
       <div
-        className="bg-ivory max-w-md w-full p-8 relative"
+        className="bg-blush max-w-md w-full p-8 relative rounded-lg border border-taupe/30"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={() => setShow(false)}
-          className="absolute top-3 right-3 text-espresso/50 hover:text-espresso text-2xl leading-none"
+          className="absolute top-3 right-3 text-ivory/50 hover:text-ivory text-2xl leading-none cursor-pointer"
           aria-label="Close"
         >
           ×
@@ -68,10 +68,10 @@ export default function ExitIntent() {
         {!submitted ? (
           <>
             <div className="text-xs uppercase tracking-[0.3em] text-wine mb-3">Before you go</div>
-            <h3 className="font-display text-3xl text-espresso leading-tight">
-              Ten percent off your first set.
+            <h3 className="font-display text-3xl text-ivory leading-tight">
+              Ten percent off your first piece.
             </h3>
-            <p className="mt-4 text-sm text-espresso/70 leading-relaxed">
+            <p className="mt-4 text-sm text-ivory/70 leading-relaxed">
               Drop your email. We'll send the code. And a short note when the next drop lands.
             </p>
             <form onSubmit={handleSubmit} className="mt-6 space-y-3">
@@ -80,27 +80,27 @@ export default function ExitIntent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@email.com"
-                className="w-full border border-taupe/40 px-4 py-3 focus:border-wine focus:outline-none"
+                className="w-full border border-taupe/40 bg-blush/60 text-ivory px-4 py-3 focus:border-wine focus:outline-none rounded"
                 required
                 autoFocus
               />
               <button
                 type="submit"
-                className="w-full bg-wine text-ivory py-3 uppercase tracking-widest text-sm hover:bg-espresso transition"
+                className="w-full bg-wine text-ivory py-3 uppercase tracking-widest text-sm hover:bg-wine/90 rc-glow-btn transition cursor-pointer rounded"
               >
                 Send me the code
               </button>
             </form>
-            <p className="mt-3 text-[10px] text-espresso/50 text-center">
+            <p className="mt-3 text-[10px] text-ivory/50 text-center">
               No spam. One-click unsubscribe. Not selling data.
             </p>
           </>
         ) : (
           <div className="text-center py-8">
-            <div className="text-4xl">🌹</div>
-            <h3 className="font-display text-2xl text-espresso mt-4">Check your inbox.</h3>
-            <p className="mt-2 text-sm text-espresso/70">
-              Code <span className="font-mono font-semibold">WELCOME10</span> is on its way.
+            <div className="text-4xl">🖤</div>
+            <h3 className="font-display text-2xl text-ivory mt-4">Check your inbox.</h3>
+            <p className="mt-2 text-sm text-ivory/70">
+              Code <span className="font-mono font-semibold text-wine">WELCOME10</span> is on its way.
             </p>
           </div>
         )}

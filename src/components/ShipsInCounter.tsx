@@ -15,9 +15,9 @@ export default function ShipsInCounter() {
         const h = Math.floor(msRemaining / (1000 * 60 * 60));
         const m = Math.floor((msRemaining / (1000 * 60)) % 60);
         if (h === 0) {
-          setText(`Order in ${m} min - goes out with today\'s Delhivery pickup`);
+          setText(`Order in ${m} min - goes out with today's Delhivery pickup`);
         } else {
-          setText(`Order in ${h}h ${m}m - goes out with today\'s Delhivery pickup`);
+          setText(`Order in ${h}h ${m}m - goes out with today's Delhivery pickup`);
         }
       } else {
         setText('Order now, goes out tomorrow morning');
@@ -29,9 +29,9 @@ export default function ShipsInCounter() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2 text-sm text-espresso bg-green-50 border-l-4 border-green-600 p-3">
-      <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
-      <span className="font-medium text-green-800">{text}</span>
+    <div className="flex items-center gap-2 text-sm text-ivory bg-wine/10 border-l-4 border-wine p-3 rounded">
+      <div className="w-2 h-2 rounded-full bg-wine animate-pulse" />
+      <span className="font-medium text-ivory">{text}</span>
     </div>
   );
 }

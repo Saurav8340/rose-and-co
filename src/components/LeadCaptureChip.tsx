@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { generateCoupon } from '@/lib/coupon';
+import { getSessionId, readIdentity, writeIdentity } from '@/lib/identity';
+import { requestContactShare, isContactPickerSupported } from '@/lib/autofill';
 
 async function saveLead(data: Record<string, any>) {
   try {
@@ -15,14 +17,11 @@ async function saveLead(data: Record<string, any>) {
   } catch {}
 }
 
-function getSessionId(): string {
-  let id = sessionStorage.getItem('rc_session_id');
-  if (!id) {
-    id = 'sess_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
-    sessionStorage.setItem('rc_session_id', id);
-  }
-  return id;
-}
+// FIX: getSessionId() used to be defined locally here using sessionStorage,
+// which resets every time the browser tab closes. Now imported from
+// lib/identity.ts, which uses localStorage — so the same visitor keeps
+// updating one Lead record across visits instead of creating a new
+// fragmented one every session. See identity.ts for the full explanation.
 
 function parseUTM() {
   if (typeof window === 'undefined') return {};
@@ -58,6 +57,7 @@ export default function LeadCaptureChip() {
   const [coupon, setCoupon] = useState('WELCOME10');
   const [fromAd, setFromAd] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [contactPickerSupported, setContactPickerSupported] = useState(false);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -71,10 +71,16 @@ export default function LeadCaptureChip() {
     setMounted(true);
     if (typeof window === 'undefined') return;
 
+    setContactPickerSupported(isContactPickerSupported());
+
     const utm = parseUTM();
     const sessionId = getSessionId();
     const isAd = isAdTraffic();
     setFromAd(isAd);
+
+    // Read whatever we already know about this visitor FIRST, so the
+    // "hasAddress" flag below is accurate.
+    const identity = readIdentity();
 
     // IMMEDIATE silent capture — regardless of modal interaction
     saveLead({
@@ -89,7 +95,7 @@ export default function LeadCaptureChip() {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       visitCount: parseInt(localStorage.getItem('rc_visits') || '0', 10) + 1,
       isReturning: parseInt(localStorage.getItem('rc_visits') || '0', 10) > 0,
-      hasAddress: !!localStorage.getItem('rc_address'),
+      hasAddress: !!identity.address,
       ...utm,
       timestamp: Date.now(),
     });
@@ -113,13 +119,13 @@ export default function LeadCaptureChip() {
 
     if (localStorage.getItem('rc_lead_captured') === '1') return;
 
-    setName(localStorage.getItem('rc_name') || '');
-    setEmail(localStorage.getItem('rc_email') || '');
-    setPhone(localStorage.getItem('rc_phone') || '');
-    setPincode(localStorage.getItem('rc_pincode') || '');
-    setCity(localStorage.getItem('rc_city') || '');
-    setStateVal(localStorage.getItem('rc_state') || '');
-    setAddress(localStorage.getItem('rc_address') || '');
+    setName(identity.name || '');
+    setEmail(identity.email || '');
+    setPhone(identity.phone || '');
+    setPincode(identity.pincode || '');
+    setCity(identity.city || '');
+    setStateVal(identity.state || '');
+    setAddress(identity.address || '');
 
     const delay = isAd ? 3000 : 8000;
     const timer = setTimeout(() => setOpen(true), delay);
@@ -158,14 +164,18 @@ export default function LeadCaptureChip() {
       segment: 'real_intent',
       timestamp: Date.now(),
     });
-    // Persist to localStorage on every partial too
-    if (name.trim()) localStorage.setItem('rc_name', name.trim());
-    if (phone) localStorage.setItem('rc_phone', phone);
-    if (email) localStorage.setItem('rc_email', email);
-    if (pincode) localStorage.setItem('rc_pincode', pincode);
-    if (city) localStorage.setItem('rc_city', city);
-    if (stateVal) localStorage.setItem('rc_state', stateVal);
-    if (address) localStorage.setItem('rc_address', address);
+    // FIX: was several individual localStorage.setItem calls using its own
+    // key names — now a single writeIdentity() call so this data lands in
+    // the exact same store checkout/page.tsx now reads from.
+    writeIdentity({
+      name: name.trim() || undefined,
+      phone: phone || undefined,
+      email: email || undefined,
+      pincode: pincode || undefined,
+      city: city || undefined,
+      state: stateVal || undefined,
+      address: address || undefined,
+    });
     setTimeout(() => setSaveStatus('saved'), 300);
   };
 
@@ -213,6 +223,31 @@ export default function LeadCaptureChip() {
     setOpen(false);
   };
 
+  // NEW: actually wires up the Contact Picker API that lib/autofill.ts
+  // exports (previously written but never imported anywhere in the app).
+  // Only shown on supported browsers (Android Chrome). Must run directly
+  // from this click handler — the browser rejects it if called any other
+  // way (e.g. inside a useEffect or a delayed callback).
+  const handleUseDeviceContact = async () => {
+    const shared = await requestContactShare();
+    if (!shared) return;
+    if (shared.name) setName(shared.name);
+    if (shared.email) setEmail(shared.email);
+    if (shared.phone) setPhone(shared.phone);
+    writeIdentity({
+      name: shared.name,
+      email: shared.email,
+      phone: shared.phone,
+    });
+    saveLead({
+      sessionId: getSessionId(),
+      name: shared.name,
+      email: shared.email,
+      phone: shared.phone,
+      timestamp: Date.now(),
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -232,13 +267,15 @@ export default function LeadCaptureChip() {
       discountPct: 10,
     });
 
-    if (hasName) localStorage.setItem('rc_name', cleanName);
-    if (hasPhone) localStorage.setItem('rc_phone', phone);
-    if (email) localStorage.setItem('rc_email', email);
-    if (pincode) localStorage.setItem('rc_pincode', pincode);
-    if (city) localStorage.setItem('rc_city', city);
-    if (stateVal) localStorage.setItem('rc_state', stateVal);
-    if (address) localStorage.setItem('rc_address', address);
+    writeIdentity({
+      name: hasName ? cleanName : undefined,
+      phone: hasPhone ? phone : undefined,
+      email: email || undefined,
+      pincode: pincode || undefined,
+      city: city || undefined,
+      state: stateVal || undefined,
+      address: address || undefined,
+    });
     localStorage.setItem('rc_active_code', code);
     localStorage.setItem('rc_active_discount', '10');
     localStorage.setItem('rc_lead_captured', '1');
@@ -270,7 +307,7 @@ export default function LeadCaptureChip() {
 
   if (!mounted || !open) return null;
 
-  const askHeading = fromAd ? 'Welcome from the ad. 10% off?' : '10% off your first set?';
+  const askHeading = fromAd ? 'Welcome from the ad. 10% off?' : '10% off your first piece?';
   const askSub = fromAd
     ? 'Just a name gets you the code. Fill more if you want faster checkout.'
     : 'Just a name gets the code. Rest is optional but saves time later.';
@@ -280,32 +317,32 @@ export default function LeadCaptureChip() {
   const modal = (
     <>
       <div
-        className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+        className="fixed inset-0 bg-espresso/70 z-40 backdrop-blur-sm"
         onClick={stage === 'ask' ? handleNo : handleFinalClose}
       />
-      <div className="fixed inset-x-4 bottom-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-sm md:w-full bg-ivory shadow-2xl border border-taupe/20 z-50 overflow-hidden">
+      <div className="fixed inset-x-4 bottom-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-sm md:w-full bg-blush shadow-2xl border border-taupe/30 rounded-lg z-50 overflow-hidden">
         {stage === 'ask' && (
           <div className="p-6 relative">
             <button
               onClick={handleNo}
               aria-label="Dismiss"
-              className="absolute top-3 right-3 text-espresso/50 hover:text-espresso text-2xl leading-none w-8 h-8 flex items-center justify-center"
+              className="absolute top-3 right-3 text-ivory/50 hover:text-ivory text-2xl leading-none w-8 h-8 flex items-center justify-center cursor-pointer"
             >×</button>
             <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">
               {fromAd ? 'Thanks for tapping' : 'A small welcome'}
             </div>
-            <h3 className="font-display text-2xl text-espresso mb-3">{askHeading}</h3>
-            <p className="text-sm text-espresso/70 mb-6 leading-relaxed">{askSub}</p>
+            <h3 className="font-display text-2xl text-ivory mb-3">{askHeading}</h3>
+            <p className="text-sm text-ivory/70 mb-6 leading-relaxed">{askSub}</p>
             <div className="flex gap-2">
               <button
                 onClick={handleYes}
-                className="flex-1 bg-wine text-ivory py-3 uppercase tracking-widest text-sm font-medium hover:bg-espresso transition"
+                className="flex-1 bg-wine text-ivory py-3 uppercase tracking-widest text-sm font-medium hover:bg-wine/90 rc-glow-btn transition cursor-pointer rounded"
               >
                 Yes, send code
               </button>
               <button
                 onClick={handleNo}
-                className="px-4 py-3 text-xs uppercase tracking-widest text-espresso/60 hover:text-espresso"
+                className="px-4 py-3 text-xs uppercase tracking-widest text-ivory/60 hover:text-ivory transition cursor-pointer"
               >
                 Not now
               </button>
@@ -320,13 +357,23 @@ export default function LeadCaptureChip() {
               type="button"
               onClick={handleFinalClose}
               aria-label="Close"
-              className="absolute top-3 right-3 text-espresso/50 hover:text-espresso text-2xl leading-none w-8 h-8 flex items-center justify-center"
+              className="absolute top-3 right-3 text-ivory/50 hover:text-ivory text-2xl leading-none w-8 h-8 flex items-center justify-center cursor-pointer"
             >×</button>
 
             <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2 pr-8">Quick moment</div>
-            <p className="text-sm text-espresso/70 mb-4 leading-relaxed pr-8">
-              Just <strong>name OR phone</strong> gets you the code. Fill more for 1-tap checkout later.
+            <p className="text-sm text-ivory/70 mb-4 leading-relaxed pr-8">
+              Just <strong className="text-ivory">name OR phone</strong> gets you the code. Fill more for 1-tap checkout later.
             </p>
+
+            {contactPickerSupported && (
+              <button
+                type="button"
+                onClick={handleUseDeviceContact}
+                className="w-full mb-3 border border-wine/50 text-wine py-2.5 text-xs uppercase tracking-widest rounded hover:bg-wine/10 transition cursor-pointer"
+              >
+                Use my device contact
+              </button>
+            )}
 
             <div className="space-y-2">
               <div className="relative">
@@ -339,10 +386,10 @@ export default function LeadCaptureChip() {
                   placeholder="Full name"
                   autoComplete="name"
                   name="name"
-                  className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                  className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2.5 focus:border-wine focus:outline-none text-sm rounded"
                 />
                 {name.trim().length >= 2 && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm">✓</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-wine text-sm">✓</span>
                 )}
               </div>
 
@@ -357,10 +404,10 @@ export default function LeadCaptureChip() {
                   name="tel"
                   maxLength={10}
                   inputMode="numeric"
-                  className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                  className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2.5 focus:border-wine focus:outline-none text-sm rounded"
                 />
                 {phone.length === 10 && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm">✓</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-wine text-sm">✓</span>
                 )}
               </div>
 
@@ -372,7 +419,7 @@ export default function LeadCaptureChip() {
                 placeholder="Email (optional)"
                 autoComplete="email"
                 name="email"
-                className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2.5 focus:border-wine focus:outline-none text-sm rounded"
               />
 
               <div className="grid grid-cols-3 gap-2">
@@ -386,7 +433,7 @@ export default function LeadCaptureChip() {
                   name="postal-code"
                   maxLength={6}
                   inputMode="numeric"
-                  className="col-span-1 border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                  className="col-span-1 border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2.5 focus:border-wine focus:outline-none text-sm rounded"
                 />
                 <input
                   type="text"
@@ -396,7 +443,7 @@ export default function LeadCaptureChip() {
                   placeholder="City (auto)"
                   autoComplete="address-level2"
                   name="city"
-                  className="col-span-2 border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                  className="col-span-2 border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2.5 focus:border-wine focus:outline-none text-sm rounded"
                 />
               </div>
 
@@ -408,26 +455,26 @@ export default function LeadCaptureChip() {
                 placeholder="Street address (optional)"
                 autoComplete="street-address"
                 name="street-address"
-                className="w-full border border-taupe/30 px-3 py-2.5 focus:border-wine focus:outline-none text-sm"
+                className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2.5 focus:border-wine focus:outline-none text-sm rounded"
               />
             </div>
 
             <button
               type="submit"
               disabled={!canSubmit}
-              className="mt-4 w-full bg-wine text-ivory py-3 uppercase tracking-widest text-sm font-medium hover:bg-espresso transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="mt-4 w-full bg-wine text-ivory py-3 uppercase tracking-widest text-sm font-medium hover:bg-wine/90 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer rounded"
             >
               {canSubmit ? 'Get my code' : 'Enter name or phone to continue'}
             </button>
 
             {saveStatus === 'saving' && (
-              <p className="text-[10px] text-espresso/50 mt-2 text-center">Saving...</p>
+              <p className="text-[10px] text-ivory/50 mt-2 text-center">Saving...</p>
             )}
             {saveStatus === 'saved' && (
-              <p className="text-[10px] text-green-700 mt-2 text-center">✓ Progress saved</p>
+              <p className="text-[10px] text-wine mt-2 text-center">✓ Progress saved</p>
             )}
             {saveStatus === 'idle' && (
-              <p className="text-[10px] text-espresso/50 mt-2 text-center">
+              <p className="text-[10px] text-ivory/50 mt-2 text-center">
                 We save as you type. Close anytime — no data lost.
               </p>
             )}
@@ -436,18 +483,18 @@ export default function LeadCaptureChip() {
 
         {stage === 'done' && (
           <div className="p-8 text-center">
-            <div className="text-3xl mb-3">🌹</div>
-            <h3 className="font-display text-2xl text-espresso mb-2">
+            <div className="text-3xl mb-3">🖤</div>
+            <h3 className="font-display text-2xl text-ivory mb-2">
               Ready, {name || 'friend'}.
             </h3>
-            <p className="text-sm text-espresso/70 mb-4">
+            <p className="text-sm text-ivory/70 mb-4">
               Save it for your next order.
             </p>
-            <div className="font-mono font-semibold text-wine text-xl bg-blush/40 py-3 px-4 inline-block">
+            <div className="font-mono font-semibold text-wine text-xl bg-blush/60 py-3 px-4 inline-block rounded">
               {coupon}
             </div>
             {(!phone || phone.length < 10) && (
-              <p className="text-xs text-espresso/60 mt-4 leading-relaxed">
+              <p className="text-xs text-ivory/60 mt-4 leading-relaxed">
                 Add your phone at checkout for WhatsApp order updates.
               </p>
             )}
