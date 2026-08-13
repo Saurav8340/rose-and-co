@@ -11,19 +11,29 @@ import {
 
 /**
  * Fluid, gesture-driven product gallery.
- * (Original drag/spring/momentum system fully preserved — see inline
- * comments below for the fluid-motion notes, unchanged from before.)
+ * (Original drag/spring/momentum system fully preserved.)
  *
- * NEW: now also accepts an optional `videos` prop. Videos are appended
- * after all photos as additional slides in the same swipeable strip, each
- * rendered as a native <video> with controls instead of an <Image>.
+ * FIX (PageSpeed Insights): the video in this gallery was measured
+ * downloading its FULL file size TWICE before the customer even pressed
+ * play — once from the main slide's <video> tag, and again from an
+ * identical <video> tag in the thumbnail row, both using
+ * preload="metadata". Raw video exports (e.g. straight off Instagram)
+ * often store their metadata at the END of the file rather than the
+ * front ("fast-start"), so a browser trying to read just the duration
+ * ends up pulling the entire file to find it — and it was doing this
+ * TWICE, once per <video> element pointing at the same URL.
  *
- * One deliberate exception to the drag system: when a pointer-down starts
- * ON the video element itself (e.g. tapping its native play/pause/scrub
- * controls), we skip starting a swipe-drag entirely and let the browser's
- * native video controls handle that interaction normally. Swiping to/from
- * a video slide still works fine via the thumbnails, dots, or dragging
- * from anywhere OUTSIDE the video's own control area.
+ * Fixed two ways:
+ * 1. Thumbnails no longer render a real <video> element at all — just a
+ *    static dark placeholder with a play icon. Zero network request.
+ * 2. The main track only mounts a real <video> element for the
+ *    CURRENTLY ACTIVE slide (conditional render, not just CSS-hidden).
+ *    A video sitting later in the gallery (as videos always do here,
+ *    appended after all photos) now costs nothing on initial page load
+ *    — the browser only fetches it once the customer actually swipes
+ *    or clicks to that slide. preload="none" reinforces this: even once
+ *    mounted, the browser won't fetch anything until the customer
+ *    presses play.
  */
 
 type Media = { type: 'image' | 'video'; src: string };
@@ -39,7 +49,6 @@ export default function ProductGallery({
 }) {
   const safeImages = images.length > 0 ? images : ['/products/amara-front.webp'];
 
-  // Combined slide list: all photos first, then any videos appended after.
   const media: Media[] = [
     ...safeImages.map((src) => ({ type: 'image' as const, src })),
     ...videos.map((src) => ({ type: 'video' as const, src })),
@@ -113,15 +122,8 @@ export default function ProductGallery({
     [n, paint],
   );
 
-  // ---- pointer gesture ----
   const onPointerDown = (e: React.PointerEvent) => {
     if (n < 2) return;
-
-    // NEW: if the gesture starts on a <video> element (tapping its native
-    // controls), don't hijack it into a swipe-drag — let the browser
-    // handle play/pause/scrub normally. Swiping away from a video slide
-    // still works via thumbnails/dots, or by starting the drag from
-    // outside the video element (e.g. the space above/below it).
     if ((e.target as HTMLElement).closest('video')) return;
 
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
@@ -214,28 +216,33 @@ export default function ProductGallery({
                   draggable={false}
                   quality={85}
                 />
-              ) : (
+              ) : i === active ? (
+                // Only the ACTIVE slide gets a real <video> element.
+                // preload="none" means the browser fetches nothing at
+                // all until the customer presses play — not even on
+                // mount.
                 <video
                   src={m.src}
                   className="w-full h-full object-cover bg-black"
                   controls
                   playsInline
-                  preload="metadata"
+                  preload="none"
                   aria-label={`${name} video`}
                 />
+              ) : (
+                // Not yet visited — plain placeholder, zero network cost.
+                <div className="w-full h-full bg-black" aria-hidden="true" />
               )}
             </div>
           ))}
         </div>
 
-        {/* Slide counter */}
         {n > 1 && (
           <div className="absolute bottom-3 right-3 rounded-full bg-espresso/55 px-2.5 py-1 text-[11px] font-medium tabular-nums text-ivory backdrop-blur-sm">
             {active + 1} / {n}
           </div>
         )}
 
-        {/* Dots */}
         {n > 1 && (
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
             {media.map((m, i) => (
@@ -279,23 +286,19 @@ export default function ProductGallery({
                   quality={60}
                 />
               ) : (
-                <>
-                  <video
-                    src={m.src}
-                    className="w-full h-full object-cover bg-black"
-                    muted
-                    preload="metadata"
-                  />
-                  {/* Play icon overlay so a video thumbnail reads clearly
-                      as a video, not just a static frame. */}
-                  <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="w-6 h-6 rounded-full bg-espresso/60 flex items-center justify-center">
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <path d="M1 0.5L9 5L1 9.5V0.5Z" fill="white" />
-                      </svg>
-                    </span>
+                // FIX: no <video> element here at all anymore — this used
+                // to be a second <video src=... preload="metadata"> that
+                // silently triggered its own full-file download alongside
+                // the main slide's copy. A static placeholder with a play
+                // icon costs zero bytes and still communicates clearly
+                // that this thumbnail is a video.
+                <div className="w-full h-full bg-black flex items-center justify-center">
+                  <span className="w-6 h-6 rounded-full bg-espresso/60 flex items-center justify-center">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1 0.5L9 5L1 9.5V0.5Z" fill="white" />
+                    </svg>
                   </span>
-                </>
+                </div>
               )}
             </button>
           ))}
@@ -304,7 +307,3 @@ export default function ProductGallery({
     </div>
   );
 }
-
-
-
-

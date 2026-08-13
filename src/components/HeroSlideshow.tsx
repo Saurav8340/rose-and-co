@@ -35,14 +35,6 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
         const discount = slide.mrp > slide.price
           ? Math.round(((slide.mrp - slide.price) / slide.mrp) * 100)
           : 0;
-        // FIX (accessibility bug found via PageSpeed Insights): links
-        // inside an aria-hidden, invisible slide were still keyboard-
-        // focusable — a sighted keyboard user tabbing through the page
-        // could land focus on a link they can't see at all, since the
-        // slide is opacity-0 and pointer-events-none. tabIndex={-1} on
-        // every interactive element inside a non-active slide removes it
-        // from the tab order entirely; only the currently visible slide's
-        // links remain reachable by keyboard.
         const isActive = i === index;
         const tabIndex = isActive ? undefined : -1;
         return (
@@ -54,7 +46,6 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
             aria-hidden={isActive ? undefined : true}
           >
             <div className="container-x grid md:grid-cols-2 gap-8 items-center py-12 md:py-20">
-              {/* Copy */}
               <div className="order-2 md:order-1">
                 <p className="text-xs uppercase tracking-[0.3em] text-crimson mb-4">
                   {slide.tagline}
@@ -99,7 +90,6 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
                 </div>
               </div>
 
-              {/* Image */}
               <Link
                 href={`/product/${slide.slug}`}
                 prefetch
@@ -127,7 +117,14 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
         );
       })}
 
-      {/* Dots */}
+      {/* Dots — FIX (PageSpeed "Avoid non-composited animations"): these
+          used to animate by changing CSS `width` (w-4 -> w-8), which
+          forces the browser to recompute layout on every frame instead
+          of handing the animation to the GPU. Now each dot has a FIXED
+          width/height (never changes), and a separate inner bar animates
+          purely via `transform: scaleX(...)` — transform is compositor-
+          friendly, so this animates smoothly without triggering layout,
+          and no longer gets flagged. */}
       {slides.length > 1 && (
         <div className="flex justify-center gap-2 pb-8">
           {slides.map((_, i) => (
@@ -135,17 +132,17 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
               key={i}
               onClick={() => setIndex(i)}
               aria-label={`Show slide ${i + 1}`}
-              className={`h-1 rounded-full transition-all cursor-pointer ${
-                i === index ? 'bg-wine w-8' : 'bg-ivory/25 w-4 hover:bg-ivory/40'
-              }`}
-            />
+              className="relative h-1.5 w-8 rounded-full bg-ivory/25 overflow-hidden cursor-pointer"
+            >
+              <span
+                className="absolute inset-0 bg-wine rounded-full origin-left transition-transform duration-300 ease-out"
+                style={{ transform: i === index ? 'scaleX(1)' : 'scaleX(0)' }}
+                aria-hidden="true"
+              />
+            </button>
           ))}
         </div>
       )}
     </section>
   );
 }
-
-
-
-

@@ -1,0 +1,15 @@
+# FIX: PageSpeed Insights flagged ~12KB of "Legacy JavaScript" — polyfills
+# for Array.prototype.at/flat/flatMap, Object.fromEntries/hasOwn, and
+# String.prototype.trimStart/trimEnd. Next.js/SWC includes these
+# automatically to support old browsers when no browserslist config exists.
+# Every browser actually used by real customers (any phone from the last
+# ~4 years) already supports all of this natively. This file tells the
+# build to target only modern, evergreen browsers, so it stops bundling
+# code nobody visiting the site actually needs — applies site-wide,
+# automatically, to every page and every future build.
+last 2 Chrome versions
+last 2 Firefox versions
+last 2 Safari versions
+last 2 Edge versions
+not IE 11
+not dead
