@@ -40,12 +40,15 @@ export async function PUT(req: NextRequest, { params }: { params: { slug: string
       },
     });
 
-    // FIX: same reasoning as the POST route in products/route.ts — without
-    // this, editing a product (new images, price, name, stock, etc.) in
-    // admin would not appear on the live /product/[slug] page or /shop
-    // listing until the 5-minute ISR timer expired AND someone visited
-    // after that point. This makes admin edits show up on the live site
-    // immediately after clicking "Save & publish".
+    // FIX: without this, an edit saved here (new image order, new video,
+    // price change, anything) would correctly write to the database, but
+    // the LIVE product page and /shop listing would keep serving an old
+    // cached snapshot for up to 5 minutes (the `revalidate = 300` timer
+    // in product/[slug]/page.tsx and shop/page.tsx) — and even then, only
+    // update on the NEXT visitor's request after that window passed, not
+    // instantly. revalidatePath('/', 'layout') busts the cache for every
+    // page under the root layout the moment Save & publish is clicked, so
+    // changes appear on the live site immediately instead of on a delay.
     revalidatePath('/', 'layout');
 
     return NextResponse.json({ product, url: `/product/${product.slug}` });
@@ -62,9 +65,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: { slug: st
   try {
     await prisma.product.delete({ where: { slug: params.slug } });
 
-    // FIX: same cache-busting reasoning — a deleted product should stop
-    // appearing on /shop and its own product page immediately, not linger
-    // for up to 5 minutes after deletion.
+    // Same cache-busting reasoning as PUT above — a deleted product
+    // should stop appearing on /shop and its own page immediately.
     revalidatePath('/', 'layout');
 
     return NextResponse.json({ ok: true });
@@ -81,5 +83,3 @@ export async function DELETE(_req: NextRequest, { params }: { params: { slug: st
     return NextResponse.json({ error: "Could not delete." }, { status: 500 });
   }
 }
-
-
