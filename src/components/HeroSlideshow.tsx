@@ -19,11 +19,17 @@ interface Slide {
 export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
   const [index, setIndex] = useState(0);
 
+  // FIX: was 6000ms, which felt fine when rotating between different
+  // PRODUCTS but drags when the same product's own photos are cycling
+  // (see homepage.tsx — slides are now built per-image, not per-product,
+  // so a single live product with several photos still shows real motion
+  // instead of one static frame). 4000ms reads as an intentional
+  // slideshow rather than a slow drift.
   useEffect(() => {
     if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setIndex((i) => (i + 1) % slides.length);
-    }, 6000);
+    }, 4000);
     return () => clearInterval(timer);
   }, [slides.length]);
 
@@ -37,7 +43,7 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
           : 0;
         return (
           <div
-            key={slide.slug}
+            key={`${slide.slug}-${i}`}
             className={`transition-opacity duration-700 ${
               i === index ? 'opacity-100' : 'opacity-0 absolute inset-0 pointer-events-none'
             }`}
@@ -80,17 +86,11 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
                 </div>
               </div>
 
-              {/* Image — given real visual weight since this is the primary
-                  hero element per the Hero-Centric pattern. A flat rounded
-                  rectangle with no depth undersells the single most
-                  important image on the page.
-
-                  FIX: this block used to be a plain <div>, not wrapped in
-                  any link, so clicking the actual hero photo did nothing —
-                  only the small "Shop this piece" text button below it was
-                  clickable. Wrapped it in the same /product/[slug] Link so
-                  clicking the image itself now opens the product page too,
-                  which is what customers naturally try first. */}
+              {/* Image — wrapped in a Link so clicking the photo itself
+                  opens the product page, same as clicking "Shop this
+                  piece". Each image (even from the same product) carries
+                  its own correct slug, so this stays accurate as slides
+                  rotate through one product's multiple photos. */}
               <Link
                 href={`/product/${slide.slug}`}
                 prefetch
@@ -106,8 +106,6 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
                 />
-                {/* Subtle bottom gradient so the image edge doesn't cut
-                    hard against the section background */}
                 <div
                   className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
                   style={{ background: 'linear-gradient(to top, rgba(10,10,10,0.35), transparent)' }}

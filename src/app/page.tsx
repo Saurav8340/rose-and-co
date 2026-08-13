@@ -21,6 +21,12 @@ const FALLBACK_EDITORIAL = {
   sub: 'Raw silhouettes, chains, and mesh. Small pieces, then they\'re gone. Ships from Gurugram.',
 };
 
+// Max images pulled per product for the rotating hero, and a hard cap on
+// total hero slides overall so a big catalog doesn't make the rotation
+// take forever to loop back around.
+const IMAGES_PER_PRODUCT = 4;
+const MAX_HERO_SLIDES = 12;
+
 export default async function HomePage() {
   const products = await prisma.product.findMany({
     where: { active: true },
@@ -34,34 +40,29 @@ export default async function HomePage() {
     },
   });
 
-  // FIX (homepage hero = auto-updating slideshow of live products):
-  // this was already pulling from the database correctly and already
-  // updates automatically whenever a product is added/edited/removed in
-  // admin — nothing was actually broken here. The one real gap: if a
-  // product's `images` field was ever an empty array (e.g. a draft saved
-  // before any photos were uploaded), it silently fell back to the old,
-  // deleted 'amara-front.webp' file — a broken image on the live hero.
-  // Fixed by skipping any product with zero images from the slideshow
-  // entirely, and by only including the first 5 most recent products so
-  // the hero doesn't get overcrowded as your catalog grows — every live
-  // product still get its full spot on the grid section further down
-  // this same page, and on /shop.
-  const slides = products
-    .map((p) => {
-      const imgs = JSON.parse(p.images) as string[];
-      return {
-        slug: p.slug,
-        name: p.name,
-        hero: imgs[0] || '',
-        price: p.price,
-        mrp: getDisplayMrp(p.price, p.compareAt),
-        tagline: FALLBACK_EDITORIAL.tagline,
-        title: FALLBACK_EDITORIAL.title,
-        sub: FALLBACK_EDITORIAL.sub,
-      };
-    })
-    .filter((s) => s.hero) // skip any product with no real photo yet
-    .slice(0, 5);
+  // FIX: with only one live product, the hero previously showed exactly
+  // one static slide (imgs[0]) and never moved — the rotation code
+  // correctly does nothing when there's only one product to rotate to
+  // (`if (slides.length <= 1) return;` in HeroSlideshow.tsx). Rather than
+  // rotating between PRODUCTS, this now rotates between every product's
+  // OWN photos — so even a single product with 7 images gets real
+  // slideshow motion, and as more products go live their images blend
+  // into the same continuous rotation automatically. Every individual
+  // image still links to its own correct /product/[slug] page.
+  const slides = products.flatMap((p) => {
+    const imgs = (JSON.parse(p.images) as string[]).filter(Boolean);
+    if (imgs.length === 0) return [];
+    return imgs.slice(0, IMAGES_PER_PRODUCT).map((img) => ({
+      slug: p.slug,
+      name: p.name,
+      hero: img,
+      price: p.price,
+      mrp: getDisplayMrp(p.price, p.compareAt),
+      tagline: FALLBACK_EDITORIAL.tagline,
+      title: FALLBACK_EDITORIAL.title,
+      sub: FALLBACK_EDITORIAL.sub,
+    }));
+  }).slice(0, MAX_HERO_SLIDES);
 
   const faqs = [
     ['When will it arrive?', 'Metros, three to five working days. Smaller cities, five to seven. Ships from Gurugram within forty-eight hours of your order.'],
