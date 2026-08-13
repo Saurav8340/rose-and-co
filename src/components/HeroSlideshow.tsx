@@ -83,8 +83,20 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
               {/* Image — given real visual weight since this is the primary
                   hero element per the Hero-Centric pattern. A flat rounded
                   rectangle with no depth undersells the single most
-                  important image on the page. */}
-              <div className="order-1 md:order-2 relative aspect-[3/4] w-full rounded-lg overflow-hidden shadow-card ring-1 ring-white/[0.06]">
+                  important image on the page.
+
+                  FIX: this block used to be a plain <div>, not wrapped in
+                  any link, so clicking the actual hero photo did nothing —
+                  only the small "Shop this piece" text button below it was
+                  clickable. Wrapped it in the same /product/[slug] Link so
+                  clicking the image itself now opens the product page too,
+                  which is what customers naturally try first. */}
+              <Link
+                href={`/product/${slide.slug}`}
+                prefetch
+                aria-label={`View ${slide.name}`}
+                className="order-1 md:order-2 relative aspect-[3/4] w-full rounded-lg overflow-hidden shadow-card ring-1 ring-white/[0.06] block cursor-pointer group"
+              >
                 <Image
                   src={slide.hero}
                   alt={slide.name}
@@ -92,7 +104,7 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
                   priority={i === 0}
                   fetchPriority={i === 0 ? 'high' : 'auto'}
                   sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover object-top"
+                  className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
                 />
                 {/* Subtle bottom gradient so the image edge doesn't cut
                     hard against the section background */}
@@ -101,7 +113,7 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
                   style={{ background: 'linear-gradient(to top, rgba(10,10,10,0.35), transparent)' }}
                   aria-hidden="true"
                 />
-              </div>
+              </Link>
             </div>
           </div>
         );
