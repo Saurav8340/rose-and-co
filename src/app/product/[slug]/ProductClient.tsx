@@ -81,7 +81,7 @@ export default function ProductClient({ product }: { product: Product }) {
               <div className="flex items-baseline gap-3">
                 <div className="text-3xl font-semibold text-ivory">{inr(displayPrice)}</div>
                 {product.compareAt && product.compareAt > displayPrice && (
-                  <div className="text-base line-through text-ivory/40">{inr(product.compareAt)}</div>
+                  <div className="text-base line-through text-ivory/60">{inr(product.compareAt)}</div>
                 )}
               </div>
               <div className="text-xs text-ivory/60 mt-2">
@@ -164,11 +164,13 @@ export default function ProductClient({ product }: { product: Product }) {
 
       <ReviewsSection productSlug={product.slug} />
 
-      <StickyBuyBar price={displayPrice} onBuy={doBuyNow} productName={product.name} />
+      <StickyBuyBar price={displayPrice} compareAt={product.compareAt} onBuy={doBuyNow} productName={product.name} />
       <div className="h-20 md:hidden" />
       <RecentlyViewed currentSlug={product.slug} />
     </>
   );
 }
+
+
 
 

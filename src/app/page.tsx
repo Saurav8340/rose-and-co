@@ -115,7 +115,7 @@ export default async function HomePage() {
                       {/* FIX: text-crimson -> text-crimson for contrast */}
                       <span className="text-lg font-semibold text-crimson">{inr(p.price)}</span>
                       {p.compareAt && (
-                        <span className="text-sm line-through text-ivory/40" aria-label={`Original price ${inr(p.compareAt)}`}>
+                        <span className="text-sm line-through text-ivory/60" aria-label={`Original price ${inr(p.compareAt)}`}>
                           {inr(p.compareAt)}
                         </span>
                       )}
@@ -224,6 +224,7 @@ export default async function HomePage() {
     </>
   );
 }
+
 
 
 

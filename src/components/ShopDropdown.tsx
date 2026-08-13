@@ -98,7 +98,7 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
                           Rs {p.price.toLocaleString('en-IN')}
                         </span>
                         {p.compareAt && (
-                          <span className="text-xs line-through text-ivory/40">
+                          <span className="text-xs line-through text-ivory/60">
                             Rs {p.compareAt.toLocaleString('en-IN')}
                           </span>
                         )}
@@ -120,6 +120,7 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
     </div>
   );
 }
+
 
 
 

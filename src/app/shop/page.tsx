@@ -92,7 +92,7 @@ export default async function ShopPage() {
                   <div className="mt-3 flex items-baseline gap-3">
                     <span className="text-xl font-semibold text-crimson">{inr(p.price)}</span>
                     {p.compareAt && (
-                      <span className="text-sm line-through text-ivory/40">{inr(p.compareAt)}</span>
+                      <span className="text-sm line-through text-ivory/60">{inr(p.compareAt)}</span>
                     )}
                   </div>
                   <p className="mt-4 text-sm text-ivory/70 leading-relaxed line-clamp-3">
@@ -110,6 +110,7 @@ export default async function ShopPage() {
     </>
   );
 }
+
 
 
 

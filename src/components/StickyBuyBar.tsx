@@ -66,7 +66,7 @@ export default function StickyBuyBar({ price, compareAt, onBuy, onBuyClick, prod
               ₹{price.toLocaleString('en-IN')}
             </span>
             {compareAt && (
-              <span className="text-xs line-through text-ivory/40 tabular-nums">
+              <span className="text-xs line-through text-ivory/60 tabular-nums">
                 ₹{compareAt.toLocaleString('en-IN')}
               </span>
             )}
@@ -91,6 +91,7 @@ export default function StickyBuyBar({ price, compareAt, onBuy, onBuyClick, prod
     </div>
   );
 }
+
 
 
 

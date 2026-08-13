@@ -61,9 +61,9 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
                   <span className="text-2xl text-crimson font-medium">{inr(slide.price)}</span>
                   {slide.mrp > slide.price && (
                     <>
-                      <span className="text-lg text-ivory/40 line-through">{inr(slide.mrp)}</span>
+                      <span className="text-lg text-ivory/60 line-through">{inr(slide.mrp)}</span>
                       {discount > 0 && (
-                        <span className="text-xs uppercase tracking-widest bg-wine text-ivory px-2 py-1">
+                        <span className="text-xs uppercase tracking-widest bg-rose text-ivory px-2 py-1">
                           {discount}% off
                         </span>
                       )}
@@ -146,3 +146,5 @@ export default function HeroSlideshow({ slides }: { slides: Slide[] }) {
     </section>
   );
 }
+
+

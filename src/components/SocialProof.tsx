@@ -39,7 +39,7 @@ export default function SocialProof() {
 
   return (
     <div
-      className={`fixed bottom-4 left-4 max-w-xs bg-ivory shadow-2xl border border-taupe/20 p-3 z-30 transition-all duration-500 ${
+      className={`fixed bottom-24 left-4 md:bottom-4 max-w-xs bg-ivory shadow-2xl border border-taupe/20 p-3 z-30 transition-all duration-500 ${
         visible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'
       }`}
     >
@@ -50,6 +50,7 @@ export default function SocialProof() {
     </div>
   );
 }
+
 
 
 
