@@ -17,7 +17,7 @@ export default function BundleOffer({
   return (
     <section className="container-x py-12 border-t border-taupe/10">
       <div className="max-w-4xl mx-auto bg-blush/40 p-6 md:p-10 rounded-lg">
-        <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">Weekend set</div>
+        <div className="text-xs uppercase tracking-[0.3em] text-crimson mb-2">Weekend set</div>
         <h2 className="font-display text-2xl md:text-3xl text-ivory mb-2">
           Take both. Save Rs {savings.toLocaleString('en-IN')}.
         </h2>
@@ -36,18 +36,18 @@ export default function BundleOffer({
             </div>
             <div>
               <div className="text-xs uppercase tracking-widest text-ivory/60">Add</div>
-              <h3 className="font-display text-lg text-ivory group-hover:text-wine transition">{otherName}</h3>
-              <div className="text-sm text-wine mt-1">Rs {otherPrice.toLocaleString('en-IN')}</div>
+              <h3 className="font-display text-lg text-ivory group-hover:text-crimson transition">{otherName}</h3>
+              <div className="text-sm text-crimson mt-1">Rs {otherPrice.toLocaleString('en-IN')}</div>
             </div>
           </Link>
 
           <div className="p-4 bg-blush border border-wine/30 flex flex-col justify-between rounded-lg">
             <div>
-              <div className="text-xs uppercase tracking-widest text-wine">Bundle price</div>
-              <div className="text-2xl font-semibold text-wine mt-1">
+              <div className="text-xs uppercase tracking-widest text-crimson">Bundle price</div>
+              <div className="text-2xl font-semibold text-crimson mt-1">
                 Rs {bundlePrice.toLocaleString('en-IN')}
               </div>
-              <div className="text-xs text-wine/80 font-medium mt-1">
+              <div className="text-xs text-crimson/80 font-medium mt-1">
                 You save Rs {savings.toLocaleString('en-IN')}
               </div>
             </div>
@@ -60,3 +60,6 @@ export default function BundleOffer({
     </section>
   );
 }
+
+
+

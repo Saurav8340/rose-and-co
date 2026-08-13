@@ -3,7 +3,7 @@ export const metadata = { title: 'Our impact', description: 'Small-batch product
 export default function ImpactPage() {
   return (
     <div className="container-x py-16 max-w-3xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">Our impact</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">Our impact</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">Small-batch, honest, checked before it ships</h1>
       <p className="mt-4 text-ivory/70 leading-relaxed">
         We&apos;re not a sustainable brand in the strict sense. But here&apos;s what we actually do.
@@ -40,3 +40,6 @@ export default function ImpactPage() {
     </div>
   );
 }
+
+
+

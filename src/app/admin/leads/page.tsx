@@ -132,14 +132,14 @@ export default function LeadsPage() {
           {name || <span className="italic text-ivory/40">anon</span>}
         </span>
         {phone ? (
-          <a href={`tel:${phone}`} className="text-sm text-ivory/80 hover:text-wine transition">
+          <a href={`tel:${phone}`} className="text-sm text-ivory/80 hover:text-crimson transition">
             📞 {phone}
           </a>
         ) : (
           <span className="text-xs text-ivory/40">no phone</span>
         )}
         {email ? (
-          <a href={`mailto:${email}`} className="text-xs text-ivory/60 hover:text-wine transition">
+          <a href={`mailto:${email}`} className="text-xs text-ivory/60 hover:text-crimson transition">
             {email}
           </a>
         ) : null}
@@ -273,7 +273,7 @@ export default function LeadsPage() {
                         <div className="flex flex-col text-ivory/80">
                           <span>{l.visits ?? 1}</span>
                           {l.returning ? (
-                            <span className="text-xs text-wine">Return</span>
+                            <span className="text-xs text-crimson">Return</span>
                           ) : null}
                         </div>
                       </td>
@@ -285,7 +285,7 @@ export default function LeadsPage() {
                               className={`text-xs ${
                                 (l.cartStatus || "").toLowerCase() === "abandoned"
                                   ? "text-glow"
-                                  : "text-wine"
+                                  : "text-crimson"
                               }`}
                             >
                               {l.cartStatus || "Active"}
@@ -329,3 +329,6 @@ function Stat({ label, value }: { label: string; value: number }) {
     </div>
   );
 }
+
+
+

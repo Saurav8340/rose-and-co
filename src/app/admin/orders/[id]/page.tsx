@@ -17,7 +17,7 @@ export default async function AdminOrderDetail({ params }: { params: { id: strin
 
   return (
     <div className="container-x py-8 max-w-4xl">
-      <Link href="/admin" className="text-xs uppercase tracking-widest text-ivory/60 hover:text-wine transition">← Back to orders</Link>
+      <Link href="/admin" className="text-xs uppercase tracking-widest text-ivory/60 hover:text-crimson transition">← Back to orders</Link>
       <h1 className="font-display text-3xl mt-2 text-ivory">Order {order.orderNumber}</h1>
 
       <div className="grid md:grid-cols-2 gap-6 mt-6">
@@ -39,9 +39,9 @@ export default async function AdminOrderDetail({ params }: { params: { id: strin
         <div className="border border-taupe/20 p-6 bg-blush rounded-lg">
           <h3 className="uppercase tracking-widest text-xs text-ivory/60 mb-3">Payment & items</h3>
           <div className="text-sm space-y-1 text-ivory">
-            <div><b>Method:</b> <span className={order.paymentMethod === 'PREPAID' ? 'text-wine font-semibold' : ''}>{order.paymentMethod}</span></div>
+            <div><b>Method:</b> <span className={order.paymentMethod === 'PREPAID' ? 'text-crimson font-semibold' : ''}>{order.paymentMethod}</span></div>
             <div><b>Total:</b> {inr(order.totalAmount)}</div>
-            {order.discountAmount > 0 && <div className="text-wine"><b>UPI discount:</b> -{inr(order.discountAmount)}</div>}
+            {order.discountAmount > 0 && <div className="text-crimson"><b>UPI discount:</b> -{inr(order.discountAmount)}</div>}
             <div><b>Paid online:</b> {inr(order.paidAmount)}</div>
             <div><b>COD amount:</b> {inr(order.codAmount)}</div>
             <div><b>Payment status:</b> {order.paymentStatus}</div>
@@ -84,3 +84,4 @@ export default async function AdminOrderDetail({ params }: { params: { id: strin
     </div>
   );
 }
+

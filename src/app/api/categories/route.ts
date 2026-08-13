@@ -51,3 +51,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ category, url: `/collections/${category.slug}` }, { status: 201 });
 }
+
+
+

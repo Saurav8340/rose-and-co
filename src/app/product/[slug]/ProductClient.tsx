@@ -72,7 +72,7 @@ export default function ProductClient({ product }: { product: Product }) {
           <ProductGallery images={product.images} name={product.name} videos={product.videos ?? []} />
           <div className="space-y-6">
             <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-wine">Rosé & Co</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-crimson">Rosé & Co</div>
               <h1 className="font-display text-3xl md:text-4xl text-ivory mt-2">{product.name}</h1>
               <RatingLine />
             </div>
@@ -94,7 +94,7 @@ export default function ProductClient({ product }: { product: Product }) {
             <ShipsInCounter />
 
             {totalStock === 0 && (
-              <div className="text-sm text-wine">This drop is sold out. Next drop in a few weeks.</div>
+              <div className="text-sm text-crimson">This drop is sold out. Next drop in a few weeks.</div>
             )}
 
             <div>
@@ -120,7 +120,7 @@ export default function ProductClient({ product }: { product: Product }) {
               <WishlistButton productId={product.id} />
               <ShareButton title={product.name} url={shareUrl} />
             </div>
-            {msg && <div className="text-sm text-wine">{msg}</div>}
+            {msg && <div className="text-sm text-crimson">{msg}</div>}
 
             <TrustBadges />
             <PincodeCheck />
@@ -170,3 +170,4 @@ export default function ProductClient({ product }: { product: Product }) {
     </>
   );
 }
+

@@ -157,3 +157,6 @@ export const articleSchema = (post: {
   mainEntityOfPage: { '@type': 'WebPage', '@id': `${BASE}/journal/${post.slug}` },
   inLanguage: 'en-IN',
 });
+
+
+

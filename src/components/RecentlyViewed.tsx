@@ -53,10 +53,13 @@ export default function RecentlyViewed({ currentSlug }: { currentSlug?: string }
               <Image src={p.image} alt={p.name} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-cover group-hover:scale-105 transition-transform" />
             </div>
             <div className="mt-2 text-xs text-ivory font-medium truncate">{p.name}</div>
-            <div className="text-xs text-wine">{inr(p.price)}</div>
+            <div className="text-xs text-crimson">{inr(p.price)}</div>
           </Link>
         ))}
       </div>
     </section>
   );
 }
+
+
+

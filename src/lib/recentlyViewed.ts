@@ -29,3 +29,6 @@ export function getRecentlyViewed(): ViewedProduct[] {
     return JSON.parse(raw);
   } catch { return []; }
 }
+
+
+

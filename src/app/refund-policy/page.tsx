@@ -34,7 +34,7 @@ export default function Page() {
         <div>
           <h2 className="font-display text-xl text-ivory mb-2">How to return</h2>
           <ol className="list-decimal pl-5 space-y-2">
-            <li>Email <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a> with your order number and reason.</li>
+            <li>Email <a className="underline text-crimson" href={`mailto:${SITE.email}`}>{SITE.email}</a> with your order number and reason.</li>
             <li>We arrange a reverse pickup &mdash; the courier collects from your address. You do not need to send it yourself.</li>
             <li>Once we receive and check it (2 working days), refund is initiated.</li>
             <li>Refund lands in your original payment source in 5–7 working days.</li>
@@ -59,3 +59,6 @@ export default function Page() {
     </div>
   );
 }
+
+
+

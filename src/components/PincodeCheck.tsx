@@ -48,7 +48,7 @@ export default function PincodeCheck() {
           {loading ? '…' : 'Check'}
         </button>
       </div>
-      {err && <div className="mt-2 text-xs text-wine">{err}</div>}
+      {err && <div className="mt-2 text-xs text-crimson">{err}</div>}
       {result && (
         <div className="mt-3 p-3 bg-blush/40 border-l-2 border-wine text-sm text-ivory rounded">
           <div>Delivering to <b>{result.city}, {result.state}</b></div>
@@ -59,3 +59,6 @@ export default function PincodeCheck() {
     </div>
   );
 }
+
+
+

@@ -51,14 +51,14 @@ export default function ReviewsSection({ productSlug }: Props) {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-start justify-between flex-wrap gap-4 mb-8">
           <div>
-            <div className="text-xs uppercase tracking-[0.3em] text-wine">What they said</div>
+            <div className="text-xs uppercase tracking-[0.3em] text-crimson">What they said</div>
             <h2 id="reviews-heading" className="font-display text-3xl md:text-4xl mt-2 text-ivory">
               {reviews.length} verified reviews
             </h2>
           </div>
           <div className="text-right">
             <div className="flex items-center gap-2">
-              <div className="flex text-wine">
+              <div className="flex text-crimson">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <span key={n} aria-hidden="true">
                     {n <= Math.round(avgRating) ? '★' : '☆'}
@@ -96,13 +96,13 @@ export default function ReviewsSection({ productSlug }: Props) {
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <div className="flex items-center gap-2">
-                    <div className="flex text-wine text-sm">
+                    <div className="flex text-crimson text-sm">
                       {[1, 2, 3, 4, 5].map((n) => (
                         <span key={n} aria-hidden="true">{n <= r.rating ? '★' : '☆'}</span>
                       ))}
                     </div>
                     {r.verified && (
-                      <span className="text-xs bg-wine/15 text-wine border border-wine/30 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-wine/15 text-crimson border border-wine/30 px-2 py-0.5 rounded">
                         ✓ Verified purchase
                       </span>
                     )}
@@ -143,7 +143,7 @@ export default function ReviewsSection({ productSlug }: Props) {
           <div className="text-center mt-6">
             <button
               onClick={() => setShowAll(true)}
-              className="text-sm underline text-wine hover:text-ivory cursor-pointer transition"
+              className="text-sm underline text-crimson hover:text-ivory cursor-pointer transition"
             >
               Read all {reviews.length} reviews
             </button>
@@ -153,3 +153,6 @@ export default function ReviewsSection({ productSlug }: Props) {
     </section>
   );
 }
+
+
+

@@ -41,7 +41,7 @@ export default function Page() {
 
         <div>
           <h2 className="font-display text-xl text-ivory mb-2">Tracking</h2>
-          <p>You get a tracking link via SMS when your order ships. You can also track from our <a href="/track" className="underline text-wine hover:text-ivory transition">Track order</a> page any time.</p>
+          <p>You get a tracking link via SMS when your order ships. You can also track from our <a href="/track" className="underline text-crimson hover:text-ivory transition">Track order</a> page any time.</p>
         </div>
 
         <div>
@@ -62,3 +62,6 @@ export default function Page() {
     </div>
   );
 }
+
+
+

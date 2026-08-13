@@ -3,7 +3,7 @@ export const metadata = { title: 'Care guide', description: 'How to wash mesh, s
 export default function CareGuidePage() {
   return (
     <div className="container-x py-16 max-w-3xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">Care guide</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">Care guide</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">Keep it holding up</h1>
       <p className="mt-4 text-ivory/70 leading-relaxed">
         Real hardware and boned construction last if you treat them right. Here are the rules.
@@ -51,3 +51,6 @@ export default function CareGuidePage() {
     </div>
   );
 }
+
+
+

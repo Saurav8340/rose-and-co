@@ -23,7 +23,7 @@ export default async function OrderSuccessPage({
     <main className="container-x py-12 md:py-16">
       <div className="max-w-3xl mx-auto text-center">
         <div className="text-6xl mb-4">🖤</div>
-        <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">Order confirmed</div>
+        <div className="text-xs uppercase tracking-[0.3em] text-crimson mb-2">Order confirmed</div>
         <h1 className="font-display text-4xl md:text-5xl text-ivory mb-4">
           Thank you.
         </h1>
@@ -39,19 +39,19 @@ export default async function OrderSuccessPage({
         {/* What happens next */}
         <div className="mt-12 grid md:grid-cols-3 gap-6 text-left">
           <div className="bg-blush/40 p-6">
-            <div className="text-xs uppercase tracking-widest text-wine mb-2">1 · Today</div>
+            <div className="text-xs uppercase tracking-widest text-crimson mb-2">1 · Today</div>
             <p className="text-sm text-ivory">
               Confirmation on WhatsApp with order details.
             </p>
           </div>
           <div className="bg-blush/40 p-6">
-            <div className="text-xs uppercase tracking-widest text-wine mb-2">2 · 24-48 hrs</div>
+            <div className="text-xs uppercase tracking-widest text-crimson mb-2">2 · 24-48 hrs</div>
             <p className="text-sm text-ivory">
               Tracking link once we hand it to Delhivery.
             </p>
           </div>
           <div className="bg-blush/40 p-6">
-            <div className="text-xs uppercase tracking-widest text-wine mb-2">3 · 3-7 days</div>
+            <div className="text-xs uppercase tracking-widest text-crimson mb-2">3 · 3-7 days</div>
             <p className="text-sm text-ivory">
               At your door. Reply with a photo if you love it.
             </p>
@@ -60,7 +60,7 @@ export default async function OrderSuccessPage({
 
         {/* Upsell — complete the look */}
         <div className="mt-16 text-left">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2 text-center">
+          <div className="text-xs uppercase tracking-[0.3em] text-crimson mb-2 text-center">
             While you wait
           </div>
           <h2 className="font-display text-2xl md:text-3xl text-ivory mb-8 text-center">
@@ -86,10 +86,10 @@ export default async function OrderSuccessPage({
                     />
                   </div>
                   <div className="mt-2">
-                    <h3 className="text-sm font-medium text-ivory group-hover:text-wine truncate">
+                    <h3 className="text-sm font-medium text-ivory group-hover:text-crimson truncate">
                       {p.name}
                     </h3>
-                    <p className="text-xs text-wine mt-0.5">
+                    <p className="text-xs text-crimson mt-0.5">
                       Rs {p.price.toLocaleString('en-IN')}
                     </p>
                   </div>
@@ -121,3 +121,6 @@ export default async function OrderSuccessPage({
     </main>
   );
 }
+
+
+

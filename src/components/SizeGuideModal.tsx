@@ -23,7 +23,7 @@ export default function SizeGuideModal() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-xs underline text-ivory hover:text-wine transition cursor-pointer"
+        className="text-xs underline text-ivory hover:text-crimson transition cursor-pointer"
         aria-label="Open size guide"
       >
         Size guide
@@ -43,7 +43,7 @@ export default function SizeGuideModal() {
             <div className="p-6 md:p-8">
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.3em] text-wine">Fit guide</div>
+                  <div className="text-xs uppercase tracking-[0.3em] text-crimson">Fit guide</div>
                   <h2 className="font-display text-2xl md:text-3xl text-ivory mt-1">
                     Find your size.
                   </h2>
@@ -125,7 +125,7 @@ export default function SizeGuideModal() {
                   href="https://wa.me/919999999999?text=Hi%20Ros%C3%A9%20%26%20Co%2C%20I%20need%20help%20choosing%20my%20size."
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs underline text-wine hover:text-ivory transition"
+                  className="text-xs underline text-crimson hover:text-ivory transition"
                 >
                   Ask us on WhatsApp
                 </a>
@@ -137,3 +137,6 @@ export default function SizeGuideModal() {
     </>
   );
 }
+
+
+

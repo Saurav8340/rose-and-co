@@ -87,3 +87,6 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   return NextResponse.json({ ok: true, endpoint: 'POST to log a lead' });
 }
+
+
+

@@ -15,7 +15,7 @@ export default function HeaderCart() {
   return (
     <Link
       href="/cart"
-      className="relative text-sm uppercase tracking-widest text-ivory hover:text-wine transition"
+      className="relative text-sm uppercase tracking-widest text-ivory hover:text-crimson transition"
       aria-label={`Cart, ${count} item${count === 1 ? '' : 's'}`}
     >
       Cart
@@ -30,3 +30,6 @@ export default function HeaderCart() {
     </Link>
   );
 }
+
+
+

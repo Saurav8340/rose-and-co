@@ -254,7 +254,7 @@ export default function ProductForm({
           {mode === "create" ? "Product created" : "Changes saved"}
         </h1>
         <p className="my-4">
-          <a href={done.url} target="_blank" rel="noreferrer" className="text-wine font-semibold underline hover:text-ivory transition">
+          <a href={done.url} target="_blank" rel="noreferrer" className="text-crimson font-semibold underline hover:text-ivory transition">
             {done.url}
           </a>
         </p>
@@ -436,7 +436,7 @@ export default function ProductForm({
             <button
               type="button"
               onClick={() => removeBullet(i)}
-              className="w-11 h-11 flex items-center justify-center border border-taupe/40 rounded-lg text-ivory/60 hover:text-wine hover:border-wine transition cursor-pointer"
+              className="w-11 h-11 flex items-center justify-center border border-taupe/40 rounded-lg text-ivory/60 hover:text-crimson hover:border-wine transition cursor-pointer"
               aria-label="Remove bullet point"
             >
               ✕
@@ -447,7 +447,7 @@ export default function ProductForm({
       <button
         type="button"
         onClick={addBullet}
-        className="mt-2 text-sm text-wine hover:text-ivory underline transition cursor-pointer"
+        className="mt-2 text-sm text-crimson hover:text-ivory underline transition cursor-pointer"
       >
         + Add bullet point
       </button>
@@ -483,7 +483,7 @@ export default function ProductForm({
         </div>
       )}
 
-      {videoError && <p className="text-wine text-xs mb-2">⚠ {videoError}</p>}
+      {videoError && <p className="text-crimson text-xs mb-2">⚠ {videoError}</p>}
 
       {videos.length > 0 && (
         <div className="space-y-2 my-3">
@@ -546,7 +546,7 @@ export default function ProductForm({
         </div>
       )}
 
-      {error && <p className="text-wine font-semibold mt-4">⚠ {error}</p>}
+      {error && <p className="text-crimson font-semibold mt-4">⚠ {error}</p>}
 
       <div className="flex gap-3 mt-6">
         <button
@@ -569,3 +569,6 @@ export default function ProductForm({
     </div>
   );
 }
+
+
+

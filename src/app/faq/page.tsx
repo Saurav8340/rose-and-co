@@ -56,7 +56,7 @@ const sections: { title: string; items: [string, string][] }[] = [
 export default function FAQ() {
   return (
     <div className="container-x py-16 max-w-2xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">Help</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">Help</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">A few common questions.</h1>
 
       <div className="mt-12 space-y-12">
@@ -68,7 +68,7 @@ export default function FAQ() {
                 <details key={q} className="border-b border-taupe/20 pb-4 pt-4 group">
                   <summary className="cursor-pointer font-medium text-ivory flex justify-between text-[15px]">
                     <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(q) }} />
-                    <span className="group-open:rotate-45 transition ml-4 text-wine">+</span>
+                    <span className="group-open:rotate-45 transition ml-4 text-crimson">+</span>
                   </summary>
                   <p className="mt-3 text-sm text-ivory/70 leading-[1.8]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(a) }} />
                 </details>
@@ -80,8 +80,11 @@ export default function FAQ() {
 
       <div className="mt-16 p-6 border border-taupe/20 text-center">
         <p className="text-sm text-ivory/80">Anything else? Write to us.</p>
-        <a className="mt-2 inline-block underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+        <a className="mt-2 inline-block underline text-crimson" href={`mailto:${SITE.email}`}>{SITE.email}</a>
       </div>
     </div>
   );
 }
+
+
+

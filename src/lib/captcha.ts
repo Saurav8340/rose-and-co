@@ -49,3 +49,6 @@ export function generateCaptcha(): { text: string; svg: string } {
   const c = generateChallenge();
   return { text: c.answer, svg: '' };
 }
+
+
+

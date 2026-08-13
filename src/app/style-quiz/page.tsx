@@ -31,7 +31,7 @@ export default function StyleQuiz() {
 
   return (
     <div className="container-x py-16 max-w-2xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">Style quiz</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">Style quiz</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">What should you wear?</h1>
       <p className="mt-3 text-sm text-ivory/70">3 questions. 30 seconds.</p>
 
@@ -91,7 +91,7 @@ export default function StyleQuiz() {
 
         {step === 3 && (
           <div>
-            <div className="text-xs uppercase tracking-widest text-wine">We think you should wear</div>
+            <div className="text-xs uppercase tracking-widest text-crimson">We think you should wear</div>
             <div className="mt-3 p-6 bg-blush/30 border-l-4 border-wine text-lg text-ivory italic">
               {recommendOutfit(answers)}
             </div>
@@ -109,3 +109,6 @@ export default function StyleQuiz() {
     </div>
   );
 }
+
+
+

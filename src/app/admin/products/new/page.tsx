@@ -7,3 +7,5 @@ export const metadata = { title: "Create a listing â€” RosÃ© & Co Admin" 
 export default function NewProductPage() {
   return <ProductForm mode="create" />;
 }
+
+

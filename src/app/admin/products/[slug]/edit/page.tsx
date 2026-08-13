@@ -60,3 +60,4 @@ export default async function EditProductPage({
 
   return <ProductForm mode="edit" initial={initial} />;
 }
+

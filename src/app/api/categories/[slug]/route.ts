@@ -54,3 +54,4 @@ export async function DELETE(_req: NextRequest, { params }: { params: { slug: st
 
   return NextResponse.json({ ok: true });
 }
+

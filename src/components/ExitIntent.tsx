@@ -67,7 +67,7 @@ export default function ExitIntent() {
 
         {!submitted ? (
           <>
-            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-3">Before you go</div>
+            <div className="text-xs uppercase tracking-[0.3em] text-crimson mb-3">Before you go</div>
             <h3 className="font-display text-3xl text-ivory leading-tight">
               Ten percent off your first piece.
             </h3>
@@ -100,7 +100,7 @@ export default function ExitIntent() {
             <div className="text-4xl">🖤</div>
             <h3 className="font-display text-2xl text-ivory mt-4">Check your inbox.</h3>
             <p className="mt-2 text-sm text-ivory/70">
-              Code <span className="font-mono font-semibold text-wine">WELCOME10</span> is on its way.
+              Code <span className="font-mono font-semibold text-crimson">WELCOME10</span> is on its way.
             </p>
           </div>
         )}
@@ -108,3 +108,6 @@ export default function ExitIntent() {
     </div>
   );
 }
+
+
+

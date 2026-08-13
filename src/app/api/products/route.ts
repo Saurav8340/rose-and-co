@@ -81,3 +81,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not create product." }, { status: 500 });
   }
 }
+
+
+

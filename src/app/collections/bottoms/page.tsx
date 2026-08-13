@@ -10,7 +10,7 @@ export default async function BottomsCollection() {
 
   return (
     <div className="container-x py-12 max-w-6xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">Plaid & Bottoms</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">Plaid & Bottoms</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">The staple, done right.</h1>
       <p className="mt-4 text-ivory/70 max-w-2xl leading-relaxed">
         Plaid skirts and bondage pants with real D-ring hardware — not the printed-on kind. Built to move with you, not just sit right in a photo.
@@ -26,7 +26,7 @@ export default async function BottomsCollection() {
               </div>
               <div className="mt-3">
                 <div className="text-sm text-ivory font-medium">{p.name}</div>
-                <div className="text-sm text-wine mt-1">{inr(p.price)}</div>
+                <div className="text-sm text-crimson mt-1">{inr(p.price)}</div>
               </div>
             </Link>
           );
@@ -35,3 +35,6 @@ export default async function BottomsCollection() {
     </div>
   );
 }
+
+
+

@@ -135,3 +135,6 @@ export function useUserSegment(currentProduct: string = 'AMARA'): UserProfile | 
 
   return profile;
 }
+
+
+

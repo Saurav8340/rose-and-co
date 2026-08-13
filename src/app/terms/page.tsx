@@ -50,9 +50,12 @@ export default function Page() {
 
         <div>
           <h2 className="font-display text-xl text-ivory mb-2">Contact</h2>
-          <p><a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a> for anything at all.</p>
+          <p><a className="underline text-crimson" href={`mailto:${SITE.email}`}>{SITE.email}</a> for anything at all.</p>
         </div>
       </div>
     </div>
   );
 }
+
+
+

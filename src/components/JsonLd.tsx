@@ -16,3 +16,6 @@ export default function JsonLd({ data }: { data: any | any[] }) {
     </>
   );
 }
+
+
+

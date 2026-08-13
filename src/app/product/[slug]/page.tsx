@@ -100,3 +100,4 @@ export default async function ProductPage({ params }: { params: { slug: string }
     </>
   );
 }
+

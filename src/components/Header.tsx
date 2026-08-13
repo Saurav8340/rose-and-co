@@ -17,10 +17,10 @@ export default function Header() {
         {/* Left nav — desktop only */}
         <nav className="hidden md:flex items-center gap-8">
           <NavShop />
-          <Link href="/journal" className="text-sm uppercase tracking-widest text-ivory hover:text-wine transition">
+          <Link href="/journal" className="text-sm uppercase tracking-widest text-ivory hover:text-crimson transition">
             Journal
           </Link>
-          <Link href="/faq" className="text-sm uppercase tracking-widest text-ivory hover:text-wine transition">
+          <Link href="/faq" className="text-sm uppercase tracking-widest text-ivory hover:text-crimson transition">
             Help
           </Link>
         </nav>
@@ -29,13 +29,13 @@ export default function Header() {
         <MobileNav />
 
         {/* Center logo */}
-        <Link href="/" className="font-display text-2xl text-ivory hover:text-wine transition tracking-wide">
+        <Link href="/" className="font-display text-2xl text-ivory hover:text-crimson transition tracking-wide">
           Rosé &amp; Co
         </Link>
 
         {/* Right actions */}
         <div className="flex items-center gap-6">
-          <Link href="/wishlist" className="text-sm uppercase tracking-widest text-ivory hover:text-wine transition hidden md:block">
+          <Link href="/wishlist" className="text-sm uppercase tracking-widest text-ivory hover:text-crimson transition hidden md:block">
             Wishlist
           </Link>
           <HeaderCart />
@@ -44,3 +44,6 @@ export default function Header() {
     </header>
   );
 }
+
+
+

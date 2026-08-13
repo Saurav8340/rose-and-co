@@ -36,14 +36,14 @@ export default function TrackPage() {
           <label className="label">Mobile</label>
           <input className="input" inputMode="numeric" maxLength={10} placeholder="10-digit mobile" value={mobile} onChange={e => setMobile(e.target.value.replace(/\D/g, ''))} required />
         </div>
-        {err && <div className="p-3 bg-wine/10 text-wine text-sm border border-wine/30 rounded">{err}</div>}
+        {err && <div className="p-3 bg-wine/10 text-crimson text-sm border border-wine/30 rounded">{err}</div>}
         <button disabled={loading} className="btn-primary w-full cursor-pointer">{loading ? 'Looking…' : 'Show my order'}</button>
       </form>
 
       {order && (
         <div className="mt-8 p-6 border border-taupe/20 bg-blush rounded-lg">
           <div className="text-xs uppercase tracking-widest text-ivory/60">Order</div>
-          <div className="font-mono text-lg text-wine">#{order.orderNumber}</div>
+          <div className="font-mono text-lg text-crimson">#{order.orderNumber}</div>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-ivory">
             <div><b>Order status</b><br/>{order.status}</div>
             <div><b>Payment status</b><br/>{order.paymentStatus}</div>
@@ -59,8 +59,11 @@ export default function TrackPage() {
       )}
 
       <div className="mt-10 text-center text-xs text-ivory/60">
-        Can not find your order? Email <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+        Can not find your order? Email <a className="underline text-crimson" href={`mailto:${SITE.email}`}>{SITE.email}</a>
       </div>
     </div>
   );
 }
+
+
+

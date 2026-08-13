@@ -11,7 +11,7 @@ export default function GiftCardsPage() {
 
   return (
     <div className="container-x py-16 max-w-3xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">Gift cards</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">Gift cards</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">Give a Rosé &amp; Co gift card</h1>
       <p className="mt-4 text-ivory/70 leading-relaxed">
         A pre-paid credit code, emailed to your recipient. They redeem it at checkout. No expiry. Works for one full order (not multiple).
@@ -20,7 +20,7 @@ export default function GiftCardsPage() {
       <div className="mt-10 grid md:grid-cols-3 gap-4">
         {cards.map(c => (
           <div key={c.amount} className="rc-card p-6 rounded-lg text-center">
-            <div className="text-4xl font-display text-wine">Rs {c.amount.toLocaleString('en-IN')}</div>
+            <div className="text-4xl font-display text-crimson">Rs {c.amount.toLocaleString('en-IN')}</div>
             <div className="text-sm text-ivory/70 mt-2">{c.tagline}</div>
           </div>
         ))}
@@ -29,7 +29,7 @@ export default function GiftCardsPage() {
       <div className="mt-10 p-6 bg-blush/40 border border-taupe/20 rounded-lg">
         <h2 className="font-display text-xl text-ivory mb-3">How it works</h2>
         <ol className="list-decimal pl-5 space-y-2 text-sm text-ivory/70">
-          <li>Email us at <a href={`mailto:${SITE.email}`} className="underline text-wine">{SITE.email}</a> with the amount and recipient email.</li>
+          <li>Email us at <a href={`mailto:${SITE.email}`} className="underline text-crimson">{SITE.email}</a> with the amount and recipient email.</li>
           <li>Pay via UPI (send to the ID on our checkout page).</li>
           <li>We generate the gift card code, email it to the recipient.</li>
           <li>They enter the code at checkout when they order.</li>
@@ -41,3 +41,6 @@ export default function GiftCardsPage() {
     </div>
   );
 }
+
+
+

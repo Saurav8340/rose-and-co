@@ -30,3 +30,6 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ leads, count: leads.length });
 }
+
+
+

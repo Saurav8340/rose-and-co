@@ -31,7 +31,7 @@ export default function JournalIndex() {
       ])} />
 
       <section className="container-x py-12 md:py-16 max-w-4xl">
-        <div className="text-xs uppercase tracking-[0.3em] text-wine">The Journal</div>
+        <div className="text-xs uppercase tracking-[0.3em] text-crimson">The Journal</div>
         <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">
           Notes from the dark side.
         </h1>
@@ -63,11 +63,11 @@ export default function JournalIndex() {
                     <div className="text-xs uppercase tracking-widest text-ivory/60">
                       {new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} &middot; {post.readingTime}
                     </div>
-                    <h2 className="font-display text-2xl md:text-3xl text-ivory mt-2 group-hover:text-wine transition">
+                    <h2 className="font-display text-2xl md:text-3xl text-ivory mt-2 group-hover:text-crimson transition">
                       {post.title}
                     </h2>
                     <p className="mt-3 text-ivory/70 leading-relaxed">{post.excerpt}</p>
-                    <div className="mt-4 text-xs uppercase tracking-widest text-wine">Read &rarr;</div>
+                    <div className="mt-4 text-xs uppercase tracking-widest text-crimson">Read &rarr;</div>
                   </div>
                 </div>
               </Link>
@@ -78,3 +78,6 @@ export default function JournalIndex() {
     </>
   );
 }
+
+
+

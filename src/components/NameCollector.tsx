@@ -37,7 +37,7 @@ export default function NameCollector() {
 
   return (
     <div className="fixed bottom-24 right-4 max-w-xs bg-blush shadow-2xl border border-taupe/30 rounded-lg p-4 z-30 md:bottom-24">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">Quick thing</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson mb-2">Quick thing</div>
       <p className="text-sm text-ivory mb-3">What should we call you?</p>
       <input
         type="text"
@@ -64,3 +64,6 @@ export default function NameCollector() {
     </div>
   );
 }
+
+
+

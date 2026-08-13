@@ -3,7 +3,7 @@ export const metadata = { title: 'Fabric guide', description: 'What we look for 
 export default function FabricGuidePage() {
   return (
     <div className="container-x py-16 max-w-3xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">Fabric guide</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">Fabric guide</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">What we obsess over</h1>
       <p className="mt-4 text-ivory/70 leading-relaxed">
         Construction is 80% of what makes a good piece. Here&apos;s what we look for and why.
@@ -33,3 +33,6 @@ export default function FabricGuidePage() {
     </div>
   );
 }
+
+
+

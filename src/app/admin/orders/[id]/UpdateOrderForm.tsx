@@ -74,9 +74,9 @@ export default function UpdateOrderForm({ order }: { order: Order }) {
       <div className={`p-4 border-2 rounded-lg ${willFireCapi ? 'border-wine bg-wine/10' : order.capiFired ? 'border-wine/60 bg-wine/20' : 'border-taupe/30 bg-blush'}`}>
         <div className="text-xs uppercase tracking-widest text-ivory/70">Meta CAPI status</div>
         {order.capiFired ? (
-          <div className="mt-1 text-sm text-wine font-medium">✓ Purchase event already sent to Meta.</div>
+          <div className="mt-1 text-sm text-crimson font-medium">✓ Purchase event already sent to Meta.</div>
         ) : willFireCapi ? (
-          <div className="mt-1 text-sm text-wine font-medium">
+          <div className="mt-1 text-sm text-crimson font-medium">
             → Saving this will fire Meta CAPI Purchase event now.
             <div className="text-xs mt-1 text-ivory/70">
               Only do this when money is actually in your bank account.
@@ -93,8 +93,9 @@ export default function UpdateOrderForm({ order }: { order: Order }) {
         <button onClick={save} disabled={loading} className="btn-primary cursor-pointer">
           {loading ? 'Saving…' : willFireCapi ? 'Save & fire Meta event' : 'Save changes'}
         </button>
-        {msg && <span className="text-sm text-wine">{msg}</span>}
+        {msg && <span className="text-sm text-crimson">{msg}</span>}
       </div>
     </div>
   );
 }
+

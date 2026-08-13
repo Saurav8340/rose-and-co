@@ -42,7 +42,7 @@ export default function TestimonialsCarousel() {
         >
           {visible.map((r, i) => (
             <div key={i} className="min-w-full px-4">
-              <div className="text-wine text-center text-lg tracking-widest">{stars(r.rating)}</div>
+              <div className="text-crimson text-center text-lg tracking-widest">{stars(r.rating)}</div>
               <p className="mt-4 text-lg text-ivory italic text-center leading-relaxed max-w-xl mx-auto">&ldquo;{r.text}&rdquo;</p>
               <div className="mt-6 text-center">
                 <div className="text-sm text-ivory font-semibold">{r.name}</div>
@@ -93,3 +93,6 @@ export default function TestimonialsCarousel() {
     </div>
   );
 }
+
+
+

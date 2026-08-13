@@ -35,7 +35,7 @@ export default function Page() {
         </div>
         <div>
           <h2 className="font-display text-xl text-ivory mb-2">Your rights</h2>
-          <p>Email <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a> to see your data, correct it, or delete it. We will do it within 7 working days.</p>
+          <p>Email <a className="underline text-crimson" href={`mailto:${SITE.email}`}>{SITE.email}</a> to see your data, correct it, or delete it. We will do it within 7 working days.</p>
         </div>
         <div>
           <h2 className="font-display text-xl text-ivory mb-2">Data storage</h2>
@@ -45,3 +45,6 @@ export default function Page() {
     </div>
   );
 }
+
+
+

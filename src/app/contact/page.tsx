@@ -13,11 +13,11 @@ export default function ContactPage() {
       <div className="mt-8 grid gap-4 text-ivory">
         <div className="p-5 border border-taupe/30 bg-blush rounded-lg">
           <div className="text-xs uppercase tracking-widest text-ivory/60 mb-1">Email</div>
-          <a className="text-lg underline text-wine hover:text-ivory transition" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+          <a className="text-lg underline text-crimson hover:text-ivory transition" href={`mailto:${SITE.email}`}>{SITE.email}</a>
         </div>
         <div className="p-5 border border-taupe/30 bg-blush rounded-lg">
           <div className="text-xs uppercase tracking-widest text-ivory/60 mb-1">Instagram</div>
-          <a className="text-lg underline text-wine hover:text-ivory transition" href={SITE.instagram} target="_blank" rel="noopener">@roseandco</a>
+          <a className="text-lg underline text-crimson hover:text-ivory transition" href={SITE.instagram} target="_blank" rel="noopener">@roseandco</a>
           <p className="text-xs text-ivory/60 mt-2">DMs are open. Slower than email but we do check.</p>
         </div>
         <div className="p-5 border border-taupe/30 bg-blush rounded-lg">
@@ -39,3 +39,6 @@ export default function ContactPage() {
     </div>
   );
 }
+
+
+

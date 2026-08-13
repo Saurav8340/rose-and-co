@@ -9,7 +9,7 @@ export default function CartReviewsSnippet() {
   return (
     <div className="mt-6 p-4 bg-blush/40 border border-taupe/20 rounded-lg">
       <div className="flex items-center gap-2 mb-3">
-        <div className="text-wine text-xs">★★★★★</div>
+        <div className="text-crimson text-xs">★★★★★</div>
         <div className="text-xs uppercase tracking-widest text-ivory/70">4.8 from {REVIEWS.length} verified buyers</div>
       </div>
       <ul className="space-y-3">
@@ -23,3 +23,6 @@ export default function CartReviewsSnippet() {
     </div>
   );
 }
+
+
+

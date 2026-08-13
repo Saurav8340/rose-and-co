@@ -81,3 +81,4 @@ export async function DELETE(_req: NextRequest, { params }: { params: { slug: st
     return NextResponse.json({ error: "Could not delete." }, { status: 500 });
   }
 }
+

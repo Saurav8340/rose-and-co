@@ -45,3 +45,4 @@ export async function POST(_req: NextRequest, { params }: { params: { slug: stri
     { status: 201 }
   );
 }
+

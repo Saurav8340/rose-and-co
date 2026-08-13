@@ -8,3 +8,6 @@ export default function Countdown({ minutes = 15 }: { minutes?: number }) {
   const s = String(sec % 60).padStart(2, '0');
   return <span className="font-mono">{m}:{s}</span>;
 }
+
+
+

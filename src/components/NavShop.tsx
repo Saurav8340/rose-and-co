@@ -28,3 +28,6 @@ export default async function NavShop() {
 
   return <ShopDropdown products={items} />;
 }
+
+
+

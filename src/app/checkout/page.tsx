@@ -258,11 +258,11 @@ export default function CheckoutPage() {
           { s: 'verify',  l: 'Quick check' },
           { s: 'payment', l: 'Payment' },
         ].map(x => (
-          <div key={x.s} className={'flex-1 text-center py-2 border-b-2 ' + (step === x.s ? 'border-wine text-wine' : 'border-taupe/20 text-ivory/40')}>{x.l}</div>
+          <div key={x.s} className={'flex-1 text-center py-2 border-b-2 ' + (step === x.s ? 'border-wine text-crimson' : 'border-taupe/20 text-ivory/40')}>{x.l}</div>
         ))}
       </div>
 
-      {err && <div className="p-3 mb-4 bg-wine/10 text-wine border border-wine/30 text-sm">{err}</div>}
+      {err && <div className="p-3 mb-4 bg-wine/10 text-crimson border border-wine/30 text-sm">{err}</div>}
 
       {step === 'done' && (
         <div className="text-center py-16">
@@ -351,7 +351,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   <button type="button" onClick={refreshCaptcha} disabled={loading}
-                    className="absolute top-2 right-2 text-xs uppercase tracking-widest text-wine underline"
+                    className="absolute top-2 right-2 text-xs uppercase tracking-widest text-crimson underline"
                     aria-label="Get a new question">
                     Refresh
                   </button>
@@ -387,7 +387,7 @@ export default function CheckoutPage() {
                         <div className="font-display text-lg text-ivory">Pay in full via UPI</div>
                         <div className="text-sm text-ivory/70 mt-1">{inr(prepaidSavingsTotal)} off.</div>
                       </div>
-                      <div className="text-xl font-semibold text-wine">{inr(prepaidTotal)}</div>
+                      <div className="text-xl font-semibold text-crimson">{inr(prepaidTotal)}</div>
                     </div>
                   </label>
 
@@ -405,7 +405,7 @@ export default function CheckoutPage() {
 
                 <div className="p-5 bg-blush border border-taupe/30 text-center">
                   <div className="text-xs uppercase tracking-widest text-ivory/60">Pay now</div>
-                  <div className="text-4xl font-semibold text-wine mt-1">{inr(amountToPay)}</div>
+                  <div className="text-4xl font-semibold text-crimson mt-1">{inr(amountToPay)}</div>
                 </div>
 
                 {isMobile ? (
@@ -416,7 +416,7 @@ export default function CheckoutPage() {
                   <div className="p-6 bg-blush border border-taupe/30 flex flex-col sm:flex-row items-center gap-6">
                     {qrData && <img src={qrData} alt="UPI QR Code" width={220} height={220} className="border p-2 shrink-0" />}
                     <div className="text-sm text-ivory/80">
-                      <div className="text-lg font-display text-wine">Scan with any UPI app.</div>
+                      <div className="text-lg font-display text-crimson">Scan with any UPI app.</div>
                       <p className="mt-2">Open GPay, PhonePe, Paytm or any UPI app on your phone. Scan the QR. Pay {inr(amountToPay)}.</p>
                     </div>
                   </div>
@@ -451,16 +451,16 @@ export default function CheckoutPage() {
                 <div className="text-sm">
                   <div className="text-ivory font-medium">{it.name}</div>
                   <div className="text-xs text-ivory/60">Size {it.size} &middot; Qty {it.quantity}</div>
-                  <div className="text-wine font-semibold mt-1">{inr(it.price * it.quantity)}</div>
+                  <div className="text-crimson font-semibold mt-1">{inr(it.price * it.quantity)}</div>
                 </div>
               </div>
             ))}
             <div className="space-y-1 text-sm text-ivory">
               <div className="flex justify-between"><span>Subtotal</span><span>{inr(subtotal)}</span></div>
               {giftWrap && (<div className="flex justify-between text-ivory/70"><span>Gift wrap</span><span>+ Rs 49</span></div>)}
-              <div className="flex justify-between"><span>Shipping</span><span className="text-wine">Free</span></div>
+              <div className="flex justify-between"><span>Shipping</span><span className="text-crimson">Free</span></div>
               {paymentMethod === 'PREPAID' && prepaidSavingsTotal > 0 && (
-                <div className="flex justify-between text-wine"><span>UPI discount</span><span>-{inr(prepaidSavingsTotal)}</span></div>
+                <div className="flex justify-between text-crimson"><span>UPI discount</span><span>-{inr(prepaidSavingsTotal)}</span></div>
               )}
             </div>
             <div className="flex justify-between mt-3 pt-3 border-t border-taupe/30 font-semibold text-ivory">
@@ -473,3 +473,6 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+
+

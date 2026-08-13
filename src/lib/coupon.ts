@@ -47,3 +47,6 @@ export function humanizeCode(rawCode: string | null | undefined): string {
   if (rawCode.length <= 15 && !/-{2,}/.test(rawCode)) return rawCode;
   return 'WELCOME10';
 }
+
+
+

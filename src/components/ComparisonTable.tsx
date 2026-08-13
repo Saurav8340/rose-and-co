@@ -15,7 +15,7 @@ export default function ComparisonTable() {
           <thead className="bg-blush/40 text-ivory">
             <tr>
               <th className="p-3 text-left text-xs uppercase tracking-widest"> </th>
-              <th className="p-3 text-left text-xs uppercase tracking-widest text-wine font-bold">Rosé & Co</th>
+              <th className="p-3 text-left text-xs uppercase tracking-widest text-crimson font-bold">Rosé & Co</th>
               <th className="p-3 text-left text-xs uppercase tracking-widest">Imported brands</th>
               <th className="p-3 text-left text-xs uppercase tracking-widest">Local alt sellers</th>
               <th className="p-3 text-left text-xs uppercase tracking-widest">Meesho / Instagram resellers</th>
@@ -25,7 +25,7 @@ export default function ComparisonTable() {
             {rows.map(r => (
               <tr key={r.label} className="border-t border-taupe/20">
                 <td className="p-3 text-xs uppercase tracking-widest text-ivory/70">{r.label}</td>
-                <td className="p-3 font-semibold text-wine">{r.us}</td>
+                <td className="p-3 font-semibold text-crimson">{r.us}</td>
                 <td className="p-3 text-ivory/70">{r.z}</td>
                 <td className="p-3 text-ivory/70">{r.f}</td>
                 <td className="p-3 text-ivory/70">{r.h}</td>
@@ -38,3 +38,6 @@ export default function ComparisonTable() {
     </div>
   );
 }
+
+
+

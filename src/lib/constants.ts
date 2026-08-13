@@ -83,3 +83,6 @@ export function getDiscountPercent(price: number, compareAt: number | null): num
 }
 
 export const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const;
+
+
+

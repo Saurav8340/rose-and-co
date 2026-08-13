@@ -21,7 +21,7 @@ export default function MobileNav() {
         onClick={() => setMobileOpen(true)}
         aria-label="Open menu"
         aria-expanded={mobileOpen}
-        className="md:hidden flex items-center justify-center w-10 h-10 -ml-2 text-ivory hover:text-wine transition cursor-pointer"
+        className="md:hidden flex items-center justify-center w-10 h-10 -ml-2 text-ivory hover:text-crimson transition cursor-pointer"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
           <path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round" />
@@ -41,7 +41,7 @@ export default function MobileNav() {
               <button
                 onClick={() => setMobileOpen(false)}
                 aria-label="Close menu"
-                className="w-9 h-9 flex items-center justify-center text-ivory hover:text-wine transition cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center text-ivory hover:text-crimson transition cursor-pointer"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
                   <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
@@ -53,28 +53,28 @@ export default function MobileNav() {
               <Link
                 href="/shop"
                 onClick={() => setMobileOpen(false)}
-                className="py-3 text-sm uppercase tracking-widest text-ivory hover:text-wine transition border-b border-taupe/10"
+                className="py-3 text-sm uppercase tracking-widest text-ivory hover:text-crimson transition border-b border-taupe/10"
               >
                 New Arrivals
               </Link>
               <Link
                 href="/journal"
                 onClick={() => setMobileOpen(false)}
-                className="py-3 text-sm uppercase tracking-widest text-ivory hover:text-wine transition border-b border-taupe/10"
+                className="py-3 text-sm uppercase tracking-widest text-ivory hover:text-crimson transition border-b border-taupe/10"
               >
                 Journal
               </Link>
               <Link
                 href="/faq"
                 onClick={() => setMobileOpen(false)}
-                className="py-3 text-sm uppercase tracking-widest text-ivory hover:text-wine transition border-b border-taupe/10"
+                className="py-3 text-sm uppercase tracking-widest text-ivory hover:text-crimson transition border-b border-taupe/10"
               >
                 Help
               </Link>
               <Link
                 href="/wishlist"
                 onClick={() => setMobileOpen(false)}
-                className="py-3 text-sm uppercase tracking-widest text-ivory hover:text-wine transition"
+                className="py-3 text-sm uppercase tracking-widest text-ivory hover:text-crimson transition"
               >
                 Wishlist
               </Link>
@@ -89,3 +89,6 @@ export default function MobileNav() {
     </>
   );
 }
+
+
+

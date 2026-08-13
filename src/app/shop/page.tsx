@@ -55,7 +55,7 @@ export default async function ShopPage() {
 
       <section className="container-x py-16 md:py-24">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine">New Arrivals</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-crimson">New Arrivals</div>
           <h1 className="font-display text-4xl md:text-6xl mt-3 text-ivory">
             Small drops. Then we vanish.
           </h1>
@@ -80,17 +80,17 @@ export default async function ShopPage() {
                     className="object-cover object-top group-hover:scale-105 transition duration-700"
                   />
                   {discount > 0 && (
-                    <span className="absolute top-4 right-4 bg-ivory text-wine text-xs font-semibold px-3 py-1 uppercase tracking-widest">
+                    <span className="absolute top-4 right-4 bg-ivory text-crimson text-xs font-semibold px-3 py-1 uppercase tracking-widest">
                       {discount}% off
                     </span>
                   )}
                 </div>
                 <div className="mt-6">
-                  <h2 className="font-display text-2xl md:text-3xl text-ivory group-hover:text-wine transition">
+                  <h2 className="font-display text-2xl md:text-3xl text-ivory group-hover:text-crimson transition">
                     {p.name}
                   </h2>
                   <div className="mt-3 flex items-baseline gap-3">
-                    <span className="text-xl font-semibold text-wine">{inr(p.price)}</span>
+                    <span className="text-xl font-semibold text-crimson">{inr(p.price)}</span>
                     {p.compareAt && (
                       <span className="text-sm line-through text-ivory/40">{inr(p.compareAt)}</span>
                     )}
@@ -98,7 +98,7 @@ export default async function ShopPage() {
                   <p className="mt-4 text-sm text-ivory/70 leading-relaxed line-clamp-3">
                     {p.description}
                   </p>
-                  <span className="mt-4 inline-block text-sm underline text-ivory group-hover:text-wine transition">
+                  <span className="mt-4 inline-block text-sm underline text-ivory group-hover:text-crimson transition">
                     See the piece
                   </span>
                 </div>
@@ -110,3 +110,6 @@ export default async function ShopPage() {
     </>
   );
 }
+
+
+

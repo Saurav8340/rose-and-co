@@ -12,10 +12,13 @@ export default function GiftWrap({ enabled, onChange }: { enabled: boolean; onCh
       <div className="flex-1">
         <div className="flex items-center justify-between">
           <div className="font-medium text-ivory">Add gift wrap</div>
-          <div className="text-sm font-semibold text-wine">+ Rs 49</div>
+          <div className="text-sm font-semibold text-crimson">+ Rs 49</div>
         </div>
         <div className="text-xs text-ivory/60 mt-1">Black tissue, wax seal, hand-written card. Adds no delay to shipping.</div>
       </div>
     </label>
   );
 }
+
+
+

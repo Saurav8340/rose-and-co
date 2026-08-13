@@ -62,7 +62,7 @@ export default function StickyBuyBar({ price, compareAt, onBuy, onBuyClick, prod
             <div className="text-xs text-ivory/70 truncate">{productName}</div>
           )}
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-wine tabular-nums">
+            <span className="text-lg font-semibold text-crimson tabular-nums">
               ₹{price.toLocaleString('en-IN')}
             </span>
             {compareAt && (
@@ -91,3 +91,6 @@ export default function StickyBuyBar({ price, compareAt, onBuy, onBuyClick, prod
     </div>
   );
 }
+
+
+

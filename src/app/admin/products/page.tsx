@@ -38,7 +38,7 @@ export default async function AdminProductsPage() {
               <tr key={p.id} className="border-t border-taupe/20 hover:bg-blush/20 transition">
                 <td className="p-3 text-ivory">{p.name}</td>
                 <td className="p-3">
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs ${p.active ? 'bg-wine/20 text-wine border border-wine/30' : 'bg-taupe/20 text-ivory/60 border border-taupe/30'}`}>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs ${p.active ? 'bg-wine/20 text-crimson border border-wine/30' : 'bg-taupe/20 text-ivory/60 border border-taupe/30'}`}>
                     {p.active ? "live" : "draft"}
                   </span>
                 </td>
@@ -47,7 +47,7 @@ export default async function AdminProductsPage() {
                   {p.compareAt ? <s className="text-ivory/40">{inr(p.compareAt)}</s> : null}
                 </td>
                 <td className="p-3">
-                  <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer" className="text-wine underline hover:text-ivory transition">/product/{p.slug}</a>
+                  <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer" className="text-crimson underline hover:text-ivory transition">/product/{p.slug}</a>
                 </td>
                 <td className="p-3 flex gap-2">
                   <Link
@@ -69,3 +69,6 @@ export default async function AdminProductsPage() {
     </div>
   );
 }
+
+
+

@@ -328,7 +328,7 @@ export default function LeadCaptureChip() {
               aria-label="Dismiss"
               className="absolute top-3 right-3 text-ivory/50 hover:text-ivory text-2xl leading-none w-8 h-8 flex items-center justify-center cursor-pointer"
             >×</button>
-            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2">
+            <div className="text-xs uppercase tracking-[0.3em] text-crimson mb-2">
               {fromAd ? 'Thanks for tapping' : 'A small welcome'}
             </div>
             <h3 className="font-display text-2xl text-ivory mb-3">{askHeading}</h3>
@@ -360,7 +360,7 @@ export default function LeadCaptureChip() {
               className="absolute top-3 right-3 text-ivory/50 hover:text-ivory text-2xl leading-none w-8 h-8 flex items-center justify-center cursor-pointer"
             >×</button>
 
-            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-2 pr-8">Quick moment</div>
+            <div className="text-xs uppercase tracking-[0.3em] text-crimson mb-2 pr-8">Quick moment</div>
             <p className="text-sm text-ivory/70 mb-4 leading-relaxed pr-8">
               Just <strong className="text-ivory">name OR phone</strong> gets you the code. Fill more for 1-tap checkout later.
             </p>
@@ -369,7 +369,7 @@ export default function LeadCaptureChip() {
               <button
                 type="button"
                 onClick={handleUseDeviceContact}
-                className="w-full mb-3 border border-wine/50 text-wine py-2.5 text-xs uppercase tracking-widest rounded hover:bg-wine/10 transition cursor-pointer"
+                className="w-full mb-3 border border-wine/50 text-crimson py-2.5 text-xs uppercase tracking-widest rounded hover:bg-wine/10 transition cursor-pointer"
               >
                 Use my device contact
               </button>
@@ -389,7 +389,7 @@ export default function LeadCaptureChip() {
                   className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2.5 focus:border-wine focus:outline-none text-sm rounded"
                 />
                 {name.trim().length >= 2 && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-wine text-sm">✓</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-crimson text-sm">✓</span>
                 )}
               </div>
 
@@ -407,7 +407,7 @@ export default function LeadCaptureChip() {
                   className="w-full border border-taupe/40 bg-blush/60 text-ivory placeholder:text-ivory/40 px-3 py-2.5 focus:border-wine focus:outline-none text-sm rounded"
                 />
                 {phone.length === 10 && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-wine text-sm">✓</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-crimson text-sm">✓</span>
                 )}
               </div>
 
@@ -471,7 +471,7 @@ export default function LeadCaptureChip() {
               <p className="text-[10px] text-ivory/50 mt-2 text-center">Saving...</p>
             )}
             {saveStatus === 'saved' && (
-              <p className="text-[10px] text-wine mt-2 text-center">✓ Progress saved</p>
+              <p className="text-[10px] text-crimson mt-2 text-center">✓ Progress saved</p>
             )}
             {saveStatus === 'idle' && (
               <p className="text-[10px] text-ivory/50 mt-2 text-center">
@@ -490,7 +490,7 @@ export default function LeadCaptureChip() {
             <p className="text-sm text-ivory/70 mb-4">
               Save it for your next order.
             </p>
-            <div className="font-mono font-semibold text-wine text-xl bg-blush/60 py-3 px-4 inline-block rounded">
+            <div className="font-mono font-semibold text-crimson text-xl bg-blush/60 py-3 px-4 inline-block rounded">
               {coupon}
             </div>
             {(!phone || phone.length < 10) && (
@@ -506,3 +506,6 @@ export default function LeadCaptureChip() {
 
   return createPortal(modal, document.body);
 }
+
+
+

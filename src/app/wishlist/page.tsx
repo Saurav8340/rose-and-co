@@ -26,7 +26,7 @@ export default function WishlistPage() {
 
   return (
     <div className="container-x py-12 max-w-4xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">Wishlist</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">Wishlist</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">Your saved pieces</h1>
       <p className="mt-3 text-sm text-ivory/70">Wishlist is saved in your browser. No account needed.</p>
 
@@ -48,13 +48,13 @@ export default function WishlistPage() {
               </Link>
               <div className="mt-3 flex items-start justify-between gap-2">
                 <div>
-                  <Link href={`/product/${p.slug}`} className="text-sm text-ivory font-medium hover:text-wine transition">{p.name}</Link>
-                  <div className="text-sm text-wine mt-1">{inr(p.price)}</div>
+                  <Link href={`/product/${p.slug}`} className="text-sm text-ivory font-medium hover:text-crimson transition">{p.name}</Link>
+                  <div className="text-sm text-crimson mt-1">{inr(p.price)}</div>
                 </div>
                 <button
                   onClick={() => toggle(p.id)}
                   aria-label="Remove from wishlist"
-                  className="text-xs uppercase tracking-widest text-ivory/60 hover:text-wine transition cursor-pointer"
+                  className="text-xs uppercase tracking-widest text-ivory/60 hover:text-crimson transition cursor-pointer"
                 >
                   Remove
                 </button>
@@ -66,3 +66,6 @@ export default function WishlistPage() {
     </div>
   );
 }
+
+
+

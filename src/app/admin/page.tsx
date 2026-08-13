@@ -76,13 +76,13 @@ export default async function AdminDashboard({ searchParams }: { searchParams: {
           <Link href="/admin/waitlist" className="btn-secondary">Waitlist {waitlistCount > 0 && <span className="ml-2 badge bg-wine text-ivory">{waitlistCount}</span>}</Link>
           <Link href="/admin/products" className="btn-secondary">Products</Link>
           <Link href="/api/admin/orders/export" className="btn-secondary">Export CSV</Link>
-          <form action="/api/admin/logout" method="POST"><button className="text-xs uppercase tracking-widest text-ivory/60 hover:text-wine transition cursor-pointer">Logout</button></form>
+          <form action="/api/admin/logout" method="POST"><button className="text-xs uppercase tracking-widest text-ivory/60 hover:text-crimson transition cursor-pointer">Logout</button></form>
         </div>
       </div>
 
       {/* Today */}
       <div className="mb-6 p-4 bg-blush/40 border-l-4 border-wine rounded">
-        <div className="text-xs uppercase tracking-widest text-wine">Today</div>
+        <div className="text-xs uppercase tracking-widest text-crimson">Today</div>
         <div className="mt-2 flex flex-wrap gap-6 text-sm text-ivory">
           <div><b className="text-ivory text-lg">{todayCount}</b> orders</div>
           <div><b className="text-ivory text-lg">{inr(todayVerifiedRevAgg._sum.paidAmount || 0)}</b> verified revenue</div>
@@ -100,7 +100,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: {
 
       {/* AD SPEND EFFICIENCY (30-day) */}
       <div className="mb-8 p-5 border-2 border-wine/40 bg-wine/10 rounded-lg">
-        <div className="text-xs uppercase tracking-widest text-wine font-semibold mb-3">Ad-spend efficiency (30 days)</div>
+        <div className="text-xs uppercase tracking-widest text-crimson font-semibold mb-3">Ad-spend efficiency (30 days)</div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <div className="text-xs text-ivory/60 uppercase tracking-widest">Prepaid share</div>
@@ -159,14 +159,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams: {
                 <td className="p-3 text-ivory">{o.fullName}<br/><span className="text-xs text-ivory/60">{o.mobile}</span></td>
                 <td className="p-3 text-xs text-ivory/80">{o.items.map(i => `${i.productName} · ${i.size} × ${i.quantity}`).join(', ')}</td>
                 <td className="p-3">
-                  <div className="text-ivory">{inr(o.paidAmount)} <span className={`text-xs ${o.paymentMethod === 'PREPAID' ? 'text-wine font-medium' : 'text-ivory/60'}`}>{o.paymentMethod === 'PREPAID' ? 'Prepaid' : 'COD'}</span></div>
-                  <div className={`text-xs ${o.paymentStatus === 'VERIFIED' ? 'text-wine' : o.paymentStatus === 'FAILED' ? 'text-glow' : 'text-ivory/60'}`}>{o.paymentStatus}</div>
+                  <div className="text-ivory">{inr(o.paidAmount)} <span className={`text-xs ${o.paymentMethod === 'PREPAID' ? 'text-crimson font-medium' : 'text-ivory/60'}`}>{o.paymentMethod === 'PREPAID' ? 'Prepaid' : 'COD'}</span></div>
+                  <div className={`text-xs ${o.paymentStatus === 'VERIFIED' ? 'text-crimson' : o.paymentStatus === 'FAILED' ? 'text-glow' : 'text-ivory/60'}`}>{o.paymentStatus}</div>
                   {o.utr && <div className="text-[10px] text-ivory/50 font-mono">UTR: {o.utr}</div>}
                 </td>
                 <td className="p-3"><span className="badge bg-espresso text-ivory border border-taupe/30">{o.orderStatus}</span></td>
-                <td className="p-3 text-xs">{o.capiFired ? <span className="text-wine">✓ Sent</span> : <span className="text-ivory/40">—</span>}</td>
+                <td className="p-3 text-xs">{o.capiFired ? <span className="text-crimson">✓ Sent</span> : <span className="text-ivory/40">—</span>}</td>
                 <td className="p-3 text-xs text-ivory/70">{new Date(o.createdAt).toLocaleString('en-IN')}</td>
-                <td className="p-3"><Link href={`/admin/orders/${o.id}`} className="text-wine underline text-xs hover:text-ivory transition">View</Link></td>
+                <td className="p-3"><Link href={`/admin/orders/${o.id}`} className="text-crimson underline text-xs hover:text-ivory transition">View</Link></td>
               </tr>
             ))}
             {orders.length === 0 && <tr><td colSpan={8} className="p-10 text-center text-ivory/60">No orders yet.</td></tr>}
@@ -185,3 +185,6 @@ function StatCard({ title, value, highlight }: { title: string; value: string; h
     </div>
   );
 }
+
+
+

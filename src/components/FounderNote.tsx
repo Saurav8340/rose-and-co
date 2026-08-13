@@ -8,7 +8,7 @@ export default function FounderNote() {
           </div>
         </div>
         <div className="md:col-span-3 space-y-4">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine">A note</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-crimson">A note</div>
           <div className="text-ivory/85 leading-[1.9] italic text-[17px]">
             <p>
               Hi. I&apos;m Aditi. The first corset I ever bought online turned out to be a boneless shell with a chain graphic printed on the front &mdash; sold as the real thing, at a price that should have gotten me actual hardware. That&apos;s the moment this started.
@@ -25,3 +25,6 @@ export default function FounderNote() {
     </div>
   );
 }
+
+
+

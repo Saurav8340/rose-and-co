@@ -36,7 +36,7 @@ export default function InventoryCountdown({ productSlug, totalStock }: Props) {
   const isUrgent = remaining <= 20;
 
   return (
-    <div className={`inline-flex items-center gap-2 text-sm ${isUrgent ? 'text-wine' : 'text-ivory'}`}>
+    <div className={`inline-flex items-center gap-2 text-sm ${isUrgent ? 'text-crimson' : 'text-ivory'}`}>
       <span className={`w-2 h-2 rounded-full ${isUrgent ? 'bg-wine' : 'bg-ivory/50'} ${ticking ? 'animate-pulse' : ''}`} />
       <span className={isUrgent ? 'font-semibold' : ''}>
         Only {remaining} left in this drop
@@ -47,3 +47,6 @@ export default function InventoryCountdown({ productSlug, totalStock }: Props) {
     </div>
   );
 }
+
+
+

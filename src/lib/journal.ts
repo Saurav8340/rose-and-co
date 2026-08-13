@@ -63,3 +63,6 @@ export function getPostBySlug(slug: string): JournalPost | null {
     readingTime: readingTime(content),
   };
 }
+
+
+

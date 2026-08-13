@@ -45,3 +45,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [...staticPages, ...collections, ...productUrls, ...postUrls];
 }
+
+
+

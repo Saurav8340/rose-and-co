@@ -83,7 +83,7 @@ export default function JournalPost({ params }: { params: { slug: string } }) {
 
         <div className="mt-16 pt-8 border-t border-taupe/20">
           <div className="p-6 bg-blush/30 border border-taupe/20">
-            <div className="text-xs uppercase tracking-[0.3em] text-wine">New drop</div>
+            <div className="text-xs uppercase tracking-[0.3em] text-crimson">New drop</div>
             <h3 className="font-display text-2xl text-ivory mt-2">Join the coven</h3>
             <p className="mt-2 text-sm text-ivory/70">
               Small pieces, real hardware. Once it&apos;s gone, it&apos;s gone.
@@ -93,9 +93,10 @@ export default function JournalPost({ params }: { params: { slug: string } }) {
         </div>
 
         <div className="mt-12">
-          <Link href="/journal" className="text-xs uppercase tracking-widest text-wine underline">&larr; Back to Journal</Link>
+          <Link href="/journal" className="text-xs uppercase tracking-widest text-crimson underline">&larr; Back to Journal</Link>
         </div>
       </article>
     </>
   );
 }
+

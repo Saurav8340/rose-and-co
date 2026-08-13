@@ -5,7 +5,7 @@ export const metadata = { title: 'Size guide', description: 'How to measure your
 export default function SizeGuidePage() {
   return (
     <div className="container-x py-16 max-w-3xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">Size guide</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">Size guide</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">How to size yourself right</h1>
       <p className="mt-4 text-ivory/70 leading-relaxed">
         Wrong size costs you a week. Here&apos;s how to get it right the first time.
@@ -34,3 +34,6 @@ export default function SizeGuidePage() {
     </div>
   );
 }
+
+
+

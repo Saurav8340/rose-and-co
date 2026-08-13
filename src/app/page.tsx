@@ -12,18 +12,12 @@ import { organizationSchema, websiteSchema } from '@/lib/schemas';
 
 export const revalidate = 300;
 
-// Products are fully dynamic from the database — no per-slug hardcoded
-// copy. Every product uses this same fallback hero text until/unless you
-// want to give a specific drop its own tagline later.
 const FALLBACK_EDITORIAL = {
   tagline: 'New drop',
   title: 'Join The Coven',
   sub: 'Raw silhouettes, chains, and mesh. Small pieces, then they\'re gone. Ships from Gurugram.',
 };
 
-// Max images pulled per product for the rotating hero, and a hard cap on
-// total hero slides overall so a big catalog doesn't make the rotation
-// take forever to loop back around.
 const IMAGES_PER_PRODUCT = 4;
 const MAX_HERO_SLIDES = 12;
 
@@ -40,15 +34,6 @@ export default async function HomePage() {
     },
   });
 
-  // FIX: with only one live product, the hero previously showed exactly
-  // one static slide (imgs[0]) and never moved — the rotation code
-  // correctly does nothing when there's only one product to rotate to
-  // (`if (slides.length <= 1) return;` in HeroSlideshow.tsx). Rather than
-  // rotating between PRODUCTS, this now rotates between every product's
-  // OWN photos — so even a single product with 7 images gets real
-  // slideshow motion, and as more products go live their images blend
-  // into the same continuous rotation automatically. Every individual
-  // image still links to its own correct /product/[slug] page.
   const slides = products.flatMap((p) => {
     const imgs = (JSON.parse(p.images) as string[]).filter(Boolean);
     if (imgs.length === 0) return [];
@@ -81,7 +66,8 @@ export default async function HomePage() {
 
       <section className="container-x py-20" aria-labelledby="collection-heading">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine">For The Unbothered</div>
+          {/* FIX: text-crimson -> text-crimson for contrast (see tailwind.config.ts) */}
+          <div className="text-xs uppercase tracking-[0.3em] text-crimson">For The Unbothered</div>
           <h2 id="collection-heading" className="font-display text-3xl md:text-5xl mt-3 text-ivory">
             Not for everyone.
           </h2>
@@ -115,7 +101,7 @@ export default async function HomePage() {
                   />
                   {discount > 0 && (
                     <span
-                      className="absolute top-4 right-4 bg-ivory text-wine text-xs font-semibold px-3 py-1 uppercase tracking-widest"
+                      className="absolute top-4 right-4 bg-ivory text-crimson text-xs font-semibold px-3 py-1 uppercase tracking-widest"
                       aria-label={`${discount} percent off`}
                     >
                       {discount}% off
@@ -126,7 +112,8 @@ export default async function HomePage() {
                   <div>
                     <h3 className="font-display text-2xl text-ivory">{p.name}</h3>
                     <div className="mt-2 flex items-baseline gap-2">
-                      <span className="text-lg font-semibold text-wine">{inr(p.price)}</span>
+                      {/* FIX: text-crimson -> text-crimson for contrast */}
+                      <span className="text-lg font-semibold text-crimson">{inr(p.price)}</span>
                       {p.compareAt && (
                         <span className="text-sm line-through text-ivory/40" aria-label={`Original price ${inr(p.compareAt)}`}>
                           {inr(p.compareAt)}
@@ -135,7 +122,7 @@ export default async function HomePage() {
                     </div>
                   </div>
                   <span
-                    className="text-sm underline text-ivory group-hover:text-wine transition"
+                    className="text-sm underline text-ivory group-hover:text-crimson transition"
                     aria-hidden="true"
                   >
                     See the piece
@@ -149,24 +136,24 @@ export default async function HomePage() {
 
       <section className="container-x pb-20" aria-labelledby="details-heading">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine">The build</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-crimson">The build</div>
           <h2 id="details-heading" className="font-display text-3xl md:text-5xl mt-3 text-ivory">Three things worth knowing.</h2>
         </div>
         <div className="grid md:grid-cols-3 gap-8 mt-14 max-w-5xl mx-auto">
           <div>
-            <div className="font-display text-xl text-wine">The hardware</div>
+            <div className="font-display text-xl text-crimson">The hardware</div>
             <p className="mt-3 text-[15px] text-ivory/75 leading-[1.8]">
               Real metal D-rings and buckles, not painted-on graphics. It holds weight. It doesn&apos;t flake off after one wash.
             </p>
           </div>
           <div>
-            <div className="font-display text-xl text-wine">The fabric</div>
+            <div className="font-display text-xl text-crimson">The fabric</div>
             <p className="mt-3 text-[15px] text-ivory/75 leading-[1.8]">
               Mesh and jersey with actual weight to them. It moves when you walk. It doesn&apos;t go see-through the first time it stretches.
             </p>
           </div>
           <div>
-            <div className="font-display text-xl text-wine">The fit</div>
+            <div className="font-display text-xl text-crimson">The fit</div>
             <p className="mt-3 text-[15px] text-ivory/75 leading-[1.8]">
               True to the sizing you already know from Zara or H&amp;M. If you&apos;re between sizes, check the piece-specific notes on the product page.
             </p>
@@ -188,7 +175,7 @@ export default async function HomePage() {
 
       <section className="container-x py-20 bg-blush/10" aria-labelledby="reviews-heading">
         <div className="text-center max-w-xl mx-auto">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine">Notes from buyers</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-crimson">Notes from buyers</div>
           <h2 id="reviews-heading" className="font-display text-3xl md:text-5xl mt-3 text-ivory">What they told us after.</h2>
         </div>
         <div className="mt-12"><TestimonialsCarousel /></div>
@@ -200,7 +187,7 @@ export default async function HomePage() {
           {faqs.map(([q, a]) => (
             <details key={q} className="border-b border-taupe/20 pb-4 pt-4 group">
               <summary className="cursor-pointer flex justify-between text-ivory font-medium text-[15px]">
-                {q}<span className="group-open:rotate-45 transition-transform text-wine" aria-hidden="true">+</span>
+                {q}<span className="group-open:rotate-45 transition-transform text-crimson" aria-hidden="true">+</span>
               </summary>
               <p className="mt-3 text-sm text-ivory/70 leading-[1.8]">{a}</p>
             </details>
@@ -211,7 +198,7 @@ export default async function HomePage() {
             href="/faq"
             prefetch={false}
             aria-label="Read all frequently asked questions"
-            className="text-sm underline text-wine"
+            className="text-sm underline text-crimson"
           >
             All the questions
           </Link>
@@ -220,7 +207,7 @@ export default async function HomePage() {
 
       <section className="container-x pb-24" aria-labelledby="journal-heading">
         <div className="bg-blush/40 p-10 md:p-16 text-center max-w-3xl mx-auto">
-          <div className="text-xs uppercase tracking-[0.3em] text-wine">The journal</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-crimson">The journal</div>
           <h2 id="journal-heading" className="font-display text-3xl md:text-4xl mt-3 text-ivory">Notes from the dark side.</h2>
           <div className="mt-6">
             <Link
@@ -237,3 +224,6 @@ export default async function HomePage() {
     </>
   );
 }
+
+
+

@@ -8,7 +8,7 @@ export default function Page() {
       <h1 className="font-display text-4xl text-ivory mb-8">Cancellations</h1>
 
       <div className="text-ivory/80 leading-relaxed space-y-6">
-        <p>You can cancel any order before it ships. Just email <a className="underline text-wine hover:text-ivory transition" href={`mailto:${SITE.email}`}>{SITE.email}</a> with your order number.</p>
+        <p>You can cancel any order before it ships. Just email <a className="underline text-crimson hover:text-ivory transition" href={`mailto:${SITE.email}`}>{SITE.email}</a> with your order number.</p>
 
         <div className="p-5 bg-blush/40 border-l-4 border-wine rounded">
           <h2 className="font-display text-xl text-ivory mb-2">Before dispatch</h2>
@@ -27,3 +27,6 @@ export default function Page() {
     </div>
   );
 }
+
+
+

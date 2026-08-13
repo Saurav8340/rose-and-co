@@ -7,7 +7,7 @@ export default function CustomerPhotos() {
   return (
     <section className="container-x py-16">
       <div className="text-center max-w-2xl mx-auto">
-        <div className="text-xs uppercase tracking-[0.3em] text-wine">From actual orders</div>
+        <div className="text-xs uppercase tracking-[0.3em] text-crimson">From actual orders</div>
         <h2 className="font-display text-3xl md:text-4xl mt-3 text-ivory">What they wrote back</h2>
         <p className="mt-3 text-sm text-ivory/70">
           Emails and DMs after wearing the piece, lightly trimmed. Photos coming as buyers tag us.
@@ -17,7 +17,7 @@ export default function CustomerPhotos() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
         {featured.map((r, i) => (
           <div key={i} className="rc-card p-6 rounded-lg flex flex-col">
-            <div className="text-wine text-sm tracking-widest">
+            <div className="text-crimson text-sm tracking-widest">
               {"\u2605".repeat(r.rating)}{"\u2606".repeat(5 - r.rating)}
             </div>
             <p className="mt-3 text-ivory italic leading-relaxed text-sm flex-1">
@@ -38,9 +38,12 @@ export default function CustomerPhotos() {
 
       <div className="text-center mt-10">
         <p className="text-xs text-ivory/60">
-          Wore yours somewhere? Tag <a href={SITE.instagram} target="_blank" rel="noopener" className="underline text-wine">@roseandco</a>. We&apos;ll ask before adding your photo here.
+          Wore yours somewhere? Tag <a href={SITE.instagram} target="_blank" rel="noopener" className="underline text-crimson">@roseandco</a>. We&apos;ll ask before adding your photo here.
         </p>
       </div>
     </section>
   );
 }
+
+
+

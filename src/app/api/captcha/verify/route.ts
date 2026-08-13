@@ -32,3 +32,6 @@ export async function POST(req: Request) {
   await prisma.verificationSession.update({ where: { token }, data: { verified: true } });
   return NextResponse.json({ ok: true });
 }
+
+
+

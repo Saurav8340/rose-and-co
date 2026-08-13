@@ -48,7 +48,7 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
         onClick={() => setOpen(!open)}
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex items-center gap-1 text-sm uppercase tracking-widest text-ivory hover:text-wine transition"
+        className="flex items-center gap-1 text-sm uppercase tracking-widest text-ivory hover:text-crimson transition"
       >
         Shop
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transition-transform ${open ? 'rotate-180' : ''}`}>
@@ -62,7 +62,7 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
   role="menu"
 >          <div className="absolute -top-3 left-0 right-0 h-3" />
           <div className="p-6">
-            <div className="text-xs uppercase tracking-[0.3em] text-wine mb-4">New Arrivals</div>
+            <div className="text-xs uppercase tracking-[0.3em] text-crimson mb-4">New Arrivals</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {products.map((p) => {
                 const discount = p.compareAt ? Math.round(((p.compareAt - p.price) / p.compareAt) * 100) : 0;
@@ -83,18 +83,18 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
                         className="object-cover object-top group-hover:scale-105 transition duration-500"
                       />
                       {discount > 0 && (
-                        <span className="absolute top-1 right-1 bg-ivory text-wine text-[10px] font-semibold px-1.5 py-0.5">
+                        <span className="absolute top-1 right-1 bg-ivory text-crimson text-[10px] font-semibold px-1.5 py-0.5">
                           {discount}%
                         </span>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-display text-lg text-ivory group-hover:text-wine transition truncate">
+                      <div className="font-display text-lg text-ivory group-hover:text-crimson transition truncate">
                         {p.name}
                       </div>
                       <div className="text-xs text-ivory/60 mt-1 line-clamp-2">{p.tagline}</div>
                       <div className="flex items-baseline gap-2 mt-2">
-                        <span className="text-sm font-semibold text-wine">
+                        <span className="text-sm font-semibold text-crimson">
                           Rs {p.price.toLocaleString('en-IN')}
                         </span>
                         {p.compareAt && (
@@ -109,7 +109,7 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
               })}
             </div>
             <div className="border-t border-taupe/30 mt-4 pt-4 flex items-center justify-between text-xs">
-              <Link href="/shop" onClick={() => setOpen(false)} className="text-wine underline uppercase tracking-widest">
+              <Link href="/shop" onClick={() => setOpen(false)} className="text-crimson underline uppercase tracking-widest">
                 View all
               </Link>
               <div className="text-ivory/60">Free shipping - 7-day returns</div>
@@ -120,3 +120,6 @@ export default function ShopDropdown({ products }: { products: Product[] }) {
     </div>
   );
 }
+
+
+

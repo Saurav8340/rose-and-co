@@ -14,3 +14,6 @@ export async function GET(req: NextRequest) {
     region: region || undefined,
   });
 }
+
+
+

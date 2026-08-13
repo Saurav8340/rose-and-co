@@ -4,3 +4,6 @@ export function generateOrderNumber(): string {
   const rand = Math.floor(100000 + Math.random() * 900000);
   return `RC${y}${m}${rand}`;
 }
+
+
+

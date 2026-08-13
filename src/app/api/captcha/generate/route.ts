@@ -25,3 +25,6 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ token, question: challenge.question, type: challenge.type });
 }
+
+
+

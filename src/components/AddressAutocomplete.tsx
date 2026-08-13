@@ -114,7 +114,7 @@ export default function AddressAutocomplete({ onChange, initial = {} }: Props) {
         <label className="block text-xs uppercase tracking-widest text-ivory/70 mb-1">
           PIN code
           {pincodeStatus === 'loading' && <span className="ml-2 text-ivory/50">checking...</span>}
-          {pincodeStatus === 'ok' && <span className="ml-2 text-wine">✓ found</span>}
+          {pincodeStatus === 'ok' && <span className="ml-2 text-crimson">✓ found</span>}
           {pincodeStatus === 'invalid' && <span className="ml-2 text-glow">not found</span>}
         </label>
         <input
@@ -178,3 +178,6 @@ export default function AddressAutocomplete({ onChange, initial = {} }: Props) {
     </div>
   );
 }
+
+
+

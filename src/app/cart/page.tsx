@@ -38,14 +38,14 @@ export default function CartPage() {
               <div className="flex-1 flex flex-col">
                 <div className="text-ivory font-medium">{it.name}</div>
                 <div className="text-xs text-ivory/60 mt-1">Size {it.size}</div>
-                <div className="text-wine font-semibold mt-1">{inr(it.price)}</div>
+                <div className="text-crimson font-semibold mt-1">{inr(it.price)}</div>
                 <div className="mt-auto flex items-center justify-between">
                   <div className="inline-flex items-center border border-taupe/40 text-ivory rounded">
                     <button onClick={() => update(i, it.quantity - 1)} className="px-3 py-1 cursor-pointer" aria-label="Decrease">-</button>
                     <span className="px-3">{it.quantity}</span>
                     <button onClick={() => update(i, it.quantity + 1)} className="px-3 py-1 cursor-pointer" aria-label="Increase">+</button>
                   </div>
-                  <button onClick={() => remove(i)} className="text-xs uppercase tracking-widest text-ivory/60 hover:text-wine transition cursor-pointer">Remove</button>
+                  <button onClick={() => remove(i)} className="text-xs uppercase tracking-widest text-ivory/60 hover:text-crimson transition cursor-pointer">Remove</button>
                 </div>
               </div>
             </div>
@@ -58,7 +58,7 @@ export default function CartPage() {
           <div className="space-y-2 text-sm text-ivory">
             <div className="flex justify-between text-ivory/50"><span>Was</span><span className="line-through">{inr(mrpTotal)}</span></div>
             <div className="flex justify-between"><span>Subtotal</span><span>{inr(total)}</span></div>
-            <div className="flex justify-between"><span>Shipping</span><span className="text-wine">Free</span></div>
+            <div className="flex justify-between"><span>Shipping</span><span className="text-crimson">Free</span></div>
           </div>
           <div className="flex justify-between mt-4 pt-4 border-t border-taupe/30 font-semibold text-lg text-ivory">
             <span>Total</span><span>{inr(total)}</span>
@@ -72,3 +72,6 @@ export default function CartPage() {
     </div>
   );
 }
+
+
+

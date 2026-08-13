@@ -10,7 +10,7 @@ export default async function CorsetsCollection() {
 
   return (
     <div className="container-x py-12 max-w-6xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">Corsets & Bodices</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">Corsets & Bodices</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3">Structure that holds.</h1>
       <p className="mt-4 text-ivory/70 max-w-2xl leading-relaxed">
         Steel-boned corsets, waspies, and bodices. Wear one as the whole look, or layer it over mesh for something rawer.
@@ -26,7 +26,7 @@ export default async function CorsetsCollection() {
               </div>
               <div className="mt-3">
                 <div className="text-sm text-ivory font-medium">{p.name}</div>
-                <div className="text-sm text-wine mt-1">{inr(p.price)}</div>
+                <div className="text-sm text-crimson mt-1">{inr(p.price)}</div>
               </div>
             </Link>
           );
@@ -35,3 +35,6 @@ export default async function CorsetsCollection() {
     </div>
   );
 }
+
+
+

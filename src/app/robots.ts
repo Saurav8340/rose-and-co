@@ -15,3 +15,6 @@ export default function robots(): MetadataRoute.Robots {
     host: 'https://rose-and-co.vercel.app',
   };
 }
+
+
+

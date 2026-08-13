@@ -29,9 +29,12 @@ export default function AdminLogin() {
       <form onSubmit={submit} className="mt-8 space-y-4">
         <div><label className="label">Email</label><input required autoFocus type="email" className="input" value={email} onChange={e => setEmail(e.target.value)} /></div>
         <div><label className="label">Password</label><input required type="password" className="input" value={password} onChange={e => setPassword(e.target.value)} /></div>
-        {err && <div className="p-3 bg-wine/10 text-wine text-sm border border-wine/30 rounded">{err}</div>}
+        {err && <div className="p-3 bg-wine/10 text-crimson text-sm border border-wine/30 rounded">{err}</div>}
         <button disabled={loading} className="btn-primary w-full cursor-pointer">{loading ? 'Signing in…' : 'Sign In'}</button>
       </form>
     </div>
   );
 }
+
+
+

@@ -9,7 +9,7 @@ export const metadata = {
 export default function AboutPage() {
   return (
     <div className="container-x py-16 max-w-2xl">
-      <div className="text-xs uppercase tracking-[0.3em] text-wine">About</div>
+      <div className="text-xs uppercase tracking-[0.3em] text-crimson">About</div>
       <h1 className="font-display text-4xl md:text-5xl text-ivory mt-3 mb-10 leading-tight">
         Small studio.<br/>One drop at a time.
       </h1>
@@ -52,7 +52,7 @@ export default function AboutPage() {
         </div>
 
         <p>
-          Because sometimes it does. This is a new brand made by one person. If your piece arrives damaged, if the size chart was off, if Delhivery loses the package &mdash; write to me at <a className="underline text-wine" href={`mailto:${SITE.email}`}>{SITE.email}</a>. Not a form, not a ticket. My inbox. I answer within a few hours during studio time.
+          Because sometimes it does. This is a new brand made by one person. If your piece arrives damaged, if the size chart was off, if Delhivery loses the package &mdash; write to me at <a className="underline text-crimson" href={`mailto:${SITE.email}`}>{SITE.email}</a>. Not a form, not a ticket. My inbox. I answer within a few hours during studio time.
         </p>
 
         <p className="text-ivory/70 italic">
@@ -64,3 +64,6 @@ export default function AboutPage() {
     </div>
   );
 }
+
+
+
