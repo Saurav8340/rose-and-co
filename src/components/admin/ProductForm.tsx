@@ -1,4 +1,8 @@
 "use client";
+// src/components/admin/ProductForm.tsx
+// ONE form used by BOTH "Create" and "Edit". Every box maps to a column in your
+// Product database table (slug, name, description, price, compareAt, images,
+// sizes, bulletPoints, videos, categoryId, active).
 
 import { useEffect, useMemo, useState } from "react";
 import { upload } from '@vercel/blob/client';
@@ -135,10 +139,10 @@ export default function ProductForm({
       for (const file of Array.from(fileList)) {
         const allowed = ['video/mp4', 'video/webm', 'video/quicktime'];
         if (!allowed.includes(file.type)) {
-          throw new Error(`${file.name}: only MP4, WebM, or MOV files are supported.`);
+          throw new Error(file.name + ": only MP4, WebM, or MOV files are supported.");
         }
         if (file.size > 100 * 1024 * 1024) {
-          throw new Error(`${file.name} is larger than 100MB. Compress it first.`);
+          throw new Error(file.name + " is larger than 100MB. Compress it first.");
         }
 
         const blob = await upload(file.name, file, {
@@ -232,7 +236,7 @@ export default function ProductForm({
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             })
-          : await fetch(`/api/products/${initial!.slug}`, {
+          : await fetch("/api/products/" + initial!.slug, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
@@ -241,7 +245,7 @@ export default function ProductForm({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save");
       const slug = data.product?.slug ?? initial?.slug;
-      setDone({ url: `/product/${slug}` });
+      setDone({ url: "/product/" + slug });
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -250,22 +254,35 @@ export default function ProductForm({
   }
 
   if (done) {
+    const productUrl = done.url;
     return (
       <div className="max-w-xl mx-auto my-16 p-8 text-center rc-card rounded-xl">
         <h1 className="font-display text-2xl text-ivory">
           {mode === "create" ? "Product created" : "Changes saved"}
         </h1>
         <p className="my-4">
-          {done.url}
+          <a
+            href={productUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-crimson font-semibold underline hover:text-ivory transition"
+          >
+            {productUrl}
+          </a>
         </p>
         <div className="flex items-center justify-center gap-3 mt-6">
           <button
             className="px-4 py-2 border border-taupe/40 rounded-lg text-ivory hover:border-wine transition cursor-pointer"
-            onClick={() => navigator.clipboard.writeText(done.url)}
+            onClick={() => navigator.clipboard.writeText(productUrl)}
           >
             Copy link
           </button>
-          /admin/products
+          <a
+            className="px-4 py-2 border border-taupe/40 rounded-lg text-ivory hover:border-wine transition"
+            href="/admin/products"
+          >
+            Back to products
+          </a>
         </div>
       </div>
     );
@@ -274,7 +291,7 @@ export default function ProductForm({
   return (
     <div className="max-w-2xl mx-auto my-10 p-6">
       <h1 className="font-display text-2xl text-ivory mb-6">
-        {mode === "create" ? "Create a listing" : `Edit: ${initial?.name}`}
+        {mode === "create" ? "Create a listing" : "Edit: " + initial?.name}
       </h1>
 
       <label className="label">Product name</label>
@@ -367,7 +384,7 @@ export default function ProductForm({
         Leave MRP blank and one will be estimated automatically.
       </p>
 
-      <label className="label mt-4">Sizes & stock</label>
+      <label className="label mt-4">Sizes &amp; stock</label>
       <p className="text-xs text-ivory/50 mb-2">
         Click a size to enable it, then type how many units you actually have.
       </p>
@@ -380,11 +397,12 @@ export default function ProductForm({
               <button
                 type="button"
                 onClick={() => toggleSize(s)}
-                className={`w-16 px-4 py-2 border rounded-lg cursor-pointer transition ${
-                  selected
+                className={
+                  "w-16 px-4 py-2 border rounded-lg cursor-pointer transition " +
+                  (selected
                     ? "bg-wine border-wine text-ivory"
-                    : "bg-blush border-taupe/40 text-ivory hover:border-wine"
-                }`}
+                    : "bg-blush border-taupe/40 text-ivory hover:border-wine")
+                }
               >
                 {s}
               </button>
@@ -451,7 +469,7 @@ export default function ProductForm({
         onDrop={(e) => { e.preventDefault(); handleVideoFiles(e.dataTransfer.files); }}
         className="block border-2 border-dashed border-taupe/40 rounded-xl px-4 py-7 text-center cursor-pointer bg-blush/40 text-ivory hover:border-wine transition mb-2"
       >
-        {videoUploading ? `Uploading… ${videoProgress}%` : 'Click to choose a video, or drag it here'}
+        {videoUploading ? ("Uploading… " + videoProgress + "%") : 'Click to choose a video, or drag it here'}
         <input
           type="file"
           accept="video/mp4,video/webm,video/quicktime"
@@ -465,7 +483,7 @@ export default function ProductForm({
         <div className="w-full h-1.5 bg-taupe/20 rounded-full overflow-hidden mb-2">
           <div
             className="h-full bg-wine transition-all duration-200"
-            style={{ width: `${videoProgress}%` }}
+            style={{ width: videoProgress + "%" }}
           />
         </div>
       )}
@@ -496,4 +514,112 @@ export default function ProductForm({
                   &#9660;
                 </button>
               </div>
-              <span className="text-xs text-ivory
+              <span className="text-xs text-ivory/50 w-5 text-center shrink-0">{i + 1}</span>
+              <video src={v} className="w-20 h-14 object-cover rounded bg-black shrink-0" muted preload="metadata" />
+              <span className="text-xs text-ivory/70 flex-1 truncate">{v.split('/').pop()}</span>
+              <button
+                type="button"
+                onClick={() => removeVideoFile(i)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-wine text-ivory cursor-pointer text-xs shrink-0"
+                aria-label="Remove video"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <label className="label mt-6">Product images</label>
+      <p className="text-xs text-ivory/50 mb-2">
+        The first image is used as the main thumbnail everywhere on the site
+        (shop grid, homepage, cart). Use the arrows to reorder.
+      </p>
+
+      <label
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
+        className="block border-2 border-dashed border-taupe/40 rounded-xl px-4 py-7 text-center cursor-pointer bg-blush/40 text-ivory hover:border-wine transition mb-2"
+      >
+        {uploading ? "Uploading & compressing…" : "Click to choose photos, or drag them here"}
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+      </label>
+      <p className="text-xs text-ivory/50">JPG/PNG/HEIC up to 4 MB each. They&apos;re auto-shrunk to load fast.</p>
+
+      {images.filter((i) => i.trim()).length > 0 && (
+        <div className="space-y-2 my-3">
+          {images.filter((i) => i.trim()).map((img, i) => (
+            <div key={img} className="flex items-center gap-2 border border-taupe/30 rounded-lg p-2">
+              <div className="flex flex-col gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => moveImage(i, -1)}
+                  disabled={i === 0}
+                  className="w-6 h-5 flex items-center justify-center text-ivory/60 hover:text-crimson disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer text-xs leading-none"
+                  aria-label="Move image earlier"
+                >
+                  &#9650;
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveImage(i, 1)}
+                  disabled={i === images.length - 1}
+                  className="w-6 h-5 flex items-center justify-center text-ivory/60 hover:text-crimson disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer text-xs leading-none"
+                  aria-label="Move image later"
+                >
+                  &#9660;
+                </button>
+              </div>
+              <span className="text-xs text-ivory/50 w-5 text-center shrink-0">{i + 1}</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={img}
+                alt={"Product image " + (i + 1)}
+                className="w-16 h-16 object-cover rounded-lg border border-taupe/30 shrink-0"
+              />
+              {i === 0 && (
+                <span className="text-[10px] uppercase tracking-wide text-crimson font-semibold shrink-0">Main</span>
+              )}
+              <span className="text-xs text-ivory/50 flex-1 truncate">{img.split('/').pop()}</span>
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="w-8 h-8 rounded-full bg-wine text-ivory cursor-pointer flex items-center justify-center text-xs leading-none shrink-0"
+                aria-label="Remove image"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {error && <p className="text-crimson font-semibold mt-4">⚠ {error}</p>}
+
+      <div className="flex gap-3 mt-6">
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => save(false)}
+          className="px-5 py-3 border border-taupe/40 rounded-lg text-ivory hover:border-wine transition cursor-pointer disabled:opacity-50"
+        >
+          {saving ? "Saving…" : "Save as draft"}
+        </button>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => save(true)}
+          className="px-5 py-3 bg-wine text-ivory rounded-lg hover:bg-wine/90 rc-glow-btn transition cursor-pointer disabled:opacity-50"
+        >
+          {saving ? "Saving…" : mode === "create" ? "Publish (go live)" : "Save & publish"}
+        </button>
+      </div>
+    </div>
+  );
+}
