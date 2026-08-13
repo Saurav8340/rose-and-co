@@ -1,7 +1,19 @@
 'use client';
 import { useState } from 'react';
 
-const METRO_PINS = ['400', '110', '560', '600', '500', '411', '700'];
+// FIX: Gurugram (pincode prefix 122) — where the warehouse actually is —
+// was completely missing from this list. It was falling through to the
+// generic "rest of India" bucket at 5-7 days, which made no sense for a
+// same-city delivery. Now split into three tiers instead of two:
+//
+// 1. LOCAL_PINS  — same city as the warehouse (Gurugram, 122xxx) — fastest
+// 2. NCR_PINS    — rest of Delhi-NCR, still very close (Delhi 110, Faridabad
+//                  121, Noida/Ghaziabad 201xxx) — fast, but not same-day-city
+// 3. METRO_PINS  — other major metros — unchanged from before
+// 4. everything else — unchanged default
+const LOCAL_PINS = ['122']; // Gurugram itself — same city as the warehouse
+const NCR_PINS = ['110', '121', '201']; // Delhi, Faridabad, Noida/Ghaziabad
+const METRO_PINS = ['400', '560', '600', '500', '411', '700']; // Mumbai, Bangalore, Chennai, Hyderabad, Pune, Kolkata
 
 export default function PincodeCheck() {
   const [pin, setPin] = useState('');
@@ -21,9 +33,17 @@ export default function PincodeCheck() {
         return;
       }
       const po = data[0].PostOffice[0];
-      const isMetro = METRO_PINS.some(m => pin.startsWith(m));
-      const minDays = isMetro ? 3 : 5;
-      const maxDays = isMetro ? 5 : 7;
+
+      const isLocal = LOCAL_PINS.some(p => pin.startsWith(p));
+      const isNCR = NCR_PINS.some(p => pin.startsWith(p));
+      const isMetro = METRO_PINS.some(p => pin.startsWith(p));
+
+      let minDays: number, maxDays: number;
+      if (isLocal) { minDays = 1; maxDays = 2; }
+      else if (isNCR) { minDays = 2; maxDays = 3; }
+      else if (isMetro) { minDays = 3; maxDays = 5; }
+      else { minDays = 5; maxDays = 7; }
+
       const now = new Date();
       const fromDate = new Date(now.getTime() + minDays * 24 * 60 * 60_000);
       const toDate   = new Date(now.getTime() + maxDays * 24 * 60 * 60_000);
@@ -59,7 +79,3 @@ export default function PincodeCheck() {
     </div>
   );
 }
-
-
-
-
