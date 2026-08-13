@@ -9,8 +9,36 @@ export default function RecentlyViewed({ currentSlug }: { currentSlug?: string }
   const [items, setItems] = useState<ViewedProduct[]>([]);
 
   useEffect(() => {
-    const all = getRecentlyViewed().filter(x => x.slug !== currentSlug);
-    setItems(all);
+    const stored = getRecentlyViewed().filter(x => x.slug !== currentSlug);
+    if (stored.length === 0) {
+      setItems([]);
+      return;
+    }
+
+    // FIX: this used to render whatever was in localStorage with zero
+    // validation, so a visitor who viewed Amara/Aarna before they were
+    // deleted kept seeing them in "Recently viewed" indefinitely — the
+    // component had no way to know they no longer exist. Now it checks
+    // the real database via /api/products/by-ids (already built,
+    // filters by active: true) and only shows products that still
+    // actually exist and are live. If the check fails for any reason
+    // (offline, etc.), falls back to the raw stored list rather than
+    // showing nothing.
+    fetch('/api/products/by-ids', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: stored.map(x => x.id) }),
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.products) {
+          setItems(stored);
+          return;
+        }
+        const liveIds = new Set(data.products.map((p: any) => p.id));
+        setItems(stored.filter(x => liveIds.has(x.id)));
+      })
+      .catch(() => setItems(stored));
   }, [currentSlug]);
 
   if (items.length === 0) return null;

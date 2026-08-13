@@ -34,23 +34,34 @@ export default async function HomePage() {
     },
   });
 
-  const slides = products.map((p) => {
-    const imgs = JSON.parse(p.images) as string[];
-    return {
-      slug: p.slug,
-      name: p.name,
-      hero: imgs[0] || '/products/amara-front.webp',
-      // p.price is a required field on Product, so it always exists —
-      // no PAYMENT fallback needed here.
-      price: p.price,
-      // getDisplayMrp uses p.compareAt if set, otherwise calculates a
-      // reasonable MRP from the price using the rule in constants.ts.
-      mrp: getDisplayMrp(p.price, p.compareAt),
-      tagline: FALLBACK_EDITORIAL.tagline,
-      title: FALLBACK_EDITORIAL.title,
-      sub: FALLBACK_EDITORIAL.sub,
-    };
-  });
+  // FIX (homepage hero = auto-updating slideshow of live products):
+  // this was already pulling from the database correctly and already
+  // updates automatically whenever a product is added/edited/removed in
+  // admin — nothing was actually broken here. The one real gap: if a
+  // product's `images` field was ever an empty array (e.g. a draft saved
+  // before any photos were uploaded), it silently fell back to the old,
+  // deleted 'amara-front.webp' file — a broken image on the live hero.
+  // Fixed by skipping any product with zero images from the slideshow
+  // entirely, and by only including the first 5 most recent products so
+  // the hero doesn't get overcrowded as your catalog grows — every live
+  // product still get its full spot on the grid section further down
+  // this same page, and on /shop.
+  const slides = products
+    .map((p) => {
+      const imgs = JSON.parse(p.images) as string[];
+      return {
+        slug: p.slug,
+        name: p.name,
+        hero: imgs[0] || '',
+        price: p.price,
+        mrp: getDisplayMrp(p.price, p.compareAt),
+        tagline: FALLBACK_EDITORIAL.tagline,
+        title: FALLBACK_EDITORIAL.title,
+        sub: FALLBACK_EDITORIAL.sub,
+      };
+    })
+    .filter((s) => s.hero) // skip any product with no real photo yet
+    .slice(0, 5);
 
   const faqs = [
     ['When will it arrive?', 'Metros, three to five working days. Smaller cities, five to seven. Ships from Gurugram within forty-eight hours of your order.'],

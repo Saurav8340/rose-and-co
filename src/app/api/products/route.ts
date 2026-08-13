@@ -1,5 +1,6 @@
 // src/app/api/products/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { verifyAdminSession } from "@/lib/session";
 
@@ -59,6 +60,17 @@ export async function POST(req: NextRequest) {
         active: body.active ?? true,
       },
     });
+
+    // FIX: without this, the new/updated product would only appear on the
+    // live site after the `revalidate = 300` timer in product/[slug]/page.tsx
+    // and shop/page.tsx naturally expired (up to 5 minutes later, and only
+    // on the NEXT visitor's request after that — not even instantly then).
+    // revalidatePath('/', 'layout') busts the cache for every page under the
+    // root layout immediately, so a newly created product shows up on /shop,
+    // the homepage, and its own /product/[slug] page right away instead of
+    // waiting on the timer. This runs on every product create — for a small
+    // catalog like this, the cost of revalidating everything is negligible.
+    revalidatePath('/', 'layout');
 
     return NextResponse.json(
       { product, url: `/product/${product.slug}` },
